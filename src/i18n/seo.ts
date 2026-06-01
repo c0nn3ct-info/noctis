@@ -73,7 +73,7 @@ export function getMeta(page: PageKey, locale: Locale): MetaPayload {
       type: 'website',
       locale: locale === 'en' ? 'en_US' : 'ru_RU',
       localeAlternate: locale === 'en' ? 'ru_RU' : 'en_US',
-      image: `${ORIGIN}/og-cover.png`,
+      image: `${ORIGIN}/og-preview.jpg`,
       url,
       title,
       description,
@@ -81,7 +81,7 @@ export function getMeta(page: PageKey, locale: Locale): MetaPayload {
     },
     twitter: {
       card: 'summary_large_image',
-      image: `${ORIGIN}/og-cover.png`,
+      image: `${ORIGIN}/og-preview.jpg`,
       title,
       description,
     },

@@ -12,8 +12,8 @@
   "footer.pages": "Страницы",
   "footer.sources": "Исходники",
 
-  "home.title": "Noctis — расширение VLESS для браузера Chrome | прокси VLESS, VMess, Trojan, Reality",
-  "home.description": "Бесплатное расширение Chrome для подключения к прокси VLESS, VMess, Trojan, Shadowsocks, Hysteria2 и Reality через локальный sing-box. Без системного VPN — прокси работает только в браузере. Обход блокировок, V2Ray/Xray-совместимо.",
+  "home.title": "Noctis — браузерный прокси",
+  "home.description": "Пускайте трафик браузера через VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard и другие — через локальный sing-box.",
   "home.hero.h1": "Расширение VLESS для браузера Chrome",
   "home.hero.h1_sub": "Прокси для браузера без системного VPN",
   "home.hero.lede": "Noctis — бесплатное расширение, которое маршрутизирует трафик Chrome через ваши собственные прокси VLESS, VMess, Trojan, Shadowsocks, Hysteria2, Reality и другие — через локальный хелпер на базе sing-box. Никакого системного VPN, никакого отдельного клиента — прокси работает прямо внутри браузера.",

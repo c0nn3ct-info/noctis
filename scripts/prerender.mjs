@@ -60,13 +60,13 @@ function getMeta(page, locale) {
       type: 'website',
       locale: locale === 'en' ? 'en_US' : 'ru_RU',
       localeAlternate: locale === 'en' ? 'ru_RU' : 'en_US',
-      image: `${ORIGIN}/og-cover.png`,
+      image: `${ORIGIN}/og-preview.jpg`,
       url,
       siteName: 'Noctis',
     },
     twitter: {
       card: 'summary_large_image',
-      image: `${ORIGIN}/og-cover.png`,
+      image: `${ORIGIN}/og-preview.jpg`,
     },
   };
 }
@@ -168,6 +168,10 @@ function escapeHtmlText(s) {
 function buildHeadInjection(page, locale, version) {
   const meta = getMeta(page, locale);
   const blocks = jsonLdBlocks(page, locale, version);
+  const ogImageAlt =
+    locale === 'ru'
+      ? 'Noctis — браузерное расширение VLESS'
+      : 'Noctis — VLESS browser extension';
   const lines = [];
   lines.push(`<link rel="canonical" href="${escapeHtmlAttr(meta.canonical)}" />`);
   for (const h of meta.hreflang) {
@@ -187,14 +191,18 @@ function buildHeadInjection(page, locale, version) {
     `<meta property="og:description" content="${escapeHtmlAttr(meta.description)}" />`,
   );
   lines.push(`<meta property="og:image" content="${escapeHtmlAttr(meta.og.image)}" />`);
+  lines.push(`<meta property="og:image:secure_url" content="${escapeHtmlAttr(meta.og.image)}" />`);
+  lines.push(`<meta property="og:image:type" content="image/jpeg" />`);
   lines.push(`<meta property="og:image:width" content="1200" />`);
   lines.push(`<meta property="og:image:height" content="630" />`);
+  lines.push(`<meta property="og:image:alt" content="${escapeHtmlAttr(ogImageAlt)}" />`);
   lines.push(`<meta name="twitter:card" content="${meta.twitter.card}" />`);
   lines.push(`<meta name="twitter:title" content="${escapeHtmlAttr(meta.title)}" />`);
   lines.push(
     `<meta name="twitter:description" content="${escapeHtmlAttr(meta.description)}" />`,
   );
   lines.push(`<meta name="twitter:image" content="${escapeHtmlAttr(meta.twitter.image)}" />`);
+  lines.push(`<meta name="twitter:image:alt" content="${escapeHtmlAttr(ogImageAlt)}" />`);
   for (const b of blocks) {
     lines.push(
       `<script type="application/ld+json">${JSON.stringify(b)}</script>`,
@@ -217,33 +225,6 @@ function injectIntoHead(html, injection, newTitle, newDescription) {
 function startServer(port) {
   const server = createServer((req, res) => handler(req, res, { public: distDir }));
   return new Promise((resolveP) => server.listen(port, () => resolveP(server)));
-}
-
-async function generateOgCover(browser) {
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1200, height: 630, deviceScaleFactor: 1 });
-  const html = `<!doctype html><html><head><meta charset="utf-8"><style>
-    html,body{margin:0;padding:0;width:1200px;height:630px;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 50%,#16213e 100%);font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;color:#fff;overflow:hidden;}
-    .wrap{display:flex;flex-direction:column;justify-content:center;height:100%;padding:80px;box-sizing:border-box;}
-    .badge{display:inline-flex;align-items:center;gap:10px;padding:8px 16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:999px;font-size:18px;letter-spacing:.04em;width:fit-content;color:#a78bfa;}
-    .dot{width:8px;height:8px;border-radius:50%;background:#a78bfa;}
-    h1{font-size:88px;font-weight:700;letter-spacing:-.02em;line-height:1.04;margin:32px 0 24px;}
-    .accent{background:linear-gradient(90deg,#a78bfa 0%,#60a5fa 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
-    p{font-size:30px;color:#9ca3af;line-height:1.3;margin:0;max-width:900px;}
-    .protos{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;}
-    .proto{padding:8px 18px;border:1px solid rgba(255,255,255,.18);border-radius:8px;font-size:20px;font-family:'JetBrains Mono','SF Mono',monospace;color:#e5e7eb;}
-  </style></head><body><div class="wrap">
-    <div class="badge"><span class="dot"></span>Noctis · VLESS Browser Extension</div>
-    <h1>Browser proxy<br/><span class="accent">VLESS, VMess, Trojan, Reality</span></h1>
-    <p>Free Chrome extension. Routes browser traffic through your own proxies via sing-box.</p>
-    <div class="protos">
-      <span class="proto">VLESS</span><span class="proto">Reality</span><span class="proto">VMess</span><span class="proto">Trojan</span><span class="proto">Shadowsocks</span><span class="proto">Hysteria2</span><span class="proto">TUIC</span><span class="proto">WireGuard</span>
-    </div>
-  </div></body></html>`;
-  await page.setContent(html, { waitUntil: 'load' });
-  const png = await page.screenshot({ type: 'png', omitBackground: false });
-  await writeFile(resolve(distDir, 'og-cover.png'), png);
-  await page.close();
 }
 
 function buildSitemap(lastmod) {
@@ -339,9 +320,6 @@ async function main() {
         console.log(`✓ prerendered ${pathFor(page, locale)} → ${target.replace(distDir, '')}`);
       }
     }
-
-    await generateOgCover(browser);
-    console.log('✓ generated og-cover.png');
 
     const lastmod = new Date().toISOString().slice(0, 10);
     await writeFile(resolve(distDir, 'sitemap.xml'), buildSitemap(lastmod), 'utf8');

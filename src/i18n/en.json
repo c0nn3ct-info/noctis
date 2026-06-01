@@ -12,8 +12,8 @@
   "footer.pages": "Pages",
   "footer.sources": "Sources",
 
-  "home.title": "Noctis — VLESS Browser Extension for Chrome | Browser Proxy (VMess, Trojan, Shadowsocks)",
-  "home.description": "Free Chrome extension to connect to VLESS, VMess, Trojan, Shadowsocks, Hysteria2 and Reality proxies. Powered by sing-box (Xray/V2Ray-compatible). No system VPN — proxy stays in the browser.",
+  "home.title": "Noctis - Browser Proxy",
+  "home.description": "Route your browser through VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard & more via a local sing-box helper.",
   "home.hero.h1": "VLESS Browser Extension for Chrome",
   "home.hero.h1_sub": "Route browser traffic through your own proxies",
   "home.hero.lede": "Noctis is a free browser extension that routes Chrome through VLESS, VMess, Trojan, Shadowsocks, Hysteria2, Reality and other proxy servers via a local helper powered by sing-box. No system VPN, no separate client window — proxying stays inside the browser.",
