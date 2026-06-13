@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AppWindow,
   Apple,
   Check,
+  ChevronDown,
   Chrome,
   Copy,
   Download,
@@ -19,9 +20,34 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Section } from '@/components/m3/section';
+import { cn } from '@/lib/utils';
 import { WEBSTORE_EXT_ID, WEBSTORE_URL } from '../constants';
 import { t } from '../i18n';
 import { Layout } from '../layout';
+
+const INSTALL_CORES = ['sing-box', 'xray', 'mihomo'] as const;
+type SiteCore = (typeof INSTALL_CORES)[number];
+
+// Cores argument, or null when the selection is the full set (installer default)
+// or empty — both mean "install everything". Mirrors the extension's builder.
+function coresArg(sel: SiteCore[]): string | null {
+  const ordered = INSTALL_CORES.filter((c) => sel.includes(c));
+  if (ordered.length === 0 || ordered.length === INSTALL_CORES.length) return null;
+  return ordered.join(',');
+}
+
+function macosCmd(sel: SiteCore[]): string {
+  const a = coresArg(sel);
+  return `curl -fsSL https://noctis.c0nn3ct.xyz/macos.sh | bash -s -- ${WEBSTORE_EXT_ID}${a ? ` ${a}` : ''}`;
+}
+function linuxCmd(sel: SiteCore[]): string {
+  const a = coresArg(sel);
+  return `curl -fsSL https://noctis.c0nn3ct.xyz/linux.sh | bash -s -- ${WEBSTORE_EXT_ID}${a ? ` ${a}` : ''}`;
+}
+function windowsCmd(sel: SiteCore[]): string {
+  const a = coresArg(sel);
+  return `${a ? `$env:NOCTIS_CORES='${a}'; ` : ''}$env:NOCTIS_EXT_ID='${WEBSTORE_EXT_ID}'; iwr -useb https://noctis.c0nn3ct.xyz/windows.ps1 | iex`;
+}
 
 function CodeBlock({ children }: { children: string }) {
   const [copied, setCopied] = useState(false);
@@ -56,7 +82,95 @@ function CodeBlock({ children }: { children: string }) {
   );
 }
 
+function CoreMultiSelect({
+  selected,
+  onToggle,
+  label,
+}: {
+  selected: SiteCore[];
+  onToggle: (c: SiteCore) => void;
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const summary = INSTALL_CORES.filter((c) => selected.includes(c)).join(', ');
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-title-small text-on-surface">{label}</h3>
+      <div ref={ref} className="relative max-w-xs">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className="flex w-full items-center justify-between gap-2 rounded-md border border-outline bg-surface-container-highest px-3 py-2 text-left font-mono text-body-medium text-on-surface"
+        >
+          <span>{summary}</span>
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 shrink-0 text-on-surface-variant transition-transform',
+              open && 'rotate-180',
+            )}
+            aria-hidden
+          />
+        </button>
+        {open && (
+          <ul
+            role="listbox"
+            aria-multiselectable
+            className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-outline-variant bg-surface-container-high p-1 shadow-lg"
+          >
+            {INSTALL_CORES.map((c) => {
+              const checked = selected.includes(c);
+              return (
+                <li key={c}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={checked}
+                    onClick={() => onToggle(c)}
+                    className="flex w-full items-center gap-2.5 rounded px-2 py-2 text-left font-mono text-body-medium text-on-surface transition-colors hover:bg-on-surface/[0.08]"
+                  >
+                    <span
+                      className={cn(
+                        'grid h-5 w-5 shrink-0 place-items-center rounded border-2',
+                        checked
+                          ? 'border-primary bg-primary text-on-primary'
+                          : 'border-outline',
+                      )}
+                    >
+                      {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                    </span>
+                    {c}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function InstallPage() {
+  const [cores, setCores] = useState<SiteCore[]>(() => [...INSTALL_CORES]);
+  const toggleCore = (c: SiteCore) =>
+    setCores((prev) =>
+      prev.includes(c) ? (prev.length > 1 ? prev.filter((x) => x !== c) : prev) : [...prev, c],
+    );
+
   return (
     <Layout current="install">
       <section className="space-y-3 pb-8">
@@ -123,12 +237,18 @@ export function InstallPage() {
               </Button>
             </div>
 
+            <CoreMultiSelect
+              selected={cores}
+              onToggle={toggleCore}
+              label={t('install.step2.cores_label')}
+            />
+
             <div className="space-y-2">
               <h3 className="flex items-center gap-2 text-title-small text-on-surface">
                 <Apple className="h-4 w-4" />
                 macOS
               </h3>
-              <CodeBlock>{`curl -fsSL https://noctis.c0nn3ct.xyz/macos.sh | bash -s -- ${WEBSTORE_EXT_ID}`}</CodeBlock>
+              <CodeBlock>{macosCmd(cores)}</CodeBlock>
             </div>
 
             <div className="space-y-2">
@@ -136,7 +256,7 @@ export function InstallPage() {
                 <Terminal className="h-4 w-4" />
                 Linux
               </h3>
-              <CodeBlock>{`curl -fsSL https://noctis.c0nn3ct.xyz/linux.sh | bash -s -- ${WEBSTORE_EXT_ID}`}</CodeBlock>
+              <CodeBlock>{linuxCmd(cores)}</CodeBlock>
             </div>
 
             <div className="space-y-2">
@@ -144,7 +264,7 @@ export function InstallPage() {
                 <AppWindow className="h-4 w-4" />
                 Windows (PowerShell)
               </h3>
-              <CodeBlock>{`$env:NOCTIS_EXT_ID='${WEBSTORE_EXT_ID}'; iwr -useb https://noctis.c0nn3ct.xyz/windows.ps1 | iex`}</CodeBlock>
+              <CodeBlock>{windowsCmd(cores)}</CodeBlock>
             </div>
 
             <p>{t('install.step2.body2')}</p>

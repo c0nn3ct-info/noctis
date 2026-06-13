@@ -11,7 +11,6 @@
   "footer.home": "Home",
   "footer.pages": "Pages",
   "footer.sources": "Sources",
-
   "home.title": "Noctis - Browser Proxy",
   "home.description": "Route your browser through VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard & more via a local proxy engine — sing-box, xray, or mihomo.",
   "home.hero.h1": "VLESS Browser Extension for Chrome",
@@ -48,7 +47,6 @@
   "home.start.h2": "Start",
   "home.start.body": "Install the extension from the Chrome Web Store, then run the helper installer for your OS. Add a server, route your traffic. The status badge turns green when the engine accepts your first connection.",
   "home.start.cta": "Install guide",
-
   "home.faq.h2": "Frequently asked questions",
   "home.faq.what.q": "What is VLESS and why use it in a browser?",
   "home.faq.what.a": "VLESS is a lightweight proxy protocol from the V2Ray/Xray family. It carries no encryption of its own — TLS does that — so it's fast and easy to disguise as ordinary HTTPS. Using VLESS through a browser extension means only browser traffic is proxied; the rest of your operating system stays on your real connection.",
@@ -70,7 +68,6 @@
   "home.faq.webrtc.a": "Yes. An optional toggle blocks UDP outside the proxy so WebRTC can't reveal your real IP while the proxy is active.",
   "home.faq.cost.q": "How much does Noctis cost?",
   "home.faq.cost.a": "Free. The extension is free in the Chrome Web Store and the native helper is open-source under MIT. You only pay for the proxy servers you choose to use.",
-
   "install.title": "Install Noctis — VLESS Chrome Extension Setup (Windows, macOS, Linux)",
   "install.description": "Step-by-step install guide for the Noctis VLESS browser extension: Chrome Web Store install, native helper setup for Windows, macOS, Linux. One-line install scripts.",
   "install.h1": "Install Noctis",
@@ -84,6 +81,7 @@
   "install.step1.cta": "Chrome Web Store",
   "install.step2.title": "2. Run the helper installer",
   "install.step2.body1": "Copy the command from the extension's Helper Setup dialog and paste it into your terminal. Your extension ID is already filled in — you don't need to look it up. For reference, the command looks like this:",
+  "install.step2.cores_label": "Cores to install (all by default):",
   "install.step2.helper_source": "Helper source",
   "install.step2.body2": "The installer downloads noctis-host and the proxy engines (sing-box, xray, mihomo) into your user data directory and writes a native-messaging manifest for every supported browser.",
   "install.step2.body3": "The first time the extension talks to the helper, your browser may show a one-time native-messaging prompt — approve it.",
@@ -94,7 +92,6 @@
   "install.uninstalling.title": "Uninstalling",
   "install.uninstalling.step1": "Remove the extension from chrome://extensions.",
   "install.uninstalling.step2": "Delete the Noctis data directory:",
-
   "privacy.title": "Privacy Policy — Noctis Browser Proxy Extension",
   "privacy.description": "What Noctis does not collect: no traffic logs, no telemetry, no analytics. Server configs stay in browser storage. Full Chrome permission breakdown and rationale.",
   "privacy.h1": "Privacy policy",
@@ -139,7 +136,6 @@
   "privacy.contact.body_after": ".",
   "privacy.changes.h2": "Changes to this policy",
   "privacy.changes.body": "Material changes will be published here with a new \"Last updated\" date. The store listing will be updated to match.",
-
   "license.title": "Noctis License — Extension EULA, Helper MIT, Proxy Engines Upstream",
   "license.description": "Noctis licensing: proprietary EULA for the extension, MIT for the native helper, upstream licenses for the sing-box, xray-core and mihomo proxy engines.",
   "license.h1": "License",

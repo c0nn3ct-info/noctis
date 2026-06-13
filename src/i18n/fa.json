@@ -11,7 +11,6 @@
   "footer.home": "خانه",
   "footer.pages": "صفحه‌ها",
   "footer.sources": "منبع‌ها",
-
   "home.title": "Noctis — پراکسی مرورگر",
   "home.description": "ترافیک مرورگر خود را از طریق VLESS، VMess، Trojan، Shadowsocks، Hysteria/2، TUIC، WireGuard و موارد دیگر، با یک موتور پراکسی محلی (sing-box، xray یا mihomo) مسیریابی کنید.",
   "home.hero.h1": "افزونه VLESS برای مرورگر Chrome",
@@ -48,7 +47,6 @@
   "home.start.h2": "شروع",
   "home.start.body": "افزونه را از Chrome Web Store نصب کنید، سپس نصب‌کننده هِلپر را برای سیستم‌عامل خود اجرا کنید. یک سرور اضافه کنید، ترافیک خود را مسیریابی کنید. وقتی موتور نخستین اتصال شما را بپذیرد، نشان وضعیت سبز می‌شود.",
   "home.start.cta": "راهنمای نصب",
-
   "home.faq.h2": "پرسش‌های پرتکرار",
   "home.faq.what.q": "VLESS چیست و چرا از آن در مرورگر استفاده کنیم؟",
   "home.faq.what.a": "VLESS یک پروتکل پراکسی سبک از خانواده V2Ray/Xray است. خودش هیچ رمزگذاری‌ای ندارد — این کار را TLS انجام می‌دهد — بنابراین سریع است و به‌راحتی می‌توان آن را شبیه HTTPS معمولی پنهان کرد. استفاده از VLESS از طریق یک افزونه مرورگر یعنی فقط ترافیک مرورگر پراکسی می‌شود؛ بقیه سیستم‌عامل شما روی اتصال واقعی‌تان باقی می‌ماند.",
@@ -70,7 +68,6 @@
   "home.faq.webrtc.a": "بله. یک تغییردهنده اختیاری UDP خارج از پراکسی را مسدود می‌کند تا WebRTC نتواند تا زمانی که پراکسی فعال است IP واقعی شما را فاش کند.",
   "home.faq.cost.q": "Noctis چقدر هزینه دارد؟",
   "home.faq.cost.a": "رایگان. افزونه در Chrome Web Store رایگان است و هِلپر بومی متن‌باز تحت MIT است. شما فقط بابت سرورهای پراکسی‌ای که خودتان انتخاب می‌کنید پول می‌دهید.",
-
   "install.title": "نصب Noctis — راه‌اندازی افزونه VLESS برای Chrome (Windows، macOS، Linux)",
   "install.description": "راهنمای گام‌به‌گام نصب افزونه مرورگر VLESS به نام Noctis: نصب از Chrome Web Store، راه‌اندازی هِلپر بومی برای Windows، macOS، Linux. اسکریپت‌های نصب تک‌خطی.",
   "install.h1": "نصب Noctis",
@@ -84,6 +81,7 @@
   "install.step1.cta": "Chrome Web Store",
   "install.step2.title": "۲. نصب‌کننده هِلپر را اجرا کنید",
   "install.step2.body1": "فرمان را از پنجره Helper Setup افزونه کپی کنید و در ترمینال خود بچسبانید. شناسه افزونه شما از پیش پر شده است — لازم نیست آن را پیدا کنید. برای مرجع، فرمان چنین شکلی دارد:",
+  "install.step2.cores_label": "هسته‌هایی که نصب شوند (به‌طور پیش‌فرض همه):",
   "install.step2.helper_source": "منبع هِلپر",
   "install.step2.body2": "نصب‌کننده noctis-host و موتورهای پراکسی (sing-box، xray، mihomo) را در پوشه داده‌های کاربری شما دانلود می‌کند و یک مانیفست native-messaging برای هر مرورگر پشتیبانی‌شده می‌نویسد.",
   "install.step2.body3": "نخستین باری که افزونه با هِلپر صحبت می‌کند، مرورگر شما ممکن است یک درخواست یک‌باره native-messaging نشان دهد — آن را تأیید کنید.",
@@ -94,7 +92,6 @@
   "install.uninstalling.title": "حذف نصب",
   "install.uninstalling.step1": "افزونه را از chrome://extensions حذف کنید.",
   "install.uninstalling.step2": "پوشه داده‌های Noctis را حذف کنید:",
-
   "privacy.title": "سیاست حریم خصوصی — افزونه پراکسی مرورگر Noctis",
   "privacy.description": "آنچه Noctis جمع‌آوری نمی‌کند: نه گزارش ترافیک، نه تله‌متری، نه تحلیل. کانفیگ‌های سرور در حافظه مرورگر باقی می‌مانند. تفکیک کامل مجوزهای Chrome و دلیل هر کدام.",
   "privacy.h1": "سیاست حریم خصوصی",
@@ -139,7 +136,6 @@
   "privacy.contact.body_after": " بنویسید.",
   "privacy.changes.h2": "تغییرات این سیاست",
   "privacy.changes.body": "تغییرات اساسی همراه با تاریخ «آخرین به‌روزرسانی» جدید در اینجا منتشر می‌شوند. فهرست فروشگاه نیز مطابق با آن به‌روز خواهد شد.",
-
   "license.title": "مجوز Noctis — EULA افزونه، MIT هِلپر، موتورهای پراکسی upstream",
   "license.description": "مجوزدهی Noctis: EULA اختصاصی برای افزونه، MIT برای هِلپر بومی، مجوزهای upstream برای موتورهای پراکسی sing-box، xray-core و mihomo.",
   "license.h1": "مجوز",

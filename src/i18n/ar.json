@@ -11,7 +11,6 @@
   "footer.home": "الرئيسية",
   "footer.pages": "الصفحات",
   "footer.sources": "المصادر",
-
   "home.title": "Noctis — وكيل للمتصفّح",
   "home.description": "وجّه متصفّحك عبر VLESS وVMess وTrojan وShadowsocks وHysteria/2 وTUIC وWireGuard وغيرها من خلال محرّك وكيل محلي (sing-box أو xray أو mihomo).",
   "home.hero.h1": "إضافة VLESS لمتصفّح Chrome",
@@ -48,7 +47,6 @@
   "home.start.h2": "البدء",
   "home.start.body": "ثبّت الإضافة من Chrome Web Store، ثم شغّل مثبّت المساعد المناسب لنظام تشغيلك. أضِف خادمًا ووجّه ترافيكك. يتحوّل شارة الحالة إلى الأخضر عندما يقبل المحرّك أول اتصال لك.",
   "home.start.cta": "دليل التثبيت",
-
   "home.faq.h2": "الأسئلة الشائعة",
   "home.faq.what.q": "ما هو VLESS ولماذا استخدامه داخل المتصفّح؟",
   "home.faq.what.a": "VLESS بروتوكول وكيل خفيف من عائلة V2Ray/Xray. لا يحمل تشفيرًا خاصًا به — يتولّى TLS ذلك — لذا فهو سريع ويسهل تمويهه على أنه HTTPS عادي. استخدام VLESS عبر إضافة متصفّح يعني أن ترافيك المتصفّح وحده هو المُوكَّل؛ أمّا بقية نظام التشغيل فتبقى على اتصالك الحقيقي.",
@@ -70,7 +68,6 @@
   "home.faq.webrtc.a": "نعم. مفتاح اختياري يحظر UDP خارج الوكيل كي لا يكشف WebRTC عنوان IP الحقيقي الخاص بك أثناء عمل الوكيل.",
   "home.faq.cost.q": "كم يكلّف Noctis؟",
   "home.faq.cost.a": "مجاني. الإضافة مجانية في Chrome Web Store والمساعد الأصلي مفتوح المصدر بترخيص MIT. أنت تدفع فقط مقابل خوادم الوكيل التي تختار استخدامها.",
-
   "install.title": "تثبيت Noctis — إعداد إضافة VLESS لـ Chrome (Windows وmacOS وLinux)",
   "install.description": "دليل تثبيت خطوة بخطوة لإضافة Noctis لوكيل VLESS في المتصفّح: التثبيت من Chrome Web Store، وإعداد المساعد الأصلي على Windows وmacOS وLinux. سكربتات تثبيت من سطر واحد.",
   "install.h1": "تثبيت Noctis",
@@ -84,6 +81,7 @@
   "install.step1.cta": "Chrome Web Store",
   "install.step2.title": "2. شغّل مثبّت المساعد",
   "install.step2.body1": "انسخ الأمر من نافذة Helper Setup في الإضافة والصقه في الطرفية. معرّف الإضافة الخاص بك مُعبّأ مسبقًا — لا حاجة للبحث عنه. للمرجع، يبدو الأمر هكذا:",
+  "install.step2.cores_label": "النوى المراد تثبيتها (الكل افتراضيًا):",
   "install.step2.helper_source": "مصدر المساعد",
   "install.step2.body2": "يُنزّل المثبّت noctis-host ومحرّكات الوكيل (sing-box وxray وmihomo) إلى دليل بيانات المستخدم الخاص بك ويكتب بيان المراسلة الأصلية لكل متصفّح مدعوم.",
   "install.step2.body3": "في أول مرة تتواصل فيها الإضافة مع المساعد، قد يعرض متصفّحك مطالبة مراسلة أصلية تظهر مرة واحدة — وافِق عليها.",
@@ -94,7 +92,6 @@
   "install.uninstalling.title": "إلغاء التثبيت",
   "install.uninstalling.step1": "أزِل الإضافة من chrome://extensions.",
   "install.uninstalling.step2": "احذف دليل بيانات Noctis:",
-
   "privacy.title": "سياسة الخصوصية — إضافة وكيل المتصفّح Noctis",
   "privacy.description": "ما لا يجمعه Noctis: لا سجلّات ترافيك ولا قياس عن بُعد ولا تحليلات. تبقى إعدادات الخوادم في تخزين المتصفّح. تفصيل كامل لصلاحيات Chrome ومبرّراتها.",
   "privacy.h1": "سياسة الخصوصية",
@@ -139,7 +136,6 @@
   "privacy.contact.body_after": ".",
   "privacy.changes.h2": "التغييرات على هذه السياسة",
   "privacy.changes.body": "ستُنشر التغييرات الجوهرية هنا بتاريخ «آخر تحديث» جديد. وسيُحدَّث إدراج المتجر ليطابقها.",
-
   "license.title": "ترخيص Noctis — EULA الإضافة، MIT المساعد، محرّكات الوكيل الأصلية",
   "license.description": "ترخيص Noctis: اتفاقية EULA مملوكة للإضافة، وترخيص MIT للمساعد الأصلي، والتراخيص الأصلية لمحرّكات الوكيل sing-box وxray-core وmihomo.",
   "license.h1": "الترخيص",

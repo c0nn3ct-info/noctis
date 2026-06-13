@@ -11,7 +11,6 @@
   "footer.home": "Inicio",
   "footer.pages": "Páginas",
   "footer.sources": "Código fuente",
-
   "home.title": "Noctis — proxy para el navegador",
   "home.description": "Enruta el tráfico de tu navegador a través de VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard y más mediante un motor de proxy local: sing-box, xray o mihomo.",
   "home.hero.h1": "Extensión VLESS para el navegador Chrome",
@@ -48,7 +47,6 @@
   "home.start.h2": "Empezar",
   "home.start.body": "Instala la extensión desde Chrome Web Store y luego ejecuta el instalador del helper para tu sistema operativo. Añade un servidor y enruta tu tráfico. La insignia de estado se vuelve verde cuando el motor acepta tu primera conexión.",
   "home.start.cta": "Guía de instalación",
-
   "home.faq.h2": "Preguntas frecuentes",
   "home.faq.what.q": "¿Qué es VLESS y por qué usarlo en un navegador?",
   "home.faq.what.a": "VLESS es un protocolo de proxy ligero de la familia V2Ray/Xray. No lleva cifrado propio —de eso se encarga TLS—, por lo que es rápido y fácil de disfrazar como HTTPS normal. Usar VLESS a través de una extensión de navegador significa que solo se proxea el tráfico del navegador; el resto de tu sistema operativo se queda en tu conexión real.",
@@ -70,7 +68,6 @@
   "home.faq.webrtc.a": "Sí. Un interruptor opcional bloquea el UDP fuera del proxy para que WebRTC no pueda revelar tu IP real mientras el proxy está activo.",
   "home.faq.cost.q": "¿Cuánto cuesta Noctis?",
   "home.faq.cost.a": "Es gratis. La extensión es gratuita en Chrome Web Store y el helper nativo es de código abierto bajo MIT. Solo pagas por los servidores proxy que decidas usar.",
-
   "install.title": "Instalar Noctis — Configuración de la extensión VLESS para Chrome (Windows, macOS, Linux)",
   "install.description": "Guía de instalación paso a paso de la extensión de navegador VLESS Noctis: instalación desde Chrome Web Store, configuración del helper nativo para Windows, macOS y Linux. Scripts de instalación de una línea.",
   "install.h1": "Instalar Noctis",
@@ -84,6 +81,7 @@
   "install.step1.cta": "Chrome Web Store",
   "install.step2.title": "2. Ejecuta el instalador del helper",
   "install.step2.body1": "Copia el comando del diálogo Helper Setup de la extensión y pégalo en tu terminal. El ID de tu extensión ya está incluido — no necesitas buscarlo. A modo de referencia, el comando tiene este aspecto:",
+  "install.step2.cores_label": "Núcleos a instalar (todos por defecto):",
   "install.step2.helper_source": "Código fuente del helper",
   "install.step2.body2": "El instalador descarga noctis-host y los motores de proxy (sing-box, xray, mihomo) en tu directorio de datos de usuario y escribe un manifiesto de native-messaging para cada navegador compatible.",
   "install.step2.body3": "La primera vez que la extensión se comunica con el helper, tu navegador puede mostrar un aviso único de native-messaging — apruébalo.",
@@ -94,7 +92,6 @@
   "install.uninstalling.title": "Desinstalación",
   "install.uninstalling.step1": "Elimina la extensión desde chrome://extensions.",
   "install.uninstalling.step2": "Borra el directorio de datos de Noctis:",
-
   "privacy.title": "Política de privacidad — Extensión proxy de navegador Noctis",
   "privacy.description": "Lo que Noctis no recopila: sin registros de tráfico, sin telemetría, sin analíticas. Las configuraciones de servidor se quedan en el almacenamiento del navegador. Desglose completo de los permisos de Chrome y su justificación.",
   "privacy.h1": "Política de privacidad",
@@ -139,7 +136,6 @@
   "privacy.contact.body_after": ".",
   "privacy.changes.h2": "Cambios en esta política",
   "privacy.changes.body": "Los cambios importantes se publicarán aquí con una nueva fecha de «Última actualización». La ficha de la tienda se actualizará para que coincida.",
-
   "license.title": "Licencia de Noctis — EULA de la extensión, MIT del helper, motores de proxy upstream",
   "license.description": "Licencias de Noctis: EULA propietaria para la extensión, MIT para el helper nativo, licencias upstream de los motores de proxy sing-box, xray-core y mihomo.",
   "license.h1": "Licencia",

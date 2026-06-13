@@ -11,7 +11,6 @@
   "footer.home": "主页",
   "footer.pages": "页面",
   "footer.sources": "源代码",
-
   "home.title": "Noctis — 浏览器代理",
   "home.description": "通过本地代理引擎（sing-box、xray 或 mihomo），让浏览器走 VLESS、VMess、Trojan、Shadowsocks、Hysteria/2、TUIC、WireGuard 等协议。",
   "home.hero.h1": "Chrome 的 VLESS 浏览器扩展",
@@ -48,7 +47,6 @@
   "home.start.h2": "开始使用",
   "home.start.body": "从 Chrome Web Store 安装扩展，然后运行适用于你操作系统的助手安装程序。添加一台服务器，路由你的流量。当引擎接受第一个连接时，状态徽标会变绿。",
   "home.start.cta": "安装指南",
-
   "home.faq.h2": "常见问题",
   "home.faq.what.q": "什么是 VLESS，为什么要在浏览器里用它？",
   "home.faq.what.a": "VLESS 是 V2Ray/Xray 家族中一种轻量级代理协议。它本身不做加密——加密由 TLS 负责——因此速度快，且容易伪装成普通的 HTTPS。通过浏览器扩展使用 VLESS，意味着只有浏览器流量被代理；操作系统的其余部分仍走你的真实连接。",
@@ -70,7 +68,6 @@
   "home.faq.webrtc.a": "会。一个可选开关会阻止代理之外的 UDP，让 WebRTC 在代理处于活动状态时无法暴露你的真实 IP。",
   "home.faq.cost.q": "Noctis 收费吗？",
   "home.faq.cost.a": "免费。扩展在 Chrome Web Store 上免费，原生助手在 MIT 许可下开源。你只需为自己选用的代理服务器付费。",
-
   "install.title": "安装 Noctis — VLESS Chrome 扩展安装设置（Windows、macOS、Linux）",
   "install.description": "Noctis VLESS 浏览器扩展的分步安装指南：Chrome Web Store 安装、Windows、macOS、Linux 上的原生助手设置。一行命令的安装脚本。",
   "install.h1": "安装 Noctis",
@@ -84,6 +81,7 @@
   "install.step1.cta": "Chrome Web Store",
   "install.step2.title": "2. 运行助手安装程序",
   "install.step2.body1": "从扩展的 Helper Setup 对话框中复制命令，粘贴到你的终端。你的扩展 ID 已经填好——无需自己查找。供参考，命令大致如下：",
+  "install.step2.cores_label": "要安装的核心（默认全部）：",
   "install.step2.helper_source": "助手源代码",
   "install.step2.body2": "安装程序会把 noctis-host 和各代理引擎（sing-box、xray、mihomo）下载到你的用户数据目录，并为每个受支持的浏览器写入 native-messaging 清单。",
   "install.step2.body3": "扩展第一次与助手通信时，你的浏览器可能会显示一次性的 native-messaging 提示——请批准它。",
@@ -94,7 +92,6 @@
   "install.uninstalling.title": "卸载",
   "install.uninstalling.step1": "通过 chrome://extensions 移除扩展。",
   "install.uninstalling.step2": "删除 Noctis 数据目录：",
-
   "privacy.title": "隐私政策 — Noctis 浏览器代理扩展",
   "privacy.description": "Noctis 不收集什么：没有流量日志、没有遥测、没有分析。服务器配置保存在浏览器存储中。完整的 Chrome 权限明细与说明。",
   "privacy.h1": "隐私政策",
@@ -139,7 +136,6 @@
   "privacy.contact.body_after": "。",
   "privacy.changes.h2": "本政策的变更",
   "privacy.changes.body": "重大变更会在此处以新的“最近更新”日期发布。商店列表也会同步更新。",
-
   "license.title": "Noctis 许可 — 扩展 EULA、助手 MIT、代理引擎上游",
   "license.description": "Noctis 许可说明：扩展采用专有 EULA，原生助手采用 MIT，sing-box、xray-core 和 mihomo 代理引擎采用各自的上游许可。",
   "license.h1": "许可",

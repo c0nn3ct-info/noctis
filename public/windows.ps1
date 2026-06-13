@@ -1,12 +1,14 @@
 # Noctis helper installer for Windows.
 # Usage:
 #   $env:NOCTIS_EXT_ID='<extension-id>'; iwr -useb https://noctis.c0nn3ct.xyz/windows.ps1 | iex
+#   # optionally choose cores: $env:NOCTIS_CORES='sing-box,xray' (default: all)
 # Or, if you have the script saved locally:
-#   .\windows.ps1 -ExtensionId <extension-id>
+#   .\windows.ps1 -ExtensionId <extension-id> -Cores sing-box,xray
 
 [CmdletBinding()]
 param(
-  [string]$ExtensionId = $env:NOCTIS_EXT_ID
+  [string]$ExtensionId = $env:NOCTIS_EXT_ID,
+  [string]$Cores = $env:NOCTIS_CORES
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,6 +19,24 @@ if (-not $ExtensionId) {
 }
 if ($ExtensionId -notmatch '^[a-p]{32}$') {
   Write-Error "Invalid extension id: $ExtensionId (expected 32 chars a-p)"
+  exit 1
+}
+
+# Which proxy cores to install. -Cores / $env:NOCTIS_CORES, else all.
+if (-not $Cores) { $Cores = 'all' }
+if ($Cores -eq 'all') { $Cores = 'sing-box,xray,mihomo' }
+$wantCores = @()
+foreach ($c in ($Cores -split ',')) {
+  $c = $c.Trim()
+  if (-not $c) { continue }
+  if ($c -notin @('sing-box', 'xray', 'mihomo')) {
+    Write-Error "Unknown core: '$c' (use sing-box, xray, mihomo, or all)"
+    exit 1
+  }
+  $wantCores += $c
+}
+if ($wantCores.Count -eq 0) {
+  Write-Error 'No cores selected.'
   exit 1
 }
 
@@ -35,24 +55,89 @@ if (-not $tag -or $tag -match 'releases/latest') {
   exit 1
 }
 
+# Pinned core versions — single source of truth served alongside this script.
+# Override $env:NOCTIS_CORES_ENV_URL to test against a local copy.
+$coresEnvUrl = if ($env:NOCTIS_CORES_ENV_URL) { $env:NOCTIS_CORES_ENV_URL } else { 'https://noctis.c0nn3ct.xyz/cores.env' }
+$pins = @{}
+try {
+  $envText = (Invoke-WebRequest -UseBasicParsing -Uri $coresEnvUrl).Content
+} catch {
+  Write-Error "Failed to fetch core version pins ($coresEnvUrl)."
+  exit 1
+}
+foreach ($line in ($envText -split "`n")) {
+  $line = $line.Trim()
+  if ($line -and -not $line.StartsWith('#') -and $line.Contains('=')) {
+    $kv = $line -split '=', 2
+    $pins[$kv[0].Trim()] = $kv[1].Trim()
+  }
+}
+$singboxVersion = $pins['SINGBOX_VERSION']
+$xrayVersion    = $pins['XRAY_VERSION']
+$mihomoVersion  = $pins['MIHOMO_VERSION']
+if (-not $singboxVersion -or -not $xrayVersion -or -not $mihomoVersion) {
+  Write-Error 'cores.env is missing one or more version pins.'
+  exit 1
+}
+
 $installDir = Join-Path $env:LOCALAPPDATA 'Noctis'
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
 $hostBin = Join-Path $installDir 'noctis-host.exe'
-$singboxBin = Join-Path $installDir 'sing-box.exe'
+# xray arch token differs from the Go arch: amd64 -> 64, arm64 -> arm64-v8a.
+$xarch = if ($arch -eq 'arm64') { 'arm64-v8a' } else { '64' }
 
 $archive = "noctis-host-$tag-windows-$arch.zip"
 $url     = "https://github.com/$repo/releases/download/$tag/$archive"
 
 $tmp = Join-Path $env:TEMP ("noctis-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+$needGeo = $false
 try {
+  # noctis-host binary (the tarball's bundled sing-box is ignored — cores are
+  # fetched from upstream at pinned versions below).
   Write-Host "-> downloading $archive"
   Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile (Join-Path $tmp $archive)
   Expand-Archive -Path (Join-Path $tmp $archive) -DestinationPath $tmp -Force
   $src = Join-Path $tmp "noctis-host-$tag-windows-$arch"
   Copy-Item (Join-Path $src 'noctis-host.exe') $hostBin -Force
-  Copy-Item (Join-Path $src 'sing-box.exe')    $singboxBin -Force
+
+  foreach ($c in $wantCores) {
+    switch ($c) {
+      'sing-box' {
+        $name = "sing-box-$singboxVersion-windows-$arch"
+        Write-Host "-> sing-box $singboxVersion"
+        $z = Join-Path $tmp 'sb.zip'
+        Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/SagerNet/sing-box/releases/download/v$singboxVersion/$name.zip" -OutFile $z
+        Expand-Archive -Path $z -DestinationPath (Join-Path $tmp 'sb') -Force
+        Copy-Item (Join-Path $tmp "sb\$name\sing-box.exe") (Join-Path $installDir 'sing-box.exe') -Force
+      }
+      'xray' {
+        Write-Host "-> xray $xrayVersion"
+        $z = Join-Path $tmp 'xray.zip'
+        Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/XTLS/Xray-core/releases/download/$xrayVersion/Xray-windows-$xarch.zip" -OutFile $z
+        Expand-Archive -Path $z -DestinationPath (Join-Path $tmp 'xray') -Force
+        Copy-Item (Join-Path $tmp 'xray\xray.exe') (Join-Path $installDir 'xray.exe') -Force
+        $needGeo = $true
+      }
+      'mihomo' {
+        $name = "mihomo-windows-$arch-$mihomoVersion"
+        Write-Host "-> mihomo $mihomoVersion"
+        $z = Join-Path $tmp 'mihomo.zip'
+        Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/MetaCubeX/mihomo/releases/download/$mihomoVersion/$name.zip" -OutFile $z
+        Expand-Archive -Path $z -DestinationPath (Join-Path $tmp 'mihomo') -Force
+        $exe = Get-ChildItem -Path (Join-Path $tmp 'mihomo') -Filter *.exe -Recurse | Select-Object -First 1
+        Copy-Item $exe.FullName (Join-Path $installDir 'mihomo.exe') -Force
+        $needGeo = $true
+      }
+    }
+  }
+
+  if ($needGeo) {
+    Write-Host '-> geo assets (geoip, geosite)'
+    Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat'   -OutFile (Join-Path $installDir 'geoip.dat')
+    Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat' -OutFile (Join-Path $installDir 'geosite.dat')
+  }
 } finally {
   Remove-Item -Recurse -Force $tmp
 }
