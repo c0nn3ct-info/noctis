@@ -12,3 +12,4 @@ Allow: /
 
 Sitemap: https://noctis.c0nn3ct.xyz/sitemap_index.xml
 Sitemap: https://noctis.c0nn3ct.xyz/sitemap.xml
+Sitemap: https://noctis.c0nn3ct.xyz/site.xml

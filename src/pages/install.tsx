@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   AppWindow,
   Apple,
@@ -20,7 +20,12 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Section } from '@/components/m3/section';
-import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { WEBSTORE_EXT_ID, WEBSTORE_URL } from '../constants';
 import { t } from '../i18n';
 import { Layout } from '../layout';
@@ -91,74 +96,34 @@ function CoreMultiSelect({
   onToggle: (c: SiteCore) => void;
   label: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
-
-  const summary = INSTALL_CORES.filter((c) => selected.includes(c)).join(', ');
-
   return (
     <div className="space-y-2">
       <h3 className="text-title-small text-on-surface">{label}</h3>
-      <div ref={ref} className="relative max-w-xs">
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          className="flex w-full items-center justify-between gap-2 rounded-md border border-outline bg-surface-container-highest px-3 py-2 text-left font-mono text-body-medium text-on-surface"
-        >
-          <span>{summary}</span>
-          <ChevronDown
-            className={cn(
-              'h-4 w-4 shrink-0 text-on-surface-variant transition-transform',
-              open && 'rotate-180',
-            )}
-            aria-hidden
-          />
-        </button>
-        {open && (
-          <ul
-            role="listbox"
-            aria-multiselectable
-            className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-outline-variant bg-surface-container-high p-1 shadow-lg"
-          >
-            {INSTALL_CORES.map((c) => {
-              const checked = selected.includes(c);
-              return (
-                <li key={c}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={checked}
-                    onClick={() => onToggle(c)}
-                    className="flex w-full items-center gap-2.5 rounded px-2 py-2 text-left font-mono text-body-medium text-on-surface transition-colors hover:bg-on-surface/[0.08]"
-                  >
-                    <span
-                      className={cn(
-                        'grid h-5 w-5 shrink-0 place-items-center rounded border-2',
-                        checked
-                          ? 'border-primary bg-primary text-on-primary'
-                          : 'border-outline',
-                      )}
-                    >
-                      {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-                    </span>
-                    {c}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+      <div className="max-w-xs">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-2 rounded-md border border-outline bg-surface-container px-3 py-2 text-left font-mono text-body-medium text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span>{INSTALL_CORES.filter((c) => selected.includes(c)).join(', ')}</span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-variant" aria-hidden />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[16rem]">
+            {INSTALL_CORES.map((c) => (
+              <DropdownMenuCheckboxItem
+                key={c}
+                checked={selected.includes(c)}
+                onCheckedChange={() => onToggle(c)}
+                onSelect={(e) => e.preventDefault()}
+                className="font-mono"
+              >
+                {c}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
