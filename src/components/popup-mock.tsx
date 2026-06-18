@@ -16,11 +16,36 @@ import { cn } from '@/lib/utils';
 const WAVE_N = 44;
 const WAVE_MAX = 3_000_000; // fixed scale (bytes/s) so the wave doesn't rescale each tick
 
+// One step of the traffic random-walk: AR(1) low-pass (gentle peaks) + an
+// occasional small burst. Shared by the seed and the live tick so the opening
+// frame already matches the settled wave instead of being taller/spikier.
+function stepDown(prev: number, rnd: () => number): number {
+  const burst = rnd() < 0.08 ? rnd() * 650_000 : 0;
+  return Math.min(2_600_000, Math.max(40_000, prev * 0.82 + rnd() * 320_000 + burst));
+}
+
+// Deterministic PRNG so the prerendered seed matches client hydration (no flash
+// / mismatch) — the live walk switches to Math.random after mount.
+function mulberry32(seed: number): () => number {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Seed by running the walk forward deterministically, so the buffer starts in a
+// settled state (same distribution as the live walk).
 function seedTraffic(): { down: number; up: number }[] {
-  return Array.from({ length: WAVE_N }, (_, i) => {
-    const down = 80_000 + Math.abs(Math.sin(i * 0.5) * Math.cos(i * 0.17)) * 1_700_000;
-    return { down, up: down * 0.12 };
-  });
+  const rnd = mulberry32(0x9e3779b9);
+  const buf: { down: number; up: number }[] = [];
+  let down = 850_000;
+  for (let i = 0; i < WAVE_N; i++) {
+    down = stepDown(down, rnd);
+    buf.push({ down, up: down * 0.12 });
+  }
+  return buf;
 }
 
 function fmtSpeed(bps: number): { value: string; unit: string } {
@@ -30,15 +55,14 @@ function fmtSpeed(bps: number): { value: string; unit: string } {
 }
 
 // Live mock traffic: a rolling buffer that scrolls a new sample in each second,
-// driving the ambient wave + the ↓/↑ readout (random-walk with occasional bursts).
+// driving the ambient wave + the ↓/↑ readout (same walk as the seed).
 function useMockTraffic() {
   const [buf, setBuf] = useState<{ down: number; up: number }[]>(seedTraffic);
   useEffect(() => {
+    const rnd = () => Math.random();
     const id = setInterval(() => {
       setBuf((b) => {
-        const prev = b[b.length - 1].down;
-        const burst = Math.random() < 0.16 ? Math.random() * 1_500_000 : 0;
-        const down = Math.min(2_600_000, Math.max(40_000, prev * 0.55 + Math.random() * 650_000 + burst));
+        const down = stepDown(b[b.length - 1].down, rnd);
         return [...b.slice(1), { down, up: down * (0.1 + Math.random() * 0.06) }];
       });
     }, 1000);
