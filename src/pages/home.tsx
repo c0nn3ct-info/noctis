@@ -46,6 +46,9 @@ export function HomePage() {
             <br />
             <span className="text-on-surface-variant">{t('home.hero.h1_sub')}</span>
           </h1>
+          <div className="flex w-full justify-center lg:hidden">
+            <PopupMock className="w-full max-w-[380px]" />
+          </div>
           <p className="max-w-xl text-body-large text-on-surface-variant">{t('home.hero.lede')}</p>
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="filled" size="s">

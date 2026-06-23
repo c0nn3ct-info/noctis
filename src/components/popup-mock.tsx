@@ -99,7 +99,7 @@ const SERVERS: ReadonlyArray<MockServer> = [
   },
 ];
 
-export function PopupMock() {
+export function PopupMock({ className }: { className?: string }) {
   const buf = useMockTraffic();
   const latest = buf[buf.length - 1];
   const dn = fmtSpeed(latest.down);
@@ -107,7 +107,13 @@ export function PopupMock() {
   const wavePoints = buf.map((s) => s.down + s.up);
 
   return (
-    <div dir="ltr" className="pointer-events-auto flex min-h-[560px] w-[380px] flex-col rounded-lg border border-outline-variant bg-background text-on-surface shadow-e3">
+    <div
+      dir="ltr"
+      className={cn(
+        'pointer-events-auto flex min-h-[560px] w-[380px] flex-col rounded-lg border border-outline-variant bg-background text-on-surface shadow-e3',
+        className,
+      )}
+    >
       <section className="shrink-0 px-4 pb-4 pt-4">
         <Card variant="elevated" padding="md" className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 text-primary opacity-[0.15]">
