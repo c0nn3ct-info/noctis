@@ -14,7 +14,7 @@ const WEBSTORE_URL =
 const GITHUB_ORG = 'https://github.com/c0nn3ct-info';
 // Scrapers (Telegram etc.) cache the preview image by URL - bump when
 // og-preview.jpg is redesigned so they re-fetch it.
-const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=2`;
+const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=3`;
 
 const DICT: Record<Locale, Record<string, string>> = {
   en,

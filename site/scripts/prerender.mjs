@@ -20,7 +20,7 @@ const WEBSTORE_URL =
 const GITHUB_ORG = 'https://github.com/c0nn3ct-info';
 // Keep in sync with src/i18n/seo.ts. Scrapers (Telegram etc.) cache the
 // preview image by URL - bump when og-preview.jpg is redesigned.
-const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=2`;
+const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=3`;
 
 const PAGE_PATH = {
   home: '/',
