@@ -18,7 +18,10 @@
 </p>
 
 <p align="center">
-  <img alt="Noctis home" src="./site/media/screenshots/home.png" width="720">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./site/media/demo-dark.gif">
+    <img alt="Noctis demo" src="./site/media/demo-light.gif" width="720">
+  </picture>
 </p>
 
 > [!IMPORTANT]
