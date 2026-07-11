@@ -1,6 +1,6 @@
 {
   "name": "noctis-site",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Marketing site for Noctis (noctis.c0nn3ct.info)",
   "private": true,
   "type": "module",
