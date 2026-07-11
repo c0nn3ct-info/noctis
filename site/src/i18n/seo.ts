@@ -12,6 +12,9 @@ const ORIGIN = 'https://noctis.c0nn3ct.info';
 const WEBSTORE_URL =
   'https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn';
 const GITHUB_ORG = 'https://github.com/c0nn3ct-info';
+// Scrapers (Telegram etc.) cache the preview image by URL - bump when
+// og-preview.jpg is redesigned so they re-fetch it.
+const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=2`;
 
 const DICT: Record<Locale, Record<string, string>> = {
   en,
@@ -93,7 +96,7 @@ export function getMeta(page: PageKey, locale: Locale): MetaPayload {
       type: 'website',
       locale: OG_LOCALE[locale],
       localeAlternate: LOCALES.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
-      image: `${ORIGIN}/og-preview.jpg`,
+      image: OG_IMAGE,
       url,
       title,
       description,
@@ -101,7 +104,7 @@ export function getMeta(page: PageKey, locale: Locale): MetaPayload {
     },
     twitter: {
       card: 'summary_large_image',
-      image: `${ORIGIN}/og-preview.jpg`,
+      image: OG_IMAGE,
       title,
       description,
     },
