@@ -18,9 +18,12 @@ const ORIGIN = 'https://noctis.c0nn3ct.info';
 const WEBSTORE_URL =
   'https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn';
 const GITHUB_ORG = 'https://github.com/c0nn3ct-info';
-// Keep in sync with src/i18n/seo.ts. Scrapers (Telegram etc.) cache the
-// preview image by URL - bump when og-preview.jpg is redesigned.
-const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=3`;
+// Same source of truth as src/i18n/seo.ts: scrapers (Telegram etc.) cache the
+// preview image by URL, so bump og-image.json when og-preview.jpg is redesigned.
+const OG_IMAGE_VERSION = JSON.parse(
+  await readFile(resolve(root, 'src/i18n/og-image.json'), 'utf8'),
+).version;
+const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=${OG_IMAGE_VERSION}`;
 
 const PAGE_PATH = {
   home: '/',

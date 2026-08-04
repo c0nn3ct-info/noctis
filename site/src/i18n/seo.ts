@@ -4,6 +4,7 @@ import es from './es.json';
 import zhCN from './zh-CN.json';
 import fa from './fa.json';
 import ar from './ar.json';
+import ogImage from './og-image.json';
 import { LOCALES, withLocale, type Locale } from './index';
 
 export type PageKey = 'home' | 'install' | 'privacy' | 'license';
@@ -12,9 +13,10 @@ const ORIGIN = 'https://noctis.c0nn3ct.info';
 const WEBSTORE_URL =
   'https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn';
 const GITHUB_ORG = 'https://github.com/c0nn3ct-info';
-// Scrapers (Telegram etc.) cache the preview image by URL - bump when
-// og-preview.jpg is redesigned so they re-fetch it.
-const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=4`;
+// Scrapers (Telegram etc.) cache the preview image by URL - bump
+// og-image.json when og-preview.jpg is redesigned so they re-fetch it.
+// scripts/prerender.mjs reads the same file, so one bump covers both.
+const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=${ogImage.version}`;
 
 const DICT: Record<Locale, Record<string, string>> = {
   en,
