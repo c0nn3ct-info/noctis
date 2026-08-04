@@ -246,6 +246,48 @@
     --surface-container-highest: 190 16% 21%;
   }
 
+  /* Storm — Tokyo Night blue (primary ≈ #7aa2f7 in dark) with a violet
+   * tertiary. Same full sweep as the accents above. */
+  :root[data-accent='storm'] {
+    --primary: 225 65% 45%;
+    --on-primary: 0 0% 100%;
+    --primary-container: 225 70% 92%;
+    --on-primary-container: 225 75% 22%;
+    --secondary-container: 225 50% 82%;
+    --on-secondary-container: 225 55% 18%;
+    --tertiary: 261 45% 45%;
+    --on-tertiary: 0 0% 100%;
+    --tertiary-container: 261 55% 92%;
+    --on-tertiary-container: 261 60% 24%;
+    --surface-container-low:     225 40% 96%;
+    --surface-container:         225 42% 93%;
+    --surface-container-high:    225 44% 90%;
+    --surface-container-highest: 225 46% 86%;
+    --surface-variant:           225 30% 88%;
+    --outline-variant:           225 24% 82%;
+    --background:                225 30% 99%;
+    --surface:                   225 30% 99%;
+  }
+  :root[data-accent='storm'].dark,
+  :root[data-accent='storm'][data-theme='dark'] {
+    --background:                232 16%  8%;
+    --surface:                   232 16%  8%;
+    --primary: 221 85% 72%;
+    --on-primary: 225 60% 14%;
+    --primary-container: 225 45% 32%;
+    --on-primary-container: 221 90% 92%;
+    --secondary-container: 228 16% 24%;
+    --on-secondary-container: 225 35% 90%;
+    --tertiary: 261 85% 79%;
+    --on-tertiary: 261 50% 16%;
+    --tertiary-container: 261 35% 32%;
+    --on-tertiary-container: 261 70% 92%;
+    --surface-container-low:     231 14% 12%;
+    --surface-container:         231 15% 14%;
+    --surface-container-high:    230 16% 18%;
+    --surface-container-highest: 230 17% 22%;
+  }
+
   /* System dark + accent: light accent has higher specificity than the base
    * media-query dark, so re-apply dark accent tokens here. */
   @media (prefers-color-scheme: dark) {
@@ -286,6 +328,26 @@
       --surface-container:         190 10% 13%;
       --surface-container-high:    190 14% 17%;
       --surface-container-highest: 190 16% 21%;
+      --surface-variant: 0 0% 28%;
+      --outline-variant: 0 0% 28%;
+    }
+    :root[data-accent='storm']:not([data-theme='light']) {
+      --background:                232 16%  8%;
+      --surface:                   232 16%  8%;
+      --primary: 221 85% 72%;
+      --on-primary: 225 60% 14%;
+      --primary-container: 225 45% 32%;
+      --on-primary-container: 221 90% 92%;
+      --secondary-container: 228 16% 24%;
+      --on-secondary-container: 225 35% 90%;
+      --tertiary: 261 85% 79%;
+      --on-tertiary: 261 50% 16%;
+      --tertiary-container: 261 35% 32%;
+      --on-tertiary-container: 261 70% 92%;
+      --surface-container-low:     231 14% 12%;
+      --surface-container:         231 15% 14%;
+      --surface-container-high:    230 16% 18%;
+      --surface-container-highest: 230 17% 22%;
       --surface-variant: 0 0% 28%;
       --outline-variant: 0 0% 28%;
     }

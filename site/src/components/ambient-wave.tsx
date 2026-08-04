@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { cn } from '@/lib/utils';
 
 // A decorative, self-rendering ambient speed wave for the landing-page popup
 // mock — mirrors the extension's PopupAmbientTraffic look (smoothed sqrt-scaled
@@ -44,7 +45,16 @@ export function AmbientWave({ points, max, className }: { points: number[]; max:
   const area = `${line} L${VW.toFixed(1)} ${VH} L0 ${VH} Z`;
 
   return (
-    <svg viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" aria-hidden className={className}>
+    <svg
+      viewBox={`0 0 ${VW} ${VH}`}
+      preserveAspectRatio="none"
+      aria-hidden
+      // Same left fade as the extension's SpeedSpark: the parent's buffer drops
+      // its oldest sample every tick, and without the mask that sample pops off
+      // the left edge. Faded, the cut reads as the wave scrolling in from
+      // off-screen.
+      className={cn('[mask-image:linear-gradient(to_right,transparent,black_12%)]', className)}
+    >
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="currentColor" stopOpacity={0.9} />
