@@ -80,6 +80,9 @@
     --border: var(--outline-variant);
     --input: var(--outline-variant);
     --ring: var(--primary);
+    --inverse-surface: var(--on-surface);
+    --on-inverse-surface: var(--surface-container-low);
+    --inverse-primary: var(--primary-container);
     --radius: 16px;
   }
 
