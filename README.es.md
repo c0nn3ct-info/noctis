@@ -19,8 +19,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./site/media/demo-dark.gif">
-    <img alt="Noctis demo" src="./site/media/demo-light.gif" width="720">
+    <source media="(prefers-color-scheme: dark)" srcset="./site/media/demo-es-dark.gif">
+    <img alt="Noctis demo" src="./site/media/demo-es-light.gif" width="720">
   </picture>
 </p>
 
