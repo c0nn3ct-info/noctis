@@ -415,6 +415,17 @@ func (s *supervisor) statsSnapshot() TrafficSample {
 	return emptySample()
 }
 
+// currentPort is the SOCKS port of the running core, or 0 when nothing runs.
+// Used by the `fetch` command to borrow the live tunnel.
+func (s *supervisor) currentPort() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.cmd == nil {
+		return 0
+	}
+	return s.port
+}
+
 func (s *supervisor) supervise(cmd *exec.Cmd, port int) {
 	err := cmd.Wait()
 	s.mu.Lock()

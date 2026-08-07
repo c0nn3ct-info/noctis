@@ -13,7 +13,7 @@ import (
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.1.2"
+var hostVersion = "1.1.3"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`
@@ -123,6 +123,10 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 				"version":  hostVersion,
 				"platform": fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH),
 				"cores":    installedCores(),
+				// Capabilities added after 1.1.2. The extension checks this list
+				// instead of comparing versions, so an older helper just loses
+				// the feature rather than being flagged incompatible.
+				"features": []string{"fetch"},
 			},
 		}
 	case "cores":
@@ -175,6 +179,17 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 		return ack{ID: msg.ID, Type: "ack", OK: true, Data: map[string]int{"socksPort": port}}
 	case "stats":
 		return ack{ID: msg.ID, Type: "ack", OK: true, Data: sup.statsSnapshot()}
+	case "fetch":
+		var args fetchArgs
+		if err := json.Unmarshal(msg.Raw, &args); err != nil {
+			return errAck(msg.ID, fmt.Errorf("decode fetch: %w", err))
+		}
+		result, err := doFetch(args, sup.currentPort())
+		if err != nil {
+			logger.Printf("fetch failed: %v", err)
+			return errAck(msg.ID, err)
+		}
+		return ack{ID: msg.ID, Type: "ack", OK: true, Data: result}
 	default:
 		return ack{
 			ID:    msg.ID,
