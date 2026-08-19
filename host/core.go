@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -219,8 +220,12 @@ func newSupervisor(notify notifyFn) *supervisor {
 	return &supervisor{notify: notify}
 }
 
+// netListen is a seam for tests; production always gets net.Listen, whose
+// "tcp" listeners always carry a *net.TCPAddr.
+var netListen = net.Listen
+
 func freePort() (int, error) {
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	l, err := netListen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return 0, err
 	}
@@ -246,11 +251,20 @@ func waitPort(port int, timeout time.Duration) error {
 	return fmt.Errorf("port %d not ready", port)
 }
 
+// netInterfaces and interfaceAddrs are seams for tests to substitute the
+// interface list and each interface's addresses; neither is reassigned in
+// production code. Addrs can genuinely fail (the interface may vanish between
+// the two calls), but not on demand, hence the indirection.
+var (
+	netInterfaces  = net.Interfaces
+	interfaceAddrs = func(iface net.Interface) ([]net.Addr, error) { return iface.Addrs() }
+)
+
 // defaultPhysicalInterface returns the name of an up, non-loopback, non-tunnel
 // interface that has at least one IPv4 address. Used to bypass TUN-mode VPNs
 // that would otherwise mangle the proxy's outbound TLS/REALITY handshake.
 func defaultPhysicalInterface() string {
-	ifs, err := net.Interfaces()
+	ifs, err := netInterfaces()
 	if err != nil {
 		return ""
 	}
@@ -273,7 +287,7 @@ func defaultPhysicalInterface() string {
 		if skip {
 			continue
 		}
-		addrs, err := iface.Addrs()
+		addrs, err := interfaceAddrs(iface)
 		if err != nil {
 			continue
 		}
@@ -317,6 +331,63 @@ func writeTempConfig(payload []byte, ext string) (string, error) {
 	return path, nil
 }
 
+// Config files are named config-<helper pid>.<ext> and outlive their session:
+// the helper rewrites its own on every start and never deletes the ones a
+// crashed session left behind. Sweep the files whose session is gone, so the
+// directory stops growing across restarts. Files of live sessions are left
+// alone — a second browser profile runs its own helper with its own core, and
+// its config is none of our business.
+func reapStaleConfigs() {
+	dir := filepath.Join(os.TempDir(), "noctis")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	me := os.Getpid()
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		pid, ok := configPid(e.Name())
+		if !ok || pid == me || processAlive(pid) {
+			continue
+		}
+		_ = os.Remove(filepath.Join(dir, e.Name()))
+	}
+}
+
+// configPid reads the writing helper's pid out of a config file name, and
+// reports false for anything that is not one of ours.
+func configPid(name string) (int, bool) {
+	rest, ok := strings.CutPrefix(name, "config-")
+	if !ok {
+		return 0, false
+	}
+	dot := strings.LastIndexByte(rest, '.')
+	if dot <= 0 {
+		return 0, false
+	}
+	pid, err := strconv.Atoi(rest[:dot])
+	if err != nil || pid <= 0 {
+		return 0, false
+	}
+	return pid, true
+}
+
+func processAlive(pid int) bool {
+	p, err := os.FindProcess(pid)
+	if err != nil {
+		return false
+	}
+	// Signal 0 asks the kernel whether the pid exists without touching it.
+	// EPERM means it exists and belongs to another user; Windows has no such
+	// probe, and there FindProcess itself fails for a pid that is gone.
+	if err := p.Signal(syscall.Signal(0)); err != nil {
+		return runtime.GOOS == "windows" || errors.Is(err, syscall.EPERM)
+	}
+	return true
+}
+
 func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 	bin, err := core.Locate()
 	if err != nil {
@@ -342,6 +413,16 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 		if p2, err := core.InjectBindInterface(patched, iface); err == nil {
 			patched = p2
 			fmt.Fprintf(os.Stderr, "noctis-host: bind_interface=%s\n", iface)
+			// Also surface it in the extension's log view: binding outbounds to
+			// the wrong adapter is invisible from the browser side (the core
+			// starts, the SOCKS port binds, and every dial then goes nowhere),
+			// so the picked name has to be readable without a terminal.
+			if s.notify != nil {
+				s.notify("log", map[string]any{
+					"stream": "helper",
+					"line":   "bind_interface=" + iface,
+				})
+			}
 		}
 	}
 	// Enable the Clash API for live traffic stats on cores that support it. The
@@ -456,12 +537,18 @@ func (s *supervisor) stop() {
 	cmd := s.cmd
 	cancel := s.cancel
 	statsCancel := s.statsCancel
+	cfgPath := s.cfgPath
 	s.statsCancel = nil
+	s.cfgPath = ""
 	s.mu.Unlock()
 	if statsCancel != nil {
 		statsCancel()
 	}
 	s.lastStats.Store(emptySample())
+	if cfgPath != "" {
+		// The core read it at launch; keeping it around only litters temp.
+		_ = os.Remove(cfgPath)
+	}
 	if cmd == nil || cmd.Process == nil {
 		return
 	}

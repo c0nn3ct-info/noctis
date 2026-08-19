@@ -59,9 +59,13 @@ var statsClient = &http.Client{}
 // long session can't grow it without limit. Counters keep their value on reset.
 const seenConnCap = 100_000
 
+// randRead is a seam for tests; crypto/rand.Read does not fail in practice,
+// but the error is still handled rather than swallowed.
+var randRead = rand.Read
+
 func randomSecret() (string, error) {
 	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
+	if _, err := randRead(b); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil

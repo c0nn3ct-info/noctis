@@ -13,7 +13,7 @@ import (
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.1.3"
+var hostVersion = "1.2.0"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`
@@ -61,6 +61,9 @@ func (s *sender) send(payload any) error {
 func main() {
 	logger := log.New(os.Stderr, "noctis-host ", log.LstdFlags|log.Lmicroseconds)
 	logger.Printf("starting v%s on %s/%s", hostVersion, runtime.GOOS, runtime.GOARCH)
+
+	// Leftovers from sessions that are gone; harmless but they accumulate.
+	reapStaleConfigs()
 
 	in := bufio.NewReaderSize(os.Stdin, 64*1024)
 	out := bufio.NewWriterSize(os.Stdout, 64*1024)
@@ -123,16 +126,26 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 				"version":  hostVersion,
 				"platform": fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH),
 				"cores":    installedCores(),
-				// Capabilities added after 1.1.2. The extension checks this list
-				// instead of comparing versions, so an older helper just loses
-				// the feature rather than being flagged incompatible.
+				// The adapter outbound connections get bound to. Reported so the
+				// extension can show the real one instead of a guess: a wrong pick
+				// (a virtual adapter on Windows) kills every dial silently.
+				"bindInterface": defaultPhysicalInterface(),
+				// Capabilities added after 1.1.2, advertised for future use. The
+				// extension gates on the host version instead (helper-compat.ts):
+				// a helper without "fetch" reads as outdated, not incompatible.
 				"features": []string{"fetch"},
 			},
 		}
 	case "cores":
 		return ack{ID: msg.ID, Type: "ack", OK: true, Data: map[string]any{"cores": installedCores()}}
 	case "ping":
-		return ack{ID: msg.ID, Type: "ack", OK: true, Data: map[string]string{"pong": "ok"}}
+		// corePort is the port a running core listens on, 0 when none runs under
+		// this helper. The extension needs the difference: a helper that answers
+		// while holding no core means the stored "connected" state is a lie.
+		return ack{ID: msg.ID, Type: "ack", OK: true, Data: map[string]any{
+			"pong":     "ok",
+			"corePort": sup.currentPort(),
+		}}
 	case "start":
 		var args startArgs
 		if err := json.Unmarshal(msg.Raw, &args); err != nil {

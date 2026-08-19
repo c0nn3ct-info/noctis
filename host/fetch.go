@@ -75,7 +75,7 @@ func doFetch(args fetchArgs, socksPort int) (*fetchResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := newRequest(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +124,18 @@ func doFetch(args fetchArgs, socksPort int) (*fetchResult, error) {
 	return out, nil
 }
 
+// dialProxy and newRequest are seams for tests, never reassigned in production.
+// They exist so the write- and request-construction failures below can be
+// exercised: a live loopback socket accepts writes regardless of what the peer
+// does, and an already-parsed http(s) URL never fails to become a request.
+var (
+	dialProxy = func(ctx context.Context, addr string) (net.Conn, error) {
+		d := net.Dialer{Timeout: socksDialLimit}
+		return d.DialContext(ctx, "tcp", addr)
+	}
+	newRequest = http.NewRequestWithContext
+)
+
 // Minimal SOCKS5 CONNECT client (no auth) — enough to borrow the running
 // core's tunnel without pulling in a dependency.
 func socks5Dial(ctx context.Context, proxyAddr, target string) (net.Conn, error) {
@@ -136,8 +148,7 @@ func socks5Dial(ctx context.Context, proxyAddr, target string) (net.Conn, error)
 		return nil, fmt.Errorf("socks5: bad port %q", portStr)
 	}
 
-	d := net.Dialer{Timeout: socksDialLimit}
-	conn, err := d.DialContext(ctx, "tcp", proxyAddr)
+	conn, err := dialProxy(ctx, proxyAddr)
 	if err != nil {
 		return nil, fmt.Errorf("socks5: dial %s: %w", proxyAddr, err)
 	}
