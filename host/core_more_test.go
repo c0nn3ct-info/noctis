@@ -2,6 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -376,5 +380,56 @@ func TestMigrateLegacySingBoxMinimal(t *testing.T) {
 	migrateLegacySingBox(doc3)
 	if _, has := doc3["route"].(map[string]any)["rule_set"]; has {
 		t.Fatal("stale rule_set not removed")
+	}
+}
+
+func TestReapStaleConfigsWithoutDirectory(t *testing.T) {
+	t.Setenv("TMPDIR", filepath.Join(t.TempDir(), "nope"))
+	// No noctis directory at all: nothing to sweep, nothing to complain about.
+	reapStaleConfigs()
+}
+
+func TestReapStaleConfigsSkipsDirectories(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("TMPDIR", tmp)
+	dir := filepath.Join(tmp, "noctis")
+	nested := filepath.Join(dir, "config-999999.json")
+	if err := os.MkdirAll(nested, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	reapStaleConfigs()
+	if _, err := os.Stat(nested); err != nil {
+		t.Fatalf("a directory named like a config was removed: %v", err)
+	}
+}
+
+func TestConfigPidRejectsNonsense(t *testing.T) {
+	for _, name := range []string{"notes.txt", "config-", "config-.json", "config-abc.json", "config-0.json", "config-12"} {
+		if pid, ok := configPid(name); ok {
+			t.Fatalf("%s parsed as pid %d", name, pid)
+		}
+	}
+}
+
+func TestProcessAliveForAnotherUsersProcess(t *testing.T) {
+	// pid 1 exists and is not ours: the kernel answers EPERM, which still means
+	// alive. Skipped where that does not hold (Windows has no signal 0).
+	if runtime.GOOS == "windows" {
+		t.Skip("no signal 0 on windows")
+	}
+	if !processAlive(1) {
+		t.Fatal("pid 1 read as dead")
+	}
+	if processAlive(0) {
+		t.Fatal("pid 0 read as alive")
+	}
+}
+
+func TestProcessAliveWhenLookupFails(t *testing.T) {
+	orig := findProcess
+	t.Cleanup(func() { findProcess = orig })
+	findProcess = func(int) (*os.Process, error) { return nil, errors.New("no such table") }
+	if processAlive(4242) {
+		t.Fatal("a failed lookup read as alive")
 	}
 }

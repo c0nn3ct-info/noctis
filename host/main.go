@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,7 +14,7 @@ import (
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.2.0"
+var hostVersion = "1.2.1"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`
@@ -133,11 +134,43 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 				// Capabilities added after 1.1.2, advertised for future use. The
 				// extension gates on the host version instead (helper-compat.ts):
 				// a helper without "fetch" reads as outdated, not incompatible.
-				"features": []string{"fetch"},
+				"features": []string{"fetch", "route"},
 			},
 		}
 	case "cores":
 		return ack{ID: msg.ID, Type: "ack", OK: true, Data: map[string]any{"cores": installedCores()}}
+	case "route-verdict":
+		var args struct {
+			Host  string    `json:"host"`
+			Hosts *[]string `json:"hosts"`
+		}
+		if err := json.Unmarshal(msg.Raw, &args); err != nil {
+			return errAck(msg.ID, fmt.Errorf("decode route-verdict: %w", err))
+		}
+		// The badge asks about every open tab at once, so a list answers with a
+		// map and saves a round trip per tab. Hosts with no verdict are absent
+		// rather than null: "not in the map" is the only shape the caller needs.
+		if args.Hosts != nil {
+			now := nowMillis()
+			out := make(map[string]*RouteVerdict, len(*args.Hosts))
+			for _, h := range *args.Hosts {
+				if v := sup.route.get(h, now); v != nil {
+					out[h] = v
+				}
+			}
+			return ack{ID: msg.ID, Type: "ack", OK: true, Data: out}
+		}
+		if args.Host == "" {
+			return errAck(msg.ID, errors.New("route-verdict: host or hosts is required"))
+		}
+		// A host nobody routed answers null rather than failing: "no verdict" and
+		// "the helper broke" must not look the same to the extension. Spelled out
+		// rather than passing the pointer straight through, so a missing verdict is
+		// a nil interface and not a typed nil pretending to be an answer.
+		if v := sup.route.get(args.Host, nowMillis()); v != nil {
+			return ack{ID: msg.ID, Type: "ack", OK: true, Data: v}
+		}
+		return ack{ID: msg.ID, Type: "ack", OK: true, Data: nil}
 	case "ping":
 		// corePort is the port a running core listens on, 0 when none runs under
 		// this helper. The extension needs the difference: a helper that answers

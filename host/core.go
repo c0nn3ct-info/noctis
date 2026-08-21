@@ -205,6 +205,9 @@ func coreDataDir(id string) (string, error) {
 }
 
 type supervisor struct {
+	// route survives core restarts: the verdicts it holds are about hosts, not
+	// about the process that reported them.
+	route        *routeJournal
 	mu           sync.Mutex
 	cmd          *exec.Cmd
 	cancel       context.CancelFunc
@@ -217,7 +220,7 @@ type supervisor struct {
 }
 
 func newSupervisor(notify notifyFn) *supervisor {
-	return &supervisor{notify: notify}
+	return &supervisor{notify: notify, route: newRouteJournal()}
 }
 
 // netListen is a seam for tests; production always gets net.Listen, whose
@@ -374,8 +377,12 @@ func configPid(name string) (int, bool) {
 	return pid, true
 }
 
+// findProcess is a seam for tests: os.FindProcess cannot fail on unix, so the
+// error path is unreachable there without substituting it.
+var findProcess = os.FindProcess
+
 func processAlive(pid int) bool {
-	p, err := os.FindProcess(pid)
+	p, err := findProcess(pid)
 	if err != nil {
 		return false
 	}
@@ -452,8 +459,14 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, bin, core.RunArgs(cfgPath, dataDir)...)
-	cmd.Stdout = newLogPipe(s.notify, "stdout")
-	cmd.Stderr = newLogPipe(s.notify, "stderr")
+	stdout := newLogPipe(s.notify, "stdout")
+	stderr := newLogPipe(s.notify, "stderr")
+	for _, p := range []*logPipe{stdout, stderr} {
+		p.route = s.route
+		p.coreID = core.ID()
+	}
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 
 	if err := cmd.Start(); err != nil {
 		cancel()
@@ -589,6 +602,11 @@ func errString(err error) string {
 type logPipe struct {
 	notify notifyFn
 	stream string
+	// route and coreID are set when the pipe carries a core's output: every line
+	// is offered to the journal, and the debug chatter the journal needs is kept
+	// out of the user-visible log.
+	route  *routeJournal
+	coreID string
 	mu     sync.Mutex
 	buf    bytes.Buffer
 }
@@ -608,6 +626,12 @@ func (p *logPipe) Write(b []byte) (int, error) {
 		}
 		line := string(p.buf.Bytes()[:idx])
 		p.buf.Next(idx + 1)
+		if p.route != nil {
+			p.route.consume(p.coreID, line, nowMillis())
+			if routeLineHidden(p.coreID, line) {
+				continue
+			}
+		}
 		if p.notify != nil {
 			p.notify("log", map[string]any{
 				"stream": p.stream,
