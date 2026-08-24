@@ -73,6 +73,21 @@ describe('PopupMock', () => {
     expect(within(singapore).getByText('188ms')).toBeInTheDocument();
   });
 
+  it('matches the popup routing switcher', () => {
+    render(<PopupMock />);
+    const routing = screen.getByRole('group', { name: 'Routing' });
+    expect(within(routing).getByRole('button', { name: 'Global' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(within(routing).getByRole('button', { name: 'Direct' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(within(routing).getByRole('button', { name: '✨ Sirius' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View all routing profiles' })).toBeInTheDocument();
+  });
+
   it('renders the footer actions', () => {
     render(<PopupMock />);
     expect(screen.getByRole('button', { name: 'View all servers' })).toBeInTheDocument();

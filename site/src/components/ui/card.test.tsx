@@ -39,7 +39,7 @@ describe('Card', () => {
       </Card>,
     );
     const card = screen.getByTestId('card');
-    expect(card).toHaveClass('border-outline-variant', 'w-40');
+    expect(card).toHaveClass('border-outline', 'w-40');
     expect(card).not.toHaveClass('p-5');
   });
 
@@ -79,5 +79,12 @@ describe('Card', () => {
     expect(cardVariants({ variant: 'tonal', padding: 'lg' })).toContain('bg-primary-container');
     expect(cardVariants({ variant: 'filled' })).toContain('bg-surface-container-high');
     expect(cardVariants({ variant: 'accent', padding: 'sm' })).toContain('bg-dir-container');
+  });
+
+  it('lets a card title be a real heading', () => {
+    render(<CardTitle as="h2">Before you start</CardTitle>);
+    expect(
+      screen.getByRole('heading', { name: 'Before you start', level: 2 }),
+    ).toBeInTheDocument();
   });
 });

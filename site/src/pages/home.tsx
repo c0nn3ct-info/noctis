@@ -21,6 +21,9 @@ const PROTOCOLS = [
   'WireGuard',
   'AnyTLS',
   'ShadowTLS',
+  'SSH',
+  'SOCKS5',
+  'HTTP',
 ] as const;
 
 const FEATURE_KEYS = [

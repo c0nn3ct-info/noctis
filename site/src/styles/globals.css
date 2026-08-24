@@ -51,15 +51,19 @@
     --on-tertiary: 0 0% 100%;
     --tertiary-container: 175 50% 90%;
     --on-tertiary-container: 175 70% 18%;
-    --success: 142 70% 38%;
+    --success: 142 75% 28%;
     --on-success: 0 0% 100%;
     --success-container: 142 60% 90%;
     --on-success-container: 142 70% 18%;
-    --warning: 38 92% 45%;
+    --warning: 38 100% 32%;
     --warning-container: 38 90% 92%;
     --on-warning-container: 38 80% 22%;
-    --error: 0 75% 50%;
+    --error: 0 78% 42%;
     --on-error: 0 0% 100%;
+    /* Informational tint (routing-profile provenance). Same values it always
+     * had, now a token instead of an inline hsl() in the badge. */
+    --info-container: 210 55% 88%;
+    --on-info-container: 210 70% 22%;
     --error-container: 0 80% 94%;
     --on-error-container: 0 70% 22%;
 
@@ -122,6 +126,8 @@
     --on-error: 0 0% 8%;
     --error-container: 0 50% 22%;
     --on-error-container: 0 90% 90%;
+    --info-container: 210 45% 22%;
+    --on-info-container: 210 70% 88%;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -161,6 +167,8 @@
       --on-error: 0 0% 8%;
       --error-container: 0 50% 22%;
       --on-error-container: 0 90% 90%;
+      --info-container: 210 45% 22%;
+      --on-info-container: 210 70% 88%;
     }
   }
 }
@@ -210,7 +218,7 @@
     --surface-container-highest: 270 14% 21%;
   }
   :root[data-accent='cyan'] {
-    --primary: 190 75% 38%;
+    --primary: 190 75% 30%;
     --on-primary: 0 0% 100%;
     --primary-container: 190 70% 90%;
     --on-primary-container: 190 80% 18%;
@@ -364,10 +372,14 @@
   html,
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-      'Noto Sans Arabic', 'Geeza Pro', 'PingFang SC', 'Microsoft YaHei',
-      'Noto Sans CJK SC', sans-serif;
-    font-feature-settings: 'cv11', 'ss01';
+    /* No Inter. It was named first for years without ever being shipped — no
+     * @font-face, no font files — so every machine already fell through to its
+     * own UI face, and 'cv11'/'ss01' (Inter-only features) did nothing. This is
+     * the stack that was actually rendering, now stated on purpose. */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text',
+      'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', 'Noto Sans Arabic',
+      'Geeza Pro', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC',
+      sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 }
@@ -440,6 +452,43 @@
   }
   .shape-squircle-power {
     clip-path: path('M 20,0 C 31.8,0 40,8.2 40,20 C 40,31.8 31.8,40 20,40 C 8.2,40 0,31.8 0,20 C 0,8.2 8.2,0 20,0 Z');
+  }
+}
+
+/* Reduced motion. Not a blanket kill: a spinner and a live status dot ARE the
+ * feedback, so they keep going (slower, or settled on a visible frame) while
+ * everything that travels stops. Colour, opacity and elevation still ease, so a
+ * hover or a selection does not snap. A press-scale stays: it lasts as long as
+ * the finger is down and reads as pressure, not as animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-property: color, background-color, border-color, outline-color,
+      text-decoration-color, fill, stroke, opacity, box-shadow !important;
+    transition-duration: var(--dur-short) !important;
+    transition-timing-function: var(--ease-emph) !important;
+  }
+  /* Decorative loops settle instead of pulsing forever. */
+  .animate-pulse-ring,
+  .animate-breathe {
+    animation: none !important;
+    opacity: 0.4;
+  }
+  /* The live dot stops blinking and stays at full strength. */
+  .animate-status-dot {
+    animation: none !important;
+    opacity: 1;
+  }
+  /* Busy indicators still turn, slowly enough not to be a distraction. */
+  .animate-spin {
+    animation-duration: 1.8s !important;
+  }
+  .shape-morph {
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto !important;
   }
 }
 

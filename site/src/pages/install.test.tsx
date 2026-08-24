@@ -12,7 +12,7 @@ function commands() {
 }
 
 function coreTrigger() {
-  return screen.getByRole('button', { name: /sing-box|xray|mihomo/ });
+  return screen.getByRole('button', { name: /sing-box, xray, mihomo|sing-box|xray|mihomo/ });
 }
 
 async function toggle(user: ReturnType<typeof userEvent.setup>, core: string) {
@@ -44,14 +44,16 @@ describe('InstallPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(t('install.h1'));
     expect(screen.getByText(t('install.lede'))).toBeInTheDocument();
 
-    expect(screen.getByText(t('install.before.title'))).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: t('install.before.title'), level: 2 }),
+    ).toBeInTheDocument();
     for (const item of ['browser', 'disk', 'admin']) {
       expect(screen.getByText(t(`install.before.${item}`))).toBeInTheDocument();
     }
 
     for (const step of ['step1', 'step2', 'step3']) {
       expect(
-        screen.getByRole('heading', { name: t(`install.${step}.title`), level: 3 }),
+        screen.getByRole('heading', { name: t(`install.${step}.title`), level: 2 }),
       ).toBeInTheDocument();
     }
     expect(screen.getByText(t('install.step1.body'))).toBeInTheDocument();
@@ -68,6 +70,13 @@ describe('InstallPage', () => {
       'href',
       'https://github.com/c0nn3ct-info/noctis',
     );
+
+    // Every command block says which platform its copy button belongs to.
+    for (const platform of ['macOS', 'Linux', 'Windows (PowerShell)']) {
+      expect(
+        screen.getByRole('button', { name: `${t('install.copy')}: ${platform}` }),
+      ).toBeInTheDocument();
+    }
   });
 
   it('prints a bare one-liner per OS while every core is selected', () => {
@@ -141,8 +150,8 @@ describe('InstallPage', () => {
     const writeText = stubClipboard(() => Promise.resolve());
     try {
       render(<InstallPage />);
-      const [macos] = screen.getAllByRole('button', { name: 'Copy command' });
-      expect(macos).toHaveAttribute('title', 'Copy');
+      const macos = screen.getByRole('button', { name: `${t('install.copy')}: macOS` });
+      expect(macos).toHaveAttribute('title', t('install.copy'));
 
       fireEvent.click(macos);
       await act(async () => {});
@@ -150,41 +159,49 @@ describe('InstallPage', () => {
       expect(writeText).toHaveBeenCalledWith(
         `curl -fsSL https://noctis.c0nn3ct.info/macos.sh | bash -s -- ${EXT}`,
       );
-      const copied = screen.getByRole('button', { name: 'Copied' });
-      expect(copied).toHaveAttribute('title', 'Copied');
+      const copied = screen.getByRole('button', { name: `${t('install.copied')}: macOS` });
+      expect(copied).toHaveAttribute('title', t('install.copied'));
       // Only the clicked block flips.
-      expect(screen.getAllByRole('button', { name: 'Copy command' })).toHaveLength(2);
+      expect(screen.getAllByRole('button', { name: new RegExp(`^${t('install.copy')}:`) })).toHaveLength(2);
 
       act(() => {
         vi.advanceTimersByTime(1600);
       });
-      expect(screen.getAllByRole('button', { name: 'Copy command' })).toHaveLength(3);
+      expect(screen.getAllByRole('button', { name: new RegExp(`^${t('install.copy')}:`) })).toHaveLength(3);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('stays silent when the clipboard is blocked', async () => {
+  it('says so when the clipboard is blocked instead of failing silently', async () => {
     const writeText = stubClipboard(() => Promise.reject(new Error('denied')));
     render(<InstallPage />);
 
-    const [, linux] = screen.getAllByRole('button', { name: 'Copy command' });
+    const linux = screen.getByRole('button', { name: `${t('install.copy')}: Linux` });
     fireEvent.click(linux);
     await act(async () => {});
 
     expect(writeText).toHaveBeenCalledWith(
       `curl -fsSL https://noctis.c0nn3ct.info/linux.sh | bash -s -- ${EXT}`,
     );
-    expect(screen.queryByRole('button', { name: 'Copied' })).toBeNull();
-    expect(screen.getAllByRole('button', { name: 'Copy command' })).toHaveLength(3);
+    expect(screen.queryByRole('button', { name: /Copied/ })).toBeNull();
+    // Visible message plus a live region, so the dead end is announced too.
+    // One live region per block, empty until its own copy succeeds or fails.
+    const announced = screen.getAllByRole('status').map((n) => n.textContent);
+    expect(announced).toContain(t('install.copy_failed'));
+    expect(announced.filter(Boolean)).toHaveLength(1);
   });
 
   it('explains updating and uninstalling', () => {
     render(<InstallPage />);
 
-    expect(screen.getByText(t('install.updating.title'))).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: t('install.updating.title'), level: 2 }),
+    ).toBeInTheDocument();
     expect(screen.getByText(t('install.updating.body'))).toBeInTheDocument();
-    expect(screen.getByText(t('install.uninstalling.title'))).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: t('install.uninstalling.title'), level: 2 }),
+    ).toBeInTheDocument();
 
     const steps = screen.getByText(t('install.uninstalling.step1')).closest('ol') as HTMLOListElement;
     expect(within(steps).getByText('~/.local/share/noctis')).toBeInTheDocument();

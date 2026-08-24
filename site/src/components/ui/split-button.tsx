@@ -18,7 +18,7 @@ const containerVariants = cva('inline-flex items-stretch gap-px', {
 });
 
 const segmentBase =
-  'relative inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-short ease-spring focus-visible:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97] [&_svg]:shrink-0 select-none';
+  'relative inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-short ease-spring focus-visible:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-disabled active:scale-[0.97] [&_svg]:shrink-0 select-none';
 
 const segmentVariants = cva(segmentBase, {
   variants: {
@@ -32,7 +32,7 @@ const segmentVariants = cva(segmentBase, {
         'border border-outline bg-transparent text-primary hover:bg-primary/[0.08]',
     },
     size: {
-      xs: 'text-[13px] [&_svg]:size-4',
+      xs: 'text-label-dense [&_svg]:size-4',
       s: 'text-sm [&_svg]:size-[18px]',
       m: 'text-base [&_svg]:size-6',
     },

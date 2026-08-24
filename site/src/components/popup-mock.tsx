@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowRight, ArrowUp, ExternalLink, Plus, Power } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ExternalLink,
+  Globe,
+  Plus,
+  Power,
+  ShieldOff,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Fab } from '@/components/ui/fab';
@@ -153,9 +162,50 @@ export function PopupMock({ className }: { className?: string }) {
         </Card>
       </section>
 
+      <section className="flex shrink-0 flex-col px-4">
+        <div className="flex items-center justify-between gap-2 pb-2">
+          <span className="text-label-small uppercase text-on-surface-variant">Routing</span>
+          <Button type="button" variant="text" size="xs" aria-label="View all routing profiles">
+            View all
+            <ArrowRight />
+          </Button>
+        </div>
+        <div
+          role="group"
+          aria-label="Routing"
+          className="inline-flex h-9 w-full rounded-pill bg-surface-container-high p-0.5 text-sm"
+        >
+          <button
+            type="button"
+            aria-pressed="true"
+            className="inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-pill bg-surface-container-lowest px-2 text-label-medium font-medium text-on-surface shadow-e1"
+          >
+            <Globe className="h-4 w-4" aria-hidden />
+            Global
+          </button>
+          <button
+            type="button"
+            aria-pressed="false"
+            className="inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-pill px-2 text-label-medium font-medium text-on-surface-variant"
+          >
+            <ShieldOff className="h-4 w-4" aria-hidden />
+            Direct
+          </button>
+          <button
+            type="button"
+            aria-pressed="false"
+            aria-label="✨ Sirius"
+            className="inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-pill px-2 text-label-medium font-medium text-on-surface-variant"
+          >
+            <span aria-hidden>✨</span>
+            Sirius
+          </button>
+        </div>
+      </section>
+
       <section className="flex flex-col px-2 pb-2 pt-3">
         <div className="flex items-center justify-between gap-2 px-2 pb-2">
-          <span className="text-label-small uppercase text-on-surface-variant">Pinned</span>
+          <span className="text-label-small uppercase text-on-surface-variant">Recent servers</span>
           <Button type="button" variant="text" size="xs" aria-label="View all servers">
             View all
             <ArrowRight />

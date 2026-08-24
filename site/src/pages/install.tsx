@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Terminal,
   Trash2,
+  UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -54,35 +55,59 @@ function windowsCmd(sel: SiteCore[]): string {
   return `${a ? `$env:NOCTIS_CORES='${a}'; ` : ''}$env:NOCTIS_EXT_ID='${WEBSTORE_EXT_ID}'; iwr -useb https://noctis.c0nn3ct.info/windows.ps1 | iex`;
 }
 
-function CodeBlock({ children }: { children: string }) {
+function CodeBlock({ children, label }: { children: string; label: string }) {
   const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(children);
+      setFailed(false);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
-      // clipboard blocked — silently no-op
+      // A blocked clipboard used to be a silent dead end. Say so, and the
+      // command is selectable either way.
+      setCopied(false);
+      setFailed(true);
     }
   };
 
   return (
-    <div className="group relative rounded-md bg-surface-container-highest">
-      <pre className="overflow-x-auto px-3 py-3 pe-12 text-body-small font-mono text-on-surface">
-        <code>{children}</code>
-      </pre>
-      <IconButton
-        type="button"
-        variant="standard"
-        size="xs"
-        onClick={() => void copy()}
-        aria-label={copied ? 'Copied' : 'Copy command'}
-        title={copied ? 'Copied' : 'Copy'}
-        className="absolute end-1.5 top-1.5 text-on-surface-variant"
+    <div className="rounded-md bg-surface-container-highest">
+      {/* The button sits in the flow rather than floating over the command: as
+          an overlay it covered the first line's text on narrow screens. */}
+      <div className="flex items-start gap-1 p-1.5">
+        {/* dir=ltr, always: bidi reorders a shell command in Arabic and Farsi
+            (`$env:…` came out as `env:…$`), which makes it wrong to read even
+            though copying it still works. Wrapping instead of scrolling keeps
+            the whole command readable without dragging it. */}
+        <pre
+          dir="ltr"
+          className="min-w-0 flex-1 whitespace-pre-wrap break-words px-1.5 py-1.5 text-left text-body-small font-mono text-on-surface"
+        >
+          <code>{children}</code>
+        </pre>
+        <IconButton
+          type="button"
+          variant="standard"
+          size="xs"
+          onClick={() => void copy()}
+          aria-label={`${copied ? t('install.copied') : t('install.copy')}: ${label}`}
+          title={copied ? t('install.copied') : t('install.copy')}
+          className="shrink-0 text-on-surface-variant"
+        >
+          {copied ? <Check /> : <Copy />}
+        </IconButton>
+      </div>
+      {/* One node does both jobs: a confirmation nobody needs to see, and a
+          failure everybody does. Two would announce the same thing twice. */}
+      <p
+        role="status"
+        className={failed ? 'px-3 pb-2 text-body-small text-error' : 'sr-only'}
       >
-        {copied ? <Check /> : <Copy />}
-      </IconButton>
+        {copied ? t('install.copied') : failed ? t('install.copy_failed') : ''}
+      </p>
     </div>
   );
 }
@@ -98,15 +123,20 @@ function CoreMultiSelect({
 }) {
   return (
     <div className="space-y-2">
-      <h3 className="text-title-small text-on-surface">{label}</h3>
+      <h3 id="cores-label" className="text-title-medium text-on-surface">
+        {label}
+      </h3>
       <div className="max-w-xs">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex w-full items-center justify-between gap-2 rounded-md border border-outline bg-surface-container px-3 py-2 text-left font-mono text-body-medium text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-labelledby="cores-label cores-value"
+              className="flex w-full items-center justify-between gap-2 rounded-md border border-outline bg-surface-container px-3 py-2 text-start font-mono text-body-medium text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <span>{INSTALL_CORES.filter((c) => selected.includes(c)).join(', ')}</span>
+              <span id="cores-value">
+                {INSTALL_CORES.filter((c) => selected.includes(c)).join(', ')}
+              </span>
               <ChevronDown className="h-4 w-4 shrink-0 text-on-surface-variant" aria-hidden />
             </button>
           </DropdownMenuTrigger>
@@ -140,13 +170,13 @@ export function InstallPage() {
     <Layout current="install">
       <section className="space-y-3 pb-8">
         <h1 className="text-headline-large font-semibold tracking-tight">{t('install.h1')}</h1>
-        <p className="text-body-large text-on-surface-variant">{t('install.lede')}</p>
+        <p className="max-w-[68ch] text-body-large text-on-surface-variant">{t('install.lede')}</p>
       </section>
 
       <section className="pb-8">
         <Card variant="filled" padding="md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle as="h2" className="flex items-center gap-2">
               <Info className="h-4 w-4 text-on-surface-variant" />
               {t('install.before.title')}
             </CardTitle>
@@ -161,7 +191,7 @@ export function InstallPage() {
               {t('install.before.disk')}
             </li>
             <li className="flex items-start gap-2">
-              <Info className="mt-0.5 h-4 w-4 shrink-0" />
+              <UserCheck className="mt-0.5 h-4 w-4 shrink-0" />
               {t('install.before.admin')}
             </li>
           </ul>
@@ -169,8 +199,8 @@ export function InstallPage() {
       </section>
 
       <div className="space-y-4 pb-8">
-        <Section header={t('install.step1.title')} icon={Download}>
-          <div className="space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
+        <Section header={t('install.step1.title')} icon={Download} headingLevel={2}>
+          <div className="max-w-[68ch] space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
             <p>{t('install.step1.body')}</p>
             <div>
               <Button asChild variant="outlined" size="s">
@@ -184,8 +214,8 @@ export function InstallPage() {
           </div>
         </Section>
 
-        <Section header={t('install.step2.title')} icon={Terminal}>
-          <div className="space-y-5 px-2 pb-3 pt-2 text-body-large text-on-surface-variant">
+        <Section header={t('install.step2.title')} icon={Terminal} headingLevel={2}>
+          <div className="max-w-[68ch] space-y-5 px-2 pb-3 pt-2 text-body-large text-on-surface-variant">
             <p>{t('install.step2.body1')}</p>
 
             <div>
@@ -209,27 +239,27 @@ export function InstallPage() {
             />
 
             <div className="space-y-2">
-              <h3 className="flex items-center gap-2 text-title-small text-on-surface">
+              <h3 className="flex items-center gap-2 text-title-medium text-on-surface">
                 <Apple className="h-4 w-4" />
                 macOS
               </h3>
-              <CodeBlock>{macosCmd(cores)}</CodeBlock>
+              <CodeBlock label="macOS">{macosCmd(cores)}</CodeBlock>
             </div>
 
             <div className="space-y-2">
-              <h3 className="flex items-center gap-2 text-title-small text-on-surface">
+              <h3 className="flex items-center gap-2 text-title-medium text-on-surface">
                 <Terminal className="h-4 w-4" />
                 Linux
               </h3>
-              <CodeBlock>{linuxCmd(cores)}</CodeBlock>
+              <CodeBlock label="Linux">{linuxCmd(cores)}</CodeBlock>
             </div>
 
             <div className="space-y-2">
-              <h3 className="flex items-center gap-2 text-title-small text-on-surface">
+              <h3 className="flex items-center gap-2 text-title-medium text-on-surface">
                 <AppWindow className="h-4 w-4" />
                 Windows (PowerShell)
               </h3>
-              <CodeBlock>{windowsCmd(cores)}</CodeBlock>
+              <CodeBlock label="Windows (PowerShell)">{windowsCmd(cores)}</CodeBlock>
             </div>
 
             <p>{t('install.step2.body2')}</p>
@@ -237,8 +267,8 @@ export function InstallPage() {
           </div>
         </Section>
 
-        <Section header={t('install.step3.title')} icon={PlayCircle}>
-          <div className="space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
+        <Section header={t('install.step3.title')} icon={PlayCircle} headingLevel={2}>
+          <div className="max-w-[68ch] space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
             <p>{t('install.step3.body')}</p>
           </div>
         </Section>
@@ -250,7 +280,7 @@ export function InstallPage() {
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary-container text-secondary-on-container">
               <RefreshCw className="h-5 w-5" />
             </span>
-            <CardTitle className="mt-2">{t('install.updating.title')}</CardTitle>
+            <CardTitle as="h2" className="mt-2">{t('install.updating.title')}</CardTitle>
             <CardDescription>{t('install.updating.body')}</CardDescription>
           </CardHeader>
         </Card>
@@ -259,7 +289,7 @@ export function InstallPage() {
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary-container text-secondary-on-container">
               <Trash2 className="h-5 w-5" />
             </span>
-            <CardTitle className="mt-2">{t('install.uninstalling.title')}</CardTitle>
+            <CardTitle as="h2" className="mt-2">{t('install.uninstalling.title')}</CardTitle>
           </CardHeader>
           <ol className="mt-3 space-y-2 ps-5 text-body-medium text-on-surface-variant list-decimal">
             <li>{t('install.uninstalling.step1')}</li>
@@ -267,14 +297,20 @@ export function InstallPage() {
               {t('install.uninstalling.step2')}
               <ul className="mt-1 space-y-0.5 ps-4 list-disc">
                 <li>
-                  macOS / Linux:{' '}
-                  <code className="rounded bg-surface-container-highest px-1 py-0.5 font-mono text-body-small">
+                  {'macOS / Linux: '}
+                  <code
+                    dir="ltr"
+                    className="inline-block rounded bg-surface-container-highest px-1 py-0.5 font-mono text-body-small"
+                  >
                     ~/.local/share/noctis
                   </code>
                 </li>
                 <li>
-                  Windows:{' '}
-                  <code className="rounded bg-surface-container-highest px-1 py-0.5 font-mono text-body-small">
+                  {'Windows: '}
+                  <code
+                    dir="ltr"
+                    className="inline-block rounded bg-surface-container-highest px-1 py-0.5 font-mono text-body-small"
+                  >
                     %LOCALAPPDATA%\Noctis
                   </code>
                 </li>

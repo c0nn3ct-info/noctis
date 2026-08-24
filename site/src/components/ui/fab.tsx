@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const fabVariants = cva(
-  'relative inline-flex shrink-0 items-center justify-center font-medium shadow-e3 transition-all duration-med ease-emph focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:shadow-e4 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60 [&_svg]:shrink-0 select-none',
+  'relative inline-flex shrink-0 items-center justify-center font-medium shadow-e3 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-med ease-emph focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:shadow-e4 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-disabled [&_svg]:shrink-0 select-none',
   {
     variants: {
       color: {
@@ -46,7 +46,7 @@ const Fab = React.forwardRef<HTMLButtonElement, FabProps>(
 Fab.displayName = 'Fab';
 
 const extendedFabVariants = cva(
-  'relative inline-flex shrink-0 items-center justify-center gap-3 px-6 font-medium shadow-e3 transition-all duration-med ease-emph focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:shadow-e4 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60 h-14 rounded-2xl text-base [&_svg]:size-6 [&_svg]:shrink-0 select-none',
+  'relative inline-flex shrink-0 items-center justify-center gap-3 px-6 font-medium shadow-e3 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-med ease-emph focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:shadow-e4 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-disabled h-14 rounded-2xl text-base [&_svg]:size-6 [&_svg]:shrink-0 select-none',
   {
     variants: {
       color: {

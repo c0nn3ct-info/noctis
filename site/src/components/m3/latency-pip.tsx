@@ -6,9 +6,11 @@ interface Props {
   pending?: boolean;
   failed?: boolean;
   className?: string;
+  /** Localized word for a failed probe. Defaults to the English 'fail'. */
+  failLabel?: string;
 }
 
-export function LatencyPip({ ms, pending, failed, className }: Props) {
+export function LatencyPip({ ms, pending, failed, className, failLabel = 'fail' }: Props) {
   let tone = 'bg-surface-container-high text-on-surface-variant';
   let dot = 'bg-outline';
   let label: React.ReactNode = '—';
@@ -18,7 +20,7 @@ export function LatencyPip({ ms, pending, failed, className }: Props) {
   } else if (failed) {
     tone = 'bg-error-container text-error-on-container';
     dot = 'bg-error';
-    label = 'fail';
+    label = failLabel;
   } else if (typeof ms === 'number') {
     label = `${ms}ms`;
     if (ms < 1000) {
@@ -33,8 +35,11 @@ export function LatencyPip({ ms, pending, failed, className }: Props) {
     }
   }
 
+  // Decorative: the value is carried by the accessible name of the control this
+  // pip sits in, so announcing it twice would only add noise.
   return (
     <span
+      aria-hidden
       className={cn(
         'inline-flex h-5 items-center gap-1.5 whitespace-nowrap rounded-pill px-2 text-label-small tabular-nums',
         tone,

@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'relative inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-short ease-spring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97] [&_svg]:shrink-0 select-none',
+  'relative inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-short ease-spring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-disabled active:scale-[0.97] [&_svg]:shrink-0 select-none',
   {
     variants: {
       variant: {
@@ -24,7 +24,7 @@ const buttonVariants = cva(
           'bg-transparent text-on-surface-variant hover:bg-on-surface/[0.08]',
       },
       size: {
-        xs: 'h-8 px-4 text-[13px] rounded-pill [&_svg]:size-4',
+        xs: 'h-8 px-4 text-label-dense rounded-pill [&_svg]:size-4',
         s: 'h-10 px-6 text-sm rounded-pill [&_svg]:size-[18px]',
         m: 'h-14 px-8 text-base rounded-pill [&_svg]:size-6',
         l: 'h-24 px-12 text-xl rounded-xl [&_svg]:size-8',

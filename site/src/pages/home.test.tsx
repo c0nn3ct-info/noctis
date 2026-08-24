@@ -15,6 +15,9 @@ const PROTOCOLS = [
   'WireGuard',
   'AnyTLS',
   'ShadowTLS',
+  'SSH',
+  'SOCKS5',
+  'HTTP',
 ];
 
 const FEATURES = [
@@ -83,7 +86,7 @@ describe('HomePage', () => {
 
     const badges = PROTOCOLS.map((p) => screen.getByText(p));
     for (const badge of badges) expect(badge).toHaveClass('font-mono');
-    expect(badges).toHaveLength(10);
+    expect(badges).toHaveLength(13);
   });
 
   it('counts and renders every feature bullet', () => {

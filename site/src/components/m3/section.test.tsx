@@ -54,3 +54,28 @@ describe('SectionLink', () => {
     expect(btn.querySelectorAll('span > span')).toHaveLength(1);
   });
 });
+
+// The level belongs to the caller: hard-coding h3 skipped a level on every site
+// page that used this as a top-level section.
+describe('Section heading level', () => {
+  it('renders the header at the level the caller asks for', () => {
+    const { rerender } = render(
+      <Section header="Steps" icon={Check}>
+        <p>x</p>
+      </Section>,
+    );
+    // The panel level keeps truncating: those rows are a fixed width.
+    expect(screen.getByRole('heading', { name: 'Steps', level: 3 })).toHaveClass('truncate');
+
+    rerender(
+      <Section header="Steps" icon={Check} headingLevel={2}>
+        <p>x</p>
+      </Section>,
+    );
+    // A document-level section carries document-level weight, and must not clip:
+    // at 390px the truncating version lost the tail of several real headings.
+    const h2 = screen.getByRole('heading', { name: 'Steps', level: 2 });
+    expect(h2).toHaveClass('text-title-large');
+    expect(h2).not.toHaveClass('truncate');
+  });
+});

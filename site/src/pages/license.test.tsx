@@ -24,7 +24,7 @@ describe('LicensePage', () => {
   it('spells out every clause of the extension EULA', () => {
     render(<LicensePage />);
 
-    expect(screen.getByRole('heading', { name: t('license.eula.h2'), level: 3 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: t('license.eula.h2'), level: 2 })).toBeInTheDocument();
     expect(screen.getByText(t('license.eula.copyright'))).toBeInTheDocument();
     expect(screen.getByText(t('license.eula.preamble'))).toBeInTheDocument();
 
@@ -41,13 +41,18 @@ describe('LicensePage', () => {
   it('credits the MIT helper and the upstream engine licenses', () => {
     render(<LicensePage />);
 
-    expect(screen.getByText(t('license.helper.h3'))).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: t('license.helper.h3'), level: 2 }),
+    ).toBeInTheDocument();
+    // Points at the helper's own subtree, not the repository root.
     expect(screen.getByRole('link', { name: t('license.helper.body_link') })).toHaveAttribute(
       'href',
-      'https://github.com/c0nn3ct-info/noctis',
+      'https://github.com/c0nn3ct-info/noctis/tree/master/host',
     );
 
-    expect(screen.getByText(t('license.engines.h3'))).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: t('license.engines.h3'), level: 2 }),
+    ).toBeInTheDocument();
     expect(screen.getByText(t('license.engines.intro'))).toBeInTheDocument();
 
     const engines: [string, string, string][] = [

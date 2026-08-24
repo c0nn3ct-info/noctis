@@ -246,8 +246,15 @@ function buildHeadInjection(page, locale, version) {
   return lines.join('\n    ');
 }
 
+// The snapshot is taken from a live browser, so <html> carries whatever the
+// capture machine preferred. Shipping class="dark" made every light-preference
+// visitor paint one dark frame before the runtime script corrected it.
+function stripCapturedTheme(html) {
+  return html.replace(/(<html\b[^>]*?)\sclass="[^"]*"/, '$1');
+}
+
 function injectIntoHead(html, injection, newTitle, newDescription) {
-  let out = html;
+  let out = stripCapturedTheme(html);
   out = out.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeHtmlText(newTitle)}</title>`);
   out = out.replace(
     /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/,

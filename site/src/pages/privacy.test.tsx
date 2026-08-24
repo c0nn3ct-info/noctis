@@ -17,7 +17,7 @@ describe('PrivacyPage', () => {
     render(<PrivacyPage />);
 
     expect(
-      screen.getByRole('heading', { name: t('privacy.stores.h2'), level: 3 }),
+      screen.getByRole('heading', { name: t('privacy.stores.h2'), level: 2 }),
     ).toBeInTheDocument();
     for (const n of [1, 2, 3, 4]) {
       expect(screen.getByText(t(`privacy.stores.item${n}`))).toBeInTheDocument();
@@ -26,23 +26,39 @@ describe('PrivacyPage', () => {
     expect(screen.getByText(t('privacy.stores.outro'))).toBeInTheDocument();
 
     expect(
-      screen.getByRole('heading', { name: t('privacy.network.h2'), level: 3 }),
+      screen.getByRole('heading', { name: t('privacy.network.h2'), level: 2 }),
     ).toBeInTheDocument();
     for (const kind of ['proxied', 'sub', 'ip']) {
       expect(screen.getByText(t(`privacy.network.${kind}.b`))).toBeInTheDocument();
-      expect(screen.getByText(t(`privacy.network.${kind}.body`))).toBeInTheDocument();
+      // The string leads with the dash separator, and every locale but zh-CN
+      // spaces it; getByText compares a raw matcher against normalized DOM
+      // text, so trim the query rather than the data.
+      expect(screen.getByText(t(`privacy.network.${kind}.body`).trim())).toBeInTheDocument();
     }
     expect(screen.getByText(t('privacy.network.outro'))).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: t('privacy.nothing.h2'), level: 3 }),
+      screen.getByRole('heading', { name: t('privacy.nothing.h2'), level: 2 }),
     ).toBeInTheDocument();
+  });
+
+  it('discloses what the website itself measures', () => {
+    render(<PrivacyPage />);
+
+    expect(
+      screen.getByRole('heading', { name: t('privacy.website.h2'), level: 2 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(t('privacy.website.intro'))).toBeInTheDocument();
+    for (const n of [1, 2, 3, 4]) {
+      expect(screen.getByText(t(`privacy.website.item${n}`))).toBeInTheDocument();
+    }
+    expect(screen.getByText(t('privacy.website.outro'))).toBeInTheDocument();
   });
 
   it('tabulates every requested permission with its rationale', () => {
     const { container } = render(<PrivacyPage />);
 
     // The section header carries the permission count.
-    const heading = screen.getByRole('heading', { name: t('privacy.permissions.h2'), level: 3 });
+    const heading = screen.getByRole('heading', { name: t('privacy.permissions.h2'), level: 2 });
     expect(heading.parentElement).toHaveTextContent('8');
 
     const table = container.querySelector('table') as HTMLTableElement;

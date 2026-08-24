@@ -1,14 +1,14 @@
 import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { initAll, render, createRoot, hydrateRoot } = vi.hoisted(() => ({
-  initAll: vi.fn(),
+const { amplitudeInit, render, createRoot, hydrateRoot } = vi.hoisted(() => ({
+  amplitudeInit: vi.fn(),
   render: vi.fn(),
   createRoot: vi.fn(),
   hydrateRoot: vi.fn(),
 }));
 
-vi.mock('@amplitude/unified', () => ({ initAll }));
+vi.mock('@amplitude/analytics-browser', () => ({ init: amplitudeInit }));
 vi.mock('react-dom/client', () => ({ createRoot, hydrateRoot }));
 
 createRoot.mockReturnValue({ render });
@@ -40,7 +40,7 @@ function mountPoint(html = '') {
 }
 
 describe('mountPage', () => {
-  it('applies the system theme, starts analytics and creates a root', async () => {
+  it('applies the system theme and creates a root', async () => {
     const mountPage = await load();
     const root = mountPoint();
 
@@ -48,13 +48,37 @@ describe('mountPage', () => {
 
     expect(document.documentElement).toHaveClass('light');
     expect(document.documentElement).not.toHaveAttribute('data-theme');
-    expect(initAll).toHaveBeenCalledTimes(1);
 
     expect(createRoot).toHaveBeenCalledWith(root);
     expect(hydrateRoot).not.toHaveBeenCalled();
     const tree = render.mock.calls[0][0];
     expect(tree.type).toBe(StrictMode);
     expect(tree.props.children).toEqual(<p>hello</p>);
+  });
+
+  // Counting a view is not part of showing the page: the SDK is imported lazily
+  // and started on idle, so the first paint never waits on it.
+  it('starts analytics only after the page is mounted, off the render path', async () => {
+    const mountPage = await load();
+    // Warm the module so the lazy import resolves from cache: under fake timers
+    // a first-time import waits on real I/O that no microtask flush can reach.
+    await import('./lib/analytics');
+    vi.useFakeTimers();
+    try {
+      mountPoint();
+
+      mountPage(<p>hello</p>);
+      expect(amplitudeInit).not.toHaveBeenCalled();
+
+      await vi.runAllTimersAsync();
+      // The idle callback kicks off a dynamic import, so let its microtasks run.
+      for (let i = 0; i < 50 && amplitudeInit.mock.calls.length === 0; i += 1) {
+        await Promise.resolve();
+      }
+      expect(amplitudeInit).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('hydrates instead when the prerendered markup is already there', async () => {

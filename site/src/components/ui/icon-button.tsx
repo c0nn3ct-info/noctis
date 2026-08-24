@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const iconButtonVariants = cva(
-  'relative inline-flex shrink-0 items-center justify-center font-medium transition-all duration-short ease-spring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.94] [&_svg]:shrink-0 select-none',
+  'relative inline-flex shrink-0 items-center justify-center font-medium transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-short ease-spring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-disabled active:scale-[0.94] [&_svg]:shrink-0 select-none',
   {
     variants: {
       variant: {

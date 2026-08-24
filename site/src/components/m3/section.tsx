@@ -7,17 +7,44 @@ interface Props {
   count?: number;
   action?: React.ReactNode;
   children: React.ReactNode;
+  /**
+   * Which heading element the header renders as. The section is a document-level
+   * heading on the site's long-form pages (h2 under the page h1) and a panel
+   * subsection inside the extension (h3), so the level belongs to the caller —
+   * hard-coding one produced a skipped level on every page that used it.
+   */
+  headingLevel?: 2 | 3 | 4;
 }
 
-export function Section({ header, icon: Icon, count, action, children }: Props) {
+export function Section({
+  header,
+  icon: Icon,
+  count,
+  action,
+  children,
+  headingLevel = 3,
+}: Props) {
+  const Heading = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
+  // A document-level section (h2) also carries document-level weight: the site's
+  // pages jumped 32px -> 16px with nothing between. Panel subsections (h3/h4)
+  // keep the compact size the extension is built around.
+  const headingSize = headingLevel === 2 ? 'text-title-large' : 'text-title-medium';
+  // A panel subsection lives in a fixed-width row and truncates. A document
+  // heading has to be readable in full: at 390px these lost their tail in every
+  // locale, and the license EULA heading lost most of its title in Russian.
+  const headingFlow = headingLevel === 2 ? 'text-balance' : 'truncate';
+  // A wrapping heading leaves the icon centred against three lines of text, so
+  // the document level aligns the row to the top instead. Panel rows are always
+  // one line, where the two are indistinguishable.
+  const headerAlign = headingLevel === 2 ? 'items-start' : 'items-center';
   return (
     <section className="overflow-hidden rounded-xl bg-surface-container-low">
-      <header className="flex items-center gap-3 px-4 pb-3 pt-4">
+      <header className={cn('flex gap-3 px-4 pb-3 pt-4', headerAlign)}>
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary-container text-secondary-on-container">
           <Icon className="h-4 w-4" />
         </span>
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <h3 className="truncate text-title-medium tracking-tight">{header}</h3>
+          <Heading className={cn('tracking-tight', headingFlow, headingSize)}>{header}</Heading>
           {typeof count === 'number' && (
             <span className="inline-flex items-center rounded-pill bg-surface-container-highest px-2 py-0.5 text-label-medium text-on-surface-variant">
               {count}

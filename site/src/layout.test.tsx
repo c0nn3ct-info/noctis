@@ -42,8 +42,9 @@ describe('Layout', () => {
       '/install/',
       '/privacy/',
       '/license/',
-      'https://github.com/c0nn3ct-info/noctis',
-      'https://github.com/c0nn3ct-info/noctis',
+      // Two labels, two destinations: they used to resolve to the same page.
+      'https://github.com/c0nn3ct-info/noctis/tree/master/site',
+      'https://github.com/c0nn3ct-info/noctis/tree/master/host',
     ]);
     expect(links.map((a) => a.textContent)).toEqual([
       t('footer.home'),
@@ -57,6 +58,19 @@ describe('Layout', () => {
       expect(external).toHaveAttribute('target', '_blank');
       expect(external).toHaveAttribute('rel', 'noreferrer noopener');
     }
+  });
+
+  it('marks the current page and offers a skip link', () => {
+    render(<Layout current="privacy">x</Layout>);
+
+    // Footer and header agree on which page is current.
+    const current = screen.getAllByRole('link', { current: 'page' });
+    expect(current.length).toBeGreaterThanOrEqual(1);
+    for (const link of current) expect(link).toHaveAttribute('href', '/privacy/');
+
+    const skip = screen.getByRole('link', { name: t('nav.skip') });
+    expect(skip).toHaveAttribute('href', '#main');
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
   });
 
   it('prefixes every internal link with the active locale', () => {

@@ -1,6 +1,6 @@
 {
   "name": "noctis-site",
-  "version": "0.3.17",
+  "version": "0.4.0",
   "description": "Marketing site for Noctis (noctis.c0nn3ct.info)",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@amplitude/unified": "^1.1.9",
+    "@amplitude/analytics-browser": "^2.42.4",
     "@radix-ui/react-dropdown-menu": "^2.1.18",
     "@radix-ui/react-slot": "^1.1.0",
     "class-variance-authority": "^0.7.1",

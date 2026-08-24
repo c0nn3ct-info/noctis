@@ -1,4 +1,4 @@
-import { Ban, Database, KeyRound, Mail, Network, ShieldCheck } from 'lucide-react';
+import { Ban, Database, Globe, KeyRound, Mail, Network, ShieldCheck } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Section } from '@/components/m3/section';
 import { t } from '../i18n';
@@ -22,6 +22,13 @@ const STORE_ITEMS = [
   'privacy.stores.item4',
 ];
 
+const WEBSITE_ITEMS = [
+  'privacy.website.item1',
+  'privacy.website.item2',
+  'privacy.website.item3',
+  'privacy.website.item4',
+];
+
 const NOTHING_ITEMS = [
   'privacy.nothing.item1',
   'privacy.nothing.item2',
@@ -37,12 +44,12 @@ export function PrivacyPage() {
         <p className="text-label-medium uppercase tracking-[0.16em] text-on-surface-variant">
           {t('privacy.last_updated')}
         </p>
-        <p className="text-body-large text-on-surface-variant">{t('privacy.lede')}</p>
+        <p className="max-w-[68ch] text-body-large text-on-surface-variant">{t('privacy.lede')}</p>
       </section>
 
       <div className="space-y-4 pb-8">
-        <Section header={t('privacy.stores.h2')} icon={Database}>
-          <div className="space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
+        <Section header={t('privacy.stores.h2')} icon={Database} headingLevel={2}>
+          <div className="max-w-[68ch] space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
             <p>{t('privacy.stores.intro')}</p>
             <ul className="space-y-1.5">
               {STORE_ITEMS.map((k) => (
@@ -56,8 +63,8 @@ export function PrivacyPage() {
           </div>
         </Section>
 
-        <Section header={t('privacy.network.h2')} icon={Network}>
-          <div className="space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
+        <Section header={t('privacy.network.h2')} icon={Network} headingLevel={2}>
+          <div className="max-w-[68ch] space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
             <p>{t('privacy.network.intro')}</p>
             <ol className="space-y-1.5 ps-5 list-decimal">
               <li>
@@ -77,8 +84,8 @@ export function PrivacyPage() {
           </div>
         </Section>
 
-        <Section header={t('privacy.nothing.h2')} icon={Ban}>
-          <ul className="space-y-2 px-2 py-2 text-body-large text-on-surface-variant">
+        <Section header={t('privacy.nothing.h2')} icon={Ban} headingLevel={2}>
+          <ul className="max-w-[68ch] space-y-2 px-2 py-2 text-body-large text-on-surface-variant">
             {NOTHING_ITEMS.map((k) => (
               <li key={k} className="flex items-start gap-2">
                 <Ban className="mt-1 h-4 w-4 shrink-0 text-on-surface-variant" />
@@ -88,16 +95,36 @@ export function PrivacyPage() {
           </ul>
         </Section>
 
-        <Section header={t('privacy.permissions.h2')} icon={KeyRound} count={PERMISSIONS.length}>
+        <Section header={t('privacy.website.h2')} icon={Globe} headingLevel={2}>
+          <div className="max-w-[68ch] space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
+            <p>{t('privacy.website.intro')}</p>
+            <ul className="space-y-1.5">
+              {WEBSITE_ITEMS.map((k) => (
+                <li key={k} className="flex items-start gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-on-surface-variant" />
+                  {t(k)}
+                </li>
+              ))}
+            </ul>
+            <p>{t('privacy.website.outro')}</p>
+          </div>
+        </Section>
+
+        <Section
+          header={t('privacy.permissions.h2')}
+          icon={KeyRound}
+          count={PERMISSIONS.length}
+          headingLevel={2}
+        >
           <div className="px-2 py-2">
             <div className="overflow-hidden rounded-md border border-outline-variant">
-              <table className="w-full table-fixed text-start text-body-medium">
+              <table className="w-full table-auto text-start text-body-medium">
                 <thead className="bg-surface-container-high text-on-surface">
                   <tr>
-                    <th className="w-28 px-3 py-2 text-label-large font-medium sm:w-40">
+                    <th className="px-3 py-2 text-start text-label-large font-medium">
                       {t('privacy.permissions.col1')}
                     </th>
-                    <th className="px-3 py-2 text-label-large font-medium">
+                    <th className="px-3 py-2 text-start text-label-large font-medium">
                       {t('privacy.permissions.col2')}
                     </th>
                   </tr>
@@ -108,8 +135,16 @@ export function PrivacyPage() {
                       key={p.name}
                       className={i % 2 ? 'bg-surface-container-low' : 'bg-surface-container'}
                     >
-                      <td className="w-28 break-words px-3 py-2 align-top font-mono text-body-small text-on-surface sm:w-40">
-                        {p.name}
+                      <td className="px-3 py-2 align-top font-mono text-body-small text-on-surface">
+                        {/* Narrow screens have to break these somewhere; from
+                            sm up the column is given the room to keep the
+                            permission name in one piece. */}
+                        <span
+                          dir="ltr"
+                          className="inline-block [overflow-wrap:anywhere] sm:whitespace-nowrap"
+                        >
+                          {p.name}
+                        </span>
                       </td>
                       <td className="px-3 py-2 align-top">{t(p.key)}</td>
                     </tr>
@@ -127,7 +162,7 @@ export function PrivacyPage() {
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary-container text-secondary-on-container">
               <ShieldCheck className="h-5 w-5" />
             </span>
-            <CardTitle className="mt-2">{t('privacy.children.h3')}</CardTitle>
+            <CardTitle as="h2" className="mt-2">{t('privacy.children.h3')}</CardTitle>
           </CardHeader>
           <p className="mt-2 text-body-medium text-on-surface-variant">{t('privacy.children.body')}</p>
         </Card>
@@ -136,7 +171,7 @@ export function PrivacyPage() {
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary-container text-secondary-on-container">
               <Mail className="h-5 w-5" />
             </span>
-            <CardTitle className="mt-2">{t('privacy.contact.h3')}</CardTitle>
+            <CardTitle as="h2" className="mt-2">{t('privacy.contact.h3')}</CardTitle>
           </CardHeader>
           <p className="mt-2 text-body-medium text-on-surface-variant">
             {t('privacy.contact.body_before')}
@@ -151,7 +186,7 @@ export function PrivacyPage() {
         </Card>
       </div>
 
-      <section className="pb-4 text-body-medium text-on-surface-variant">
+      <section className="max-w-[68ch] pb-4 text-body-medium text-on-surface-variant">
         <h2 className="text-title-medium text-on-surface">{t('privacy.changes.h2')}</h2>
         <p className="mt-2">{t('privacy.changes.body')}</p>
       </section>
