@@ -25,9 +25,9 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis 是浏览器代理，而非系统级 VPN。只有 Chrome 的流量会被路由；操作系统的其余部分仍走你的真实连接。扩展在专有 EULA 下免费提供；本机组件开源（MIT）。
+> Noctis 是浏览器代理，而非系统级 VPN。只有 Chrome 的流量会被路由；操作系统的其余部分仍走你的真实连接。扩展在专有 EULA 下免费提供；原生助手开源（MIT）。
 
-Noctis 是一款免费的浏览器扩展，它通过一个本机组件驱动可插拔的代理引擎——sing-box、xray-core 或 mihomo——把 Chrome 的流量路由到 VLESS、VMess、Trojan、Shadowsocks、Hysteria2、Reality 等代理服务器。无需系统级 VPN，也没有单独的客户端窗口——代理始终在浏览器内部进行。
+Noctis 是一款免费的浏览器扩展，它通过一个本地助手驱动可插拔的代理引擎——sing-box、xray-core 或 mihomo——把 Chrome 的流量路由到 VLESS、VMess、Trojan、Shadowsocks、Hysteria2、Reality 等代理服务器。无需系统级 VPN，也没有单独的客户端窗口——代理始终在浏览器内部进行。
 
 ## ✨ 功能
 
@@ -55,7 +55,7 @@ Noctis 支持 VLESS（包括 VLESS Reality）、VMess、Trojan、Shadowsocks、H
   Browser                                    你的机器
   ┌──────────────────┐  native messaging   ┌──────────────────┐
   │ Noctis 扩展      │ ◀─────────────────▶ │  noctis-host     │
-  │ popup · panel    │   事件 · 日志       │ (本机组件)       │
+  │ popup · panel    │   事件 · 日志       │ (原生助手)       │
   │ options          │                     └────────┬─────────┘
   └────────┬─────────┘                              │ 启动 · 配置
            │                                        ▼
@@ -70,27 +70,27 @@ Noctis 支持 VLESS（包括 VLESS Reality）、VMess、Trojan、Shadowsocks、H
                                             └──────────────────┘
 ```
 
-Noctis 默认自带 sing-box，也能驱动 xray-core 和 mihomo。一个小型本机组件在你的机器上管理引擎，Noctis 会为每台服务器自动挑选合适的引擎——因此单一引擎无法处理的协议也能直接使用。xray 解锁 xhttp/splithttp 和 XTLS 流变体（REALITY-vision）；mihomo 增加 Snell、SSR 和 Mieru。浏览器扩展只发送路由决策——绝不传输原始流量。
+Noctis 默认自带 sing-box，也能驱动 xray-core 和 mihomo。一个小型原生助手在你的机器上管理引擎，Noctis 会为每台服务器自动挑选合适的引擎——因此单一引擎无法处理的协议也能直接使用。xray 解锁 xhttp/splithttp 和 XTLS 流变体（REALITY-vision）；mihomo 增加 Snell、SSR 和 Mieru。浏览器扩展只发送路由决策——绝不传输原始流量。
 
 ## 📥 安装
 
-Noctis 扩展需要在你的机器上运行一个小型本机组件。该本机组件负责管理代理引擎——sing-box、xray 或 mihomo——也就是真正执行代理的引擎。
+Noctis 扩展需要在你的机器上运行一个小型原生助手。该助手负责管理代理引擎——sing-box、xray 或 mihomo——也就是真正执行代理的引擎。
 
 ### 开始之前
 
 - 基于 Chromium 的浏览器，版本 120 或更新（Chrome、Chromium、Edge、Brave、Arc、Vivaldi、Opera、Yandex Browser）。
-- 约 100 MB 的可用磁盘空间，用于本机组件和各代理引擎。
+- 约 100 MB 的可用磁盘空间，用于助手和各代理引擎。
 - 无需管理员 / root 权限——一切都安装到你的用户账户中。
 
 ### 安装扩展
 
-从 [Chrome Web Store](https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn) 安装 Noctis。安装后打开扩展——它会检测到本机组件缺失，并显示一个安装对话框，其中已为你的机器预填好一行命令。
+从 [Chrome Web Store](https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn) 安装 Noctis。安装后打开扩展——它会检测到助手缺失，并显示一个安装对话框，其中已为你的机器预填好一行命令。
 
-### 运行本机组件安装程序
+### 运行助手安装程序
 
-从扩展的本机组件设置窗口复制命令并粘贴到终端。扩展 ID 已自动填入，无需另行查找。命令如下：
+从扩展的 Helper Setup 对话框中复制命令，粘贴到你的终端。你的扩展 ID 已经填好——无需自己查找。供参考，命令大致如下：
 
-本机组件源代码：<https://github.com/c0nn3ct-info/noctis>
+助手源代码：<https://github.com/c0nn3ct-info/noctis>
 
 **macOS**
 ```bash
@@ -109,7 +109,7 @@ $env:NOCTIS_EXT_ID='nmhobajopepdpihahepaddpdifdcenpn'; iwr -useb https://noctis.
 
 安装程序会把 noctis-host 和各代理引擎（sing-box、xray、mihomo）下载到你的用户数据目录，并为每个受支持的浏览器写入 native-messaging 清单。
 
-扩展第一次与本机组件通信时，你的浏览器可能会显示一次性的 native-messaging 提示——请批准它。
+扩展第一次与助手通信时，你的浏览器可能会显示一次性的 native-messaging 提示——请批准它。
 
 ### 首次运行
 
@@ -135,16 +135,16 @@ VLESS 是 V2Ray/Xray 家族中一种轻量级代理协议。它本身不做加�
 VPN 把系统上的每个应用都通过一条连接隧道化，通常还需要管理员权限。像 Noctis 这样的浏览器代理扩展只路由浏览器，无需 root 或管理员权限，让你可以同时把 Zoom、Steam、Telegram 桌面端和 BT 下载保留在真实网络上。
 
 **Noctis 支持 VLESS Reality 吗？**
-支持。Noctis 会把 Reality 参数（Server Name、Fingerprint、SNI、Dest、public key、short ID）原样传给本机组件，并在支持它的引擎上运行该服务器——xray 提供完整的 XTLS-vision 流。粘贴一条 `vless://...flow=xtls-rprx-vision&security=reality` 分享链接，扩展会导入其中每个字段。
+支持。Noctis 会把 Reality 参数（Server Name、Fingerprint、SNI、Dest、public key、short ID）原样传给助手，并在支持它的引擎上运行该服务器——xray 提供完整的 XTLS-vision 流。粘贴一条 `vless://...flow=xtls-rprx-vision&security=reality` 分享链接，扩展会导入其中每个字段。
 
 **Noctis 支持哪些代理协议？**
 VLESS、VMess、Trojan、Shadowsocks、Hysteria2、TUIC、WireGuard、AnyTLS 和 ShadowTLS——此外还通过 xray 和 mihomo 支持 xhttp/splithttp、Snell、SSR 等。V2Ray 和 Xray 的分享链接可直接使用。
 
 **Chrome 代理扩展用起来安全吗？**
-比大多数更安全。Noctis 不向开发者发送任何东西——没有分析、没有遥测、没有远程配置。服务器配置保存在浏览器存储中。本机组件无需管理员权限即可运行。完整的权限清单和说明在[隐私政策](./site/PRIVACY.md)中。
+比大多数更安全。Noctis 不向开发者发送任何东西——没有分析、没有遥测、没有远程配置。服务器配置保存在浏览器存储中。原生助手无需管理员权限即可运行。完整的权限清单和说明在[隐私政策](./site/PRIVACY.md)中。
 
 **Noctis 能在 Windows、macOS 和 Linux 上运行吗？**
-可以——Windows、macOS 和 Linux 上基于 Chromium 的浏览器（Chrome、Edge、Brave、Arc、Vivaldi、Opera、Yandex Browser）。本机组件为每个平台都提供了一行命令的安装脚本。
+可以——Windows、macOS 和 Linux 上基于 Chromium 的浏览器（Chrome、Edge、Brave、Arc、Vivaldi、Opera、Yandex Browser）。原生助手为每个平台都提供了一行命令的安装脚本。
 
 **我能用订阅 URL 来自动更新服务器吗？**
 可以。只需粘贴一次订阅 URL，Noctis 就会按计划刷新它。服务器列表会自动更新；置顶和活动选择会在刷新后保留。
@@ -156,7 +156,7 @@ Noctis 本身只是一个代理客户端——它把你的浏览器路由到你�
 会。一个可选开关会阻止代理之外的 UDP，让 WebRTC 在代理处于活动状态时无法暴露你的真实 IP。
 
 **Noctis 收费吗？**
-免费。扩展在 Chrome Web Store 上免费，本机组件在 MIT 许可下开源。你只需为自己选用的代理服务器付费。
+免费。扩展在 Chrome Web Store 上免费，原生助手在 MIT 许可下开源。你只需为自己选用的代理服务器付费。
 
 ## 🙏 致谢
 
@@ -167,5 +167,5 @@ Noctis 本身只是一个代理客户端——它把你的浏览器路由到你�
 
 - 许可 — 专有 EULA：见 [LICENSE](./site/LICENSE.md) 或 <https://noctis.c0nn3ct.info/zh-CN/license/>。
 - 隐私 — 见 [PRIVACY](./site/PRIVACY.md) 或 <https://noctis.c0nn3ct.info/zh-CN/privacy/>。
-- 本机组件 — MIT 许可：见 <https://github.com/c0nn3ct-info/noctis>。
+- 原生助手 — MIT 许可：见 <https://github.com/c0nn3ct-info/noctis>。
 - 代理引擎 — sing-box（GPL-3.0）、xray-core（MPL-2.0）和 mihomo（GPL-3.0），各自在其上游许可下重新分发。

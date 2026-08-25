@@ -3,11 +3,14 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -70,6 +73,40 @@ func msgFor(t *testing.T, raw string) *incomingMsg {
 		t.Fatalf("bad test message %s: %v", raw, err)
 	}
 	return &m
+}
+
+func TestDispatchProbe(t *testing.T) {
+	sup := newSupervisor(nil)
+	lg := log.New(io.Discard, "", 0)
+	orig := probeDial
+	t.Cleanup(func() { probeDial = orig })
+	probeDial = func(context.Context, string) (net.Conn, error) {
+		return &scriptedConn{reader: strings.NewReader("")}, nil
+	}
+
+	a := dispatch(msgFor(t, `{"id":"1","type":"probe","host":"h.example","port":443}`), sup, lg)
+	if !a.OK {
+		t.Fatalf("probe ack = %+v, want ok", a)
+	}
+	res, ok := a.Data.(*probeResult)
+	if !ok || res.Via != "direct" {
+		t.Fatalf("probe data = %+v, want a direct result", a.Data)
+	}
+
+	// A dial that finds nothing is the server's answer, reported as an error.
+	probeDial = func(context.Context, string) (net.Conn, error) {
+		return nil, errors.New("connect: connection refused")
+	}
+	if a := dispatch(msgFor(t, `{"id":"2","type":"probe","host":"h.example","port":443}`), sup, lg); a.OK ||
+		!strings.Contains(a.Error, "connection refused") {
+		t.Fatalf("refused ack = %+v, want the dial error", a)
+	}
+
+	// A payload that is not a probe request at all.
+	if a := dispatch(msgFor(t, `{"id":"3","type":"probe","port":"nope"}`), sup, lg); a.OK ||
+		!strings.Contains(a.Error, "decode probe") {
+		t.Fatalf("bad-args ack = %+v, want a decode error", a)
+	}
 }
 
 func TestDispatchSimple(t *testing.T) {

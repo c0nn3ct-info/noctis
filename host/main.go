@@ -14,7 +14,7 @@ import (
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.2.1"
+var hostVersion = "1.2.2"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`
@@ -225,6 +225,16 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 		return ack{ID: msg.ID, Type: "ack", OK: true, Data: map[string]int{"socksPort": port}}
 	case "stats":
 		return ack{ID: msg.ID, Type: "ack", OK: true, Data: sup.statsSnapshot()}
+	case "probe":
+		var args probeArgs
+		if err := json.Unmarshal(msg.Raw, &args); err != nil {
+			return errAck(msg.ID, fmt.Errorf("decode probe: %w", err))
+		}
+		result, err := doProbe(args)
+		if err != nil {
+			return errAck(msg.ID, err)
+		}
+		return ack{ID: msg.ID, Type: "ack", OK: true, Data: result}
 	case "fetch":
 		var args fetchArgs
 		if err := json.Unmarshal(msg.Raw, &args); err != nil {

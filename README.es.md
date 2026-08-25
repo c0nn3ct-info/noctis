@@ -13,7 +13,7 @@
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn"><img src="https://img.shields.io/chrome-web-store/v/nmhobajopepdpihahepaddpdifdcenpn?label=Chrome%20Web%20Store&color=4285F4" alt="Chrome Web Store"></a>
   <a href="./site/LICENSE.md"><img src="https://img.shields.io/badge/license-EULA-blue" alt="Licencia: EULA"></a>
-  <a href="https://github.com/c0nn3ct-info/noctis"><img src="https://img.shields.io/badge/helper-MIT-green" alt="Componente local: MIT"></a>
+  <a href="https://github.com/c0nn3ct-info/noctis"><img src="https://img.shields.io/badge/helper-MIT-green" alt="Helper: MIT"></a>
   <a href="https://noctis.c0nn3ct.info"><img src="https://img.shields.io/badge/site-noctis.c0nn3ct.info-7c3aed" alt="Sitio web"></a>
 </p>
 
@@ -25,9 +25,9 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis es un proxy para el navegador, no una VPN de sistema. Solo se enruta el tráfico de Chrome; el resto de tu sistema operativo se queda en tu conexión real. La extensión es gratuita bajo una EULA propietaria; el componente local es de código abierto (MIT).
+> Noctis es un proxy para el navegador, no una VPN de sistema. Solo se enruta el tráfico de Chrome; el resto de tu sistema operativo se queda en tu conexión real. La extensión es gratuita bajo una EULA propietaria; el helper nativo es de código abierto (MIT).
 
-Noctis es una extensión de navegador gratuita que enruta Chrome a través de VLESS, VMess, Trojan, Shadowsocks, Hysteria2, Reality y otros servidores proxy mediante un componente local que controla un motor de proxy modular: sing-box, xray-core o mihomo. Sin VPN de sistema, sin ventana de cliente aparte: el proxy se queda dentro del navegador.
+Noctis es una extensión de navegador gratuita que enruta Chrome a través de VLESS, VMess, Trojan, Shadowsocks, Hysteria2, Reality y otros servidores proxy mediante un helper local que controla un motor de proxy modular: sing-box, xray-core o mihomo. Sin VPN de sistema, sin ventana de cliente aparte: el proxy se queda dentro del navegador.
 
 ## ✨ Funciones
 
@@ -36,7 +36,7 @@ Noctis es una extensión de navegador gratuita que enruta Chrome a través de VL
 - **Enrutamiento por reglas** — Coincidencia por dominio, GeoSite o GeoIP. Cada regla enruta a proxy, directo o bloqueo.
 - **Tres modos de enrutamiento** — Global envía todo a través del proxy. Rules solo enruta las coincidencias. Direct lo omite por completo.
 - **Comprobaciones de estado + conmutación automática** — Sondeos de latencia en segundo plano; ping manual con un toque por servidor. Los servidores que fallan salen de la ruta activa.
-- **Lista de servidores fijados** — Mantén tres favoritos en la parte superior de la ventana emergente. Cambia el servidor activo sin abrir el panel completo.
+- **Lista de servidores fijados** — Mantén tres favoritos en la parte superior del popup. Cambia el servidor activo sin abrir el panel completo.
 - **Flujo de registros en vivo** — La salida stdout y stderr del motor de proxy se transmite a la extensión. Diagnostica problemas de conexión sin salir del navegador.
 - **Protección contra fugas de WebRTC** — Un interruptor opcional bloquea el UDP fuera del proxy para que WebRTC no pueda revelar tu IP real.
 - **Reglas integradas de bloqueo de anuncios y rastreadores** — Las familias `geosite:ads` se enrutan a bloqueo de forma predeterminada. Desactívalo si prefieres gestionarlo en otro sitio.
@@ -53,10 +53,10 @@ Los navegadores no pueden ejecutar por sí solos un motor de proxy. Tres piezas 
 
 ```
   Navegador                                  Tu equipo
-  ┌──────────────────┐  native messaging   ┌────────────────────┐
-  │ Extensión        │ ◀─────────────────▶ │  noctis-host       │
-  │ Noctis           │   eventos · logs    │ (componente local) │
-  │ popup · panel    │                     └────────┬───────────┘
+  ┌──────────────────┐  native messaging   ┌──────────────────┐
+  │ Extensión        │ ◀─────────────────▶ │  noctis-host     │
+  │ Noctis           │   eventos · logs    │ (helper nativo)  │
+  │ popup · panel    │                     └────────┬─────────┘
   └────────┬─────────┘                              │ arranque · config
            │                                        ▼
            │                                ┌──────────────────┐
@@ -70,27 +70,27 @@ Los navegadores no pueden ejecutar por sí solos un motor de proxy. Tres piezas 
                                             └──────────────────┘
 ```
 
-Noctis incluye sing-box de forma predeterminada y también puede controlar xray-core y mihomo. Un pequeño componente local supervisa el motor en tu equipo, y Noctis elige el adecuado para cada servidor automáticamente — así los protocolos que un solo motor no puede manejar simplemente funcionan. xray habilita xhttp/splithttp y las variantes de flujo XTLS (REALITY-vision); mihomo añade Snell, SSR y Mieru. La extensión del navegador solo envía decisiones de enrutamiento, nunca tráfico en bruto.
+Noctis incluye sing-box de forma predeterminada y también puede controlar xray-core y mihomo. Un pequeño helper nativo supervisa el motor en tu equipo, y Noctis elige el adecuado para cada servidor automáticamente — así los protocolos que un solo motor no puede manejar simplemente funcionan. xray habilita xhttp/splithttp y las variantes de flujo XTLS (REALITY-vision); mihomo añade Snell, SSR y Mieru. La extensión del navegador solo envía decisiones de enrutamiento, nunca tráfico en bruto.
 
 ## 📥 Instalación
 
-La extensión Noctis necesita un pequeño componente local ejecutándose en tu equipo. El componente local supervisa el motor de proxy —sing-box, xray o mihomo— que realmente hace el proxy.
+La extensión Noctis necesita un pequeño helper nativo ejecutándose en tu equipo. El helper supervisa el motor de proxy —sing-box, xray o mihomo— que realmente hace el proxy.
 
 ### Antes de empezar
 
 - Un navegador basado en Chromium, versión 120 o más reciente (Chrome, Chromium, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser).
-- Unos 100 MB de disco libre para el componente local y los motores de proxy.
+- Unos 100 MB de disco libre para el helper y los motores de proxy.
 - Sin permisos de administrador / root — todo se instala en tu cuenta de usuario.
 
 ### Instala la extensión
 
-Instala Noctis desde [Chrome Web Store](https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn). Abre la extensión tras instalarla — detectará que falta el componente local y mostrará un diálogo de configuración con un comando ya rellenado para tu equipo.
+Instala Noctis desde [Chrome Web Store](https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn). Abre la extensión tras instalarla — detectará que falta el helper y mostrará un diálogo de configuración con un comando ya rellenado para tu equipo.
 
-### Ejecuta el instalador del componente local
+### Ejecuta el instalador del helper
 
-Copia el comando del diálogo Configurar componente local de la extensión y pégalo en tu terminal. El ID de la extensión ya está incluido; no necesitas buscarlo. Como referencia, el comando tiene este aspecto:
+Copia el comando del diálogo Helper Setup de la extensión y pégalo en tu terminal. El ID de tu extensión ya está incluido — no necesitas buscarlo. A modo de referencia, el comando tiene este aspecto:
 
-Código fuente del componente local: <https://github.com/c0nn3ct-info/noctis>
+Código fuente del helper: <https://github.com/c0nn3ct-info/noctis>
 
 **macOS**
 ```bash
@@ -109,11 +109,11 @@ $env:NOCTIS_EXT_ID='nmhobajopepdpihahepaddpdifdcenpn'; iwr -useb https://noctis.
 
 El instalador descarga noctis-host y los motores de proxy (sing-box, xray, mihomo) en tu directorio de datos de usuario y escribe un manifiesto de native-messaging para cada navegador compatible.
 
-La primera vez que la extensión se comunica con el componente local, tu navegador puede mostrar un aviso único de native-messaging — apruébalo.
+La primera vez que la extensión se comunica con el helper, tu navegador puede mostrar un aviso único de native-messaging — apruébalo.
 
 ### Primer arranque
 
-Abre la ventana emergente de la extensión, pega un enlace de conexión `vless://`, `ss://` o `trojan://`, o una URL de suscripción, y activa el servidor. El indicador de estado se vuelve verde cuando el motor empieza a aceptar tráfico.
+Abre el popup de la extensión, pega un enlace de compartir `vless://`, `ss://` o `trojan://` (o una URL de suscripción) y activa el servidor. La insignia de estado se vuelve verde en cuanto el motor acepta tráfico.
 
 ### Actualización
 
@@ -135,16 +135,16 @@ VLESS es un protocolo de proxy ligero de la familia V2Ray/Xray. No lleva cifrado
 Una VPN tuneliza todas las aplicaciones de tu sistema a través de una única conexión y normalmente necesita permisos de administrador. Una extensión proxy de navegador como Noctis solo enruta el navegador, no requiere root ni administrador, y te permite mantener Zoom, Steam, Telegram para escritorio y los torrents en tu red real al mismo tiempo.
 
 **¿Noctis admite VLESS Reality?**
-Sí. Noctis pasa los parámetros de Reality (Server Name, Fingerprint, SNI, Dest, clave pública, short ID) al componente local sin modificarlos y ejecuta el servidor en un motor que los admite — xray ofrece el flujo XTLS-vision completo. Pega un enlace de compartir `vless://...flow=xtls-rprx-vision&security=reality` y la extensión importa todos los campos.
+Sí. Noctis pasa los parámetros de Reality (Server Name, Fingerprint, SNI, Dest, clave pública, short ID) al helper sin modificarlos y ejecuta el servidor en un motor que los admite — xray ofrece el flujo XTLS-vision completo. Pega un enlace de compartir `vless://...flow=xtls-rprx-vision&security=reality` y la extensión importa todos los campos.
 
 **¿Qué protocolos de proxy admite Noctis?**
 VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS y ShadowTLS — además de xhttp/splithttp, Snell, SSR y más mediante xray y mihomo. Los enlaces de compartir de V2Ray y Xray funcionan tal cual.
 
 **¿Es seguro usar una extensión proxy de Chrome?**
-Más segura que la mayoría. Noctis no envía nada a su desarrollador — ni analíticas, ni telemetría, ni configuración remota. Las configuraciones de servidor se quedan en el almacenamiento del navegador. El componente local se ejecuta sin permisos de administrador. La lista completa de permisos y su justificación están en la [política de privacidad](./site/PRIVACY.md).
+Más segura que la mayoría. Noctis no envía nada a su desarrollador — ni analíticas, ni telemetría, ni configuración remota. Las configuraciones de servidor se quedan en el almacenamiento del navegador. El helper nativo se ejecuta sin permisos de administrador. La lista completa de permisos y su justificación están en la [política de privacidad](./site/PRIVACY.md).
 
 **¿Noctis funciona en Windows, macOS y Linux?**
-Sí — en navegadores basados en Chromium en Windows, macOS y Linux (Chrome, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser). El componente local tiene scripts de instalación de una línea para cada plataforma.
+Sí — en navegadores basados en Chromium en Windows, macOS y Linux (Chrome, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser). El helper nativo tiene scripts de instalación de una línea para cada plataforma.
 
 **¿Puedo usar una URL de suscripción para actualizar los servidores automáticamente?**
 Sí. Pega una URL de suscripción una vez y Noctis la actualiza según un horario. Las listas de servidores se actualizan automáticamente; las selecciones fijadas y la activa sobreviven a las actualizaciones.
@@ -156,7 +156,7 @@ Noctis en sí solo es un cliente de proxy — enruta tu navegador a través del 
 Sí. Un interruptor opcional bloquea el UDP fuera del proxy para que WebRTC no pueda revelar tu IP real mientras el proxy está activo.
 
 **¿Cuánto cuesta Noctis?**
-Es gratis. La extensión es gratuita en Chrome Web Store y el componente local es de código abierto bajo MIT. Solo pagas por los servidores proxy que decidas usar.
+Es gratis. La extensión es gratuita en Chrome Web Store y el helper nativo es de código abierto bajo MIT. Solo pagas por los servidores proxy que decidas usar.
 
 ## 🙏 Agradecimientos
 
@@ -167,5 +167,5 @@ Es gratis. La extensión es gratuita en Chrome Web Store y el componente local e
 
 - Licencia — EULA propietaria: consulta [LICENSE](./site/LICENSE.md) o <https://noctis.c0nn3ct.info/es/license/>.
 - Privacidad — consulta [PRIVACY](./site/PRIVACY.md) o <https://noctis.c0nn3ct.info/es/privacy/>.
-- Componente local — con licencia MIT: consulta <https://github.com/c0nn3ct-info/noctis>.
+- Helper nativo — con licencia MIT: consulta <https://github.com/c0nn3ct-info/noctis>.
 - Motores de proxy — sing-box (GPL-3.0), xray-core (MPL-2.0) y mihomo (GPL-3.0), cada uno redistribuido bajo su licencia upstream.
