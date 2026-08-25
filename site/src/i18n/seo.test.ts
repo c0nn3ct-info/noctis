@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { buildSitemap, getAllRoutes, getJsonLd, getMeta, pathFor, type PageKey } from './seo';
+import {
+  buildSitemap,
+  getAllRoutes,
+  getJsonLd,
+  getMeta,
+  NOINDEX_PAGES,
+  pathFor,
+  type PageKey,
+} from './seo';
 import { LOCALES } from './index';
 import en from './en.json';
 import ru from './ru.json';
@@ -34,6 +42,7 @@ describe('getMeta', () => {
     expect(meta.description).toBe(ru['install.description']);
     expect(meta.canonical).toBe(`${ORIGIN}/ru/install/`);
     expect(meta.htmlLang).toBe('ru');
+    expect(meta.noindex).toBe(false);
 
     expect(meta.hreflang).toEqual([
       { lang: 'en', href: `${ORIGIN}/install/` },
@@ -136,26 +145,43 @@ describe('getJsonLd', () => {
 });
 
 describe('buildSitemap', () => {
-  const xml = buildSitemap('2026-01-31');
+  const xml = buildSitemap();
+  const indexable = PAGES.filter((p) => !NOINDEX_PAGES.includes(p));
 
-  it('is a well-formed urlset with one entry per page/locale pair', () => {
+  it('is a well-formed urlset covering only the indexable pages', () => {
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml.trimEnd().endsWith('</urlset>')).toBe(true);
-    expect(xml.match(/<url>/g)).toHaveLength(PAGES.length * LOCALES.length);
-    expect(xml.match(/<lastmod>2026-01-31<\/lastmod>/g)).toHaveLength(
-      PAGES.length * LOCALES.length,
-    );
+    expect(xml.match(/<url>/g)).toHaveLength(indexable.length * LOCALES.length);
+    // A lastmod stamped at build time claimed every page changed on every deploy.
+    expect(xml).not.toContain('<lastmod>');
+    expect(xml).not.toContain('<changefreq>');
+  });
+
+  it('leaves the noindexed pages out entirely', () => {
+    for (const page of NOINDEX_PAGES) {
+      expect(xml).not.toContain(`${ORIGIN}/${page}/`);
+      expect(xml).not.toContain(`${ORIGIN}/ru/${page}/`);
+    }
   });
 
   it('carries per-page priorities and hreflang alternates', () => {
     expect(xml).toContain(`<loc>${ORIGIN}/</loc>`);
     expect(xml).toContain('<priority>1.0</priority>');
     expect(xml).toContain('<priority>0.8</priority>');
-    expect(xml).toContain('<priority>0.5</priority>');
     expect(xml).toContain(
       `<xhtml:link rel="alternate" hreflang="zh-CN" href="${ORIGIN}/zh-CN/install/" />`,
     );
-    expect(xml.match(/hreflang="x-default"/g)).toHaveLength(PAGES.length * LOCALES.length);
+    expect(xml.match(/hreflang="x-default"/g)).toHaveLength(indexable.length * LOCALES.length);
+  });
+});
+
+describe('noindexed pages', () => {
+  it('marks the legal pages noindex in every locale, and nothing else', () => {
+    for (const locale of LOCALES) {
+      for (const page of PAGES) {
+        expect(getMeta(page, locale).noindex).toBe(NOINDEX_PAGES.includes(page));
+      }
+    }
   });
 });
 

@@ -101,7 +101,9 @@ describe('Layout', () => {
     ).toEqual(['/ru/', '/ru/install/', '/ru/privacy/', '/ru/license/']);
     expect(within(footer()).getByText(t('footer.pages'))).toBeInTheDocument();
     expect(within(footer()).getByText(t('footer.sources'))).toBeInTheDocument();
-    expect(within(footer()).getByText(t('footer.languages'))).toBeInTheDocument();
+    expect(
+      within(footer()).getByRole('navigation', { name: t('footer.languages') }),
+    ).toBeInTheDocument();
     // The language links leave the active locale for the target one.
     expect(
       within(footer())

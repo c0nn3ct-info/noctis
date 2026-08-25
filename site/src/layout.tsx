@@ -133,32 +133,38 @@ export function Layout({ current, children }: LayoutProps) {
               </li>
             </ul>
           </nav>
-          {/* The header switcher builds its menu on click, so a crawler never sees
-              those links. Google discovered the locales through the sitemap alone,
-              which is why five of six sat unindexed - these are the same six URLs
-              as plain markup. */}
-          <nav aria-label={t('footer.languages')}>
-            <div className="mb-2 text-label-small uppercase tracking-[0.12em]">
-              {t('footer.languages')}
-            </div>
-            <ul className="space-y-0.5">
-              {LOCALE_OPTIONS.map((l) => (
-                <li key={l.code}>
-                  <a
-                    className="inline-flex items-center gap-2 py-1 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    href={withLocale(currentPath, l.code)}
-                    hrefLang={l.code}
-                    lang={l.code}
-                    aria-current={l.code === locale ? 'true' : undefined}
-                  >
-                    <Languages className="h-3.5 w-3.5" aria-hidden />
-                    {l.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
         </div>
+        {/* The header switcher builds its menu on click, so the prerendered HTML
+            carries no link between the locales at all - only hreflang. These are the
+            same six URLs as plain markup. One wrapped row rather than a fourth
+            column: six stacked items made the footer twice as tall and broke the
+            column layout below 900px. */}
+        <nav
+          aria-label={t('footer.languages')}
+          className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-outline-variant pt-4 text-label-small"
+        >
+          {/* The icon carries the row; the group name lives on the nav's
+              aria-label, so screen readers still announce it. */}
+          <Languages className="me-1 h-3.5 w-3.5 shrink-0" aria-hidden />
+          {LOCALE_OPTIONS.map((l, i) => (
+            <span key={l.code} className="inline-flex items-center gap-2">
+              {i > 0 && (
+                <span aria-hidden className="text-outline-variant">
+                  ·
+                </span>
+              )}
+              <a
+                className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                href={withLocale(currentPath, l.code)}
+                hrefLang={l.code}
+                lang={l.code}
+                aria-current={l.code === locale ? 'true' : undefined}
+              >
+                {l.label}
+              </a>
+            </span>
+          ))}
+        </nav>
       </footer>
     </div>
   );

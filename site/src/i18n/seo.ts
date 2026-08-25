@@ -44,6 +44,9 @@ const PAGE_PATH: Record<PageKey, string> = {
   license: '/license/',
 };
 
+/** Pages kept crawlable but out of the index - see scripts/prerender.mjs. */
+export const NOINDEX_PAGES: readonly PageKey[] = ['privacy', 'license'];
+
 const PRIORITY: Record<PageKey, string> = {
   home: '1.0',
   install: '0.8',
@@ -66,6 +69,8 @@ export interface MetaPayload {
     description: string;
     siteName: string;
   };
+  /** True when the page ships <meta name="robots" content="noindex, follow">. */
+  noindex: boolean;
   twitter: {
     card: string;
     image: string;
@@ -90,6 +95,7 @@ export function getMeta(page: PageKey, locale: Locale): MetaPayload {
     title,
     description,
     canonical: url,
+    noindex: NOINDEX_PAGES.includes(page),
     hreflang: [
       ...LOCALES.map((l) => ({ lang: l, href: `${ORIGIN}${pathFor(page, l)}` })),
       { lang: 'x-default', href: `${ORIGIN}${pathFor(page, 'en')}` },
@@ -216,8 +222,10 @@ export function getJsonLd(page: PageKey, locale: Locale, version: string): JsonL
   return { blocks };
 }
 
-export function buildSitemap(lastmod: string): string {
-  const pages: PageKey[] = ['home', 'install', 'privacy', 'license'];
+export function buildSitemap(): string {
+  const pages: PageKey[] = (['home', 'install', 'privacy', 'license'] as PageKey[]).filter(
+    (p) => !NOINDEX_PAGES.includes(p),
+  );
   const urls: string[] = [];
 
   for (const page of pages) {
@@ -230,8 +238,6 @@ export function buildSitemap(lastmod: string): string {
       urls.push(
         `  <url>
     <loc>${url}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
     <priority>${PRIORITY[page]}</priority>
 ${alts}
     <xhtml:link rel="alternate" hreflang="x-default" href="${ORIGIN}${pathFor(page, 'en')}" />

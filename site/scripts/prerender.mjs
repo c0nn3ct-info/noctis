@@ -34,6 +34,12 @@ const PAGE_PATH = {
 
 const PRIORITY = { home: '1.0', install: '0.8', privacy: '0.5', license: '0.5' };
 
+// Legal boilerplate, six translations each: twelve URLs that will never rank for
+// anything and dilute what Google crawls. Kept linked and crawlable ("follow"),
+// just out of the index - and therefore out of the sitemap, which otherwise earns a
+// "Submitted URL marked noindex" report.
+const NOINDEX_PAGES = new Set(['privacy', 'license']);
+
 const LOCALES = ['en', 'ru', 'es', 'zh-CN', 'fa', 'ar'];
 
 const OG_LOCALE = {
@@ -208,6 +214,7 @@ function buildHeadInjection(page, locale, version) {
   const blocks = jsonLdBlocks(page, locale, version);
   const ogImageAlt = OG_IMAGE_ALT[locale] ?? OG_IMAGE_ALT.en;
   const lines = [];
+  if (NOINDEX_PAGES.has(page)) lines.push('<meta name="robots" content="noindex, follow" />');
   lines.push(`<link rel="canonical" href="${escapeHtmlAttr(meta.canonical)}" />`);
   for (const h of meta.hreflang) {
     lines.push(
@@ -275,7 +282,7 @@ function startServer(port) {
 // every deploy - a signal Google discounts once it proves wrong. Omitting it is
 // honest, and <priority> stays only because it is free.
 function buildSitemap() {
-  const pages = ['home', 'install', 'privacy', 'license'];
+  const pages = ['home', 'install', 'privacy', 'license'].filter((p) => !NOINDEX_PAGES.has(p));
   const locales = LOCALES;
   const urls = [];
   for (const page of pages) {
