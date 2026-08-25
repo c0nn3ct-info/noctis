@@ -81,6 +81,31 @@ describe('mountPage', () => {
     }
   });
 
+  // Browsers that have requestIdleCallback get the real thing; the timer above is
+  // only the fallback for the ones that do not (Safari until 26).
+  it('uses requestIdleCallback when the browser has one', async () => {
+    const mountPage = await load();
+    await import('./lib/analytics');
+    const idle = vi.fn((cb: () => void) => {
+      cb();
+      return 1;
+    });
+    vi.stubGlobal('requestIdleCallback', idle);
+    try {
+      mountPoint();
+
+      mountPage(<p>hello</p>);
+
+      expect(idle).toHaveBeenCalledWith(expect.any(Function), { timeout: 3000 });
+      for (let i = 0; i < 50 && amplitudeInit.mock.calls.length === 0; i += 1) {
+        await Promise.resolve();
+      }
+      expect(amplitudeInit).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('hydrates instead when the prerendered markup is already there', async () => {
     const mountPage = await load();
     const root = mountPoint('<p>hello</p>');
