@@ -11,6 +11,7 @@
   "footer.home": "Inicio",
   "footer.pages": "Páginas",
   "footer.sources": "Código fuente",
+  "footer.languages": "Idiomas",
   "home.title": "Noctis — proxy para el navegador",
   "home.description": "Enruta el tráfico de tu navegador a través de VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard y más mediante un motor de proxy local: sing-box, xray o mihomo.",
   "home.hero.h1": "Extensión VLESS para el navegador Chrome",

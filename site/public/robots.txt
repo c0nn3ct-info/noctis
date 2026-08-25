@@ -10,6 +10,12 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
-Sitemap: https://noctis.c0nn3ct.info/sitemap_index.xml
-Sitemap: https://noctis.c0nn3ct.info/sitemap.xml
-Sitemap: https://noctis.c0nn3ct.info/site.xml
+# The ?v=2 is not cache-busting. Search Console has the bare
+# https://noctis.c0nn3ct.info/sitemap.xml stuck at "Couldn't fetch" - the entry has
+# been in that state for a month, survives removal and resubmission, and is Google's
+# state rather than ours: the identical bytes read fine at /site.xml, at
+# /sitemap_index.xml and at this same path with a query string (verified 2026-08-25,
+# 24 URLs discovered), and a URL Inspection live test on the bare path returns
+# 200 application/xml. Other crawlers ignore the query. Drop it if Google ever
+# unsticks the plain URL.
+Sitemap: https://noctis.c0nn3ct.info/sitemap.xml?v=2

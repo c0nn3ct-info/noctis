@@ -8,7 +8,9 @@ function pairPath(currentPath: string, target: Locale): string {
   return withLocale(stripLocale(currentPath), target);
 }
 
-const LOCALES: ReadonlyArray<{ code: Locale; label: string }> = [
+// Exported: the footer renders the same six languages as crawlable links, and a
+// second copy of this list would drift the moment a locale is added.
+export const LOCALE_OPTIONS: ReadonlyArray<{ code: Locale; label: string }> = [
   { code: 'en', label: 'English' },
   { code: 'ru', label: 'Русский' },
   { code: 'es', label: 'Español' },
@@ -74,7 +76,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
           role="menu"
           className="absolute end-0 top-full z-30 mt-1 min-w-[10rem] overflow-hidden rounded-md border border-outline-variant bg-surface-container shadow-e2"
         >
-          {LOCALES.map((l) => {
+          {LOCALE_OPTIONS.map((l) => {
             const active = l.code === locale;
             return (
               <li key={l.code} role="none">

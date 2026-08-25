@@ -11,6 +11,7 @@
   "footer.home": "主页",
   "footer.pages": "页面",
   "footer.sources": "源代码",
+  "footer.languages": "语言",
   "home.title": "Noctis — 浏览器代理",
   "home.description": "通过本地代理引擎（sing-box、xray 或 mihomo），让浏览器走 VLESS、VMess、Trojan、Shadowsocks、Hysteria/2、TUIC、WireGuard 等协议。",
   "home.hero.h1": "Chrome 的 VLESS 浏览器扩展",

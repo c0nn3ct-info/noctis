@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { Download, FileText, Github, Home, ShieldCheck } from 'lucide-react';
+import { Download, FileText, Github, Home, Languages, ShieldCheck } from 'lucide-react';
 import { NoctisLogo } from '@/components/noctis-logo';
 import { cn } from '@/lib/utils';
-import { localePath, t } from './i18n';
-import { LanguageSwitcher } from './components/language-switcher';
+import { getLocale, withLocale, t, localePath } from './i18n';
+import { LanguageSwitcher, LOCALE_OPTIONS } from './components/language-switcher';
 import { GithubLink } from './components/github-link';
 
 type PageKey = 'home' | 'install' | 'privacy' | 'license';
@@ -26,6 +26,10 @@ const PAGES: ReadonlyArray<{ key: PageKey; path: string; labelKey: string; icon:
 
 export function Layout({ current, children }: LayoutProps) {
   const homeHref = localePath('/');
+  const locale = getLocale();
+  // Locale-less path of the page being rendered, so every language link points at
+  // this page's translation rather than at the six home pages.
+  const currentPath = PAGES.find((p) => p.key === current)!.path;
   return (
     <div className="flex min-h-screen flex-col bg-background text-on-surface">
       {/* First stop for a keyboard user: the header repeats on every page and
@@ -127,6 +131,31 @@ export function Layout({ current, children }: LayoutProps) {
                   {t('footer.helper')}
                 </a>
               </li>
+            </ul>
+          </nav>
+          {/* The header switcher builds its menu on click, so a crawler never sees
+              those links. Google discovered the locales through the sitemap alone,
+              which is why five of six sat unindexed - these are the same six URLs
+              as plain markup. */}
+          <nav aria-label={t('footer.languages')}>
+            <div className="mb-2 text-label-small uppercase tracking-[0.12em]">
+              {t('footer.languages')}
+            </div>
+            <ul className="space-y-0.5">
+              {LOCALE_OPTIONS.map((l) => (
+                <li key={l.code}>
+                  <a
+                    className="inline-flex items-center gap-2 py-1 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    href={withLocale(currentPath, l.code)}
+                    hrefLang={l.code}
+                    lang={l.code}
+                    aria-current={l.code === locale ? 'true' : undefined}
+                  >
+                    <Languages className="h-3.5 w-3.5" aria-hidden />
+                    {l.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </nav>
         </div>

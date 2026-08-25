@@ -11,6 +11,7 @@
   "footer.home": "Главная",
   "footer.pages": "Страницы",
   "footer.sources": "Исходный код",
+  "footer.languages": "Языки",
   "home.title": "Noctis — браузерный прокси",
   "home.description": "Пускайте трафик браузера через VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard и другие — через локальный движок прокси (sing-box, xray или mihomo).",
   "home.hero.h1": "Расширение VLESS для браузера Chrome",

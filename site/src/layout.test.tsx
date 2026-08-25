@@ -45,8 +45,15 @@ describe('Layout', () => {
       // Two labels, two destinations: they used to resolve to the same page.
       'https://github.com/c0nn3ct-info/noctis/tree/master/site',
       'https://github.com/c0nn3ct-info/noctis/tree/master/host',
+      // Every locale of *this* page, as markup a crawler can follow.
+      '/install/',
+      '/ru/install/',
+      '/es/install/',
+      '/zh-CN/install/',
+      '/fa/install/',
+      '/ar/install/',
     ]);
-    expect(links.map((a) => a.textContent)).toEqual([
+    expect(links.slice(0, 6).map((a) => a.textContent)).toEqual([
       t('footer.home'),
       t('nav.install'),
       t('nav.privacy'),
@@ -54,7 +61,15 @@ describe('Layout', () => {
       t('footer.site'),
       t('footer.helper'),
     ]);
-    for (const external of links.slice(4)) {
+    expect(links.slice(6).map((a) => a.getAttribute('hreflang'))).toEqual([
+      'en',
+      'ru',
+      'es',
+      'zh-CN',
+      'fa',
+      'ar',
+    ]);
+    for (const external of links.slice(4, 6)) {
       expect(external).toHaveAttribute('target', '_blank');
       expect(external).toHaveAttribute('rel', 'noreferrer noopener');
     }
@@ -86,5 +101,13 @@ describe('Layout', () => {
     ).toEqual(['/ru/', '/ru/install/', '/ru/privacy/', '/ru/license/']);
     expect(within(footer()).getByText(t('footer.pages'))).toBeInTheDocument();
     expect(within(footer()).getByText(t('footer.sources'))).toBeInTheDocument();
+    expect(within(footer()).getByText(t('footer.languages'))).toBeInTheDocument();
+    // The language links leave the active locale for the target one.
+    expect(
+      within(footer())
+        .getAllByRole('link')
+        .slice(6)
+        .map((a) => a.getAttribute('href')),
+    ).toEqual(['/privacy/', '/ru/privacy/', '/es/privacy/', '/zh-CN/privacy/', '/fa/privacy/', '/ar/privacy/']);
   });
 });

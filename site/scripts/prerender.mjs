@@ -269,7 +269,12 @@ function startServer(port) {
   return new Promise((resolveP) => server.listen(port, () => resolveP(server)));
 }
 
-function buildSitemap(lastmod) {
+// No <lastmod>/<changefreq>: the sitemap is built in the public mirror, whose
+// history is one squashed commit per release, so there is no per-page change date
+// to report. Stamping the build date on all 24 URLs claims every page changed on
+// every deploy - a signal Google discounts once it proves wrong. Omitting it is
+// honest, and <priority> stays only because it is free.
+function buildSitemap() {
   const pages = ['home', 'install', 'privacy', 'license'];
   const locales = LOCALES;
   const urls = [];
@@ -285,8 +290,6 @@ function buildSitemap(lastmod) {
       urls.push(
         `  <url>
     <loc>${url}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
     <priority>${PRIORITY[page]}</priority>
 ${alts}
     <xhtml:link rel="alternate" hreflang="x-default" href="${ORIGIN}${pathFor(page, 'en')}" />
@@ -300,23 +303,6 @@ ${alts}
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${urls.join('\n')}
 </urlset>
-`;
-}
-
-// A sitemap index is not strictly needed at this scale (<50k URLs / <50MB), but search
-// consoles accept it and it future-proofs splitting the sitemap later.
-function buildSitemapIndex(lastmod) {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>${ORIGIN}/sitemap.xml</loc>
-    <lastmod>${lastmod}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${ORIGIN}/site.xml</loc>
-    <lastmod>${lastmod}</lastmod>
-  </sitemap>
-</sitemapindex>
 `;
 }
 
@@ -380,15 +366,11 @@ async function main() {
       }
     }
 
-    const lastmod = new Date().toISOString().slice(0, 10);
-    const sitemap = buildSitemap(lastmod);
-    await writeFile(resolve(distDir, 'sitemap.xml'), sitemap, 'utf8');
-    console.log(`✓ wrote sitemap.xml (lastmod=${lastmod})`);
-    // site.xml is an alias of sitemap.xml (identical content) served at a second path.
-    await writeFile(resolve(distDir, 'site.xml'), sitemap, 'utf8');
-    console.log(`✓ wrote site.xml (lastmod=${lastmod})`);
-    await writeFile(resolve(distDir, 'sitemap_index.xml'), buildSitemapIndex(lastmod), 'utf8');
-    console.log(`✓ wrote sitemap_index.xml (lastmod=${lastmod})`);
+    // One sitemap at one URL. The old site.xml alias and sitemap_index.xml were
+    // byte-identical copies, which cost a Search Console entry each and got crawled
+    // as pages in their own right.
+    await writeFile(resolve(distDir, 'sitemap.xml'), buildSitemap(), 'utf8');
+    console.log('✓ wrote sitemap.xml');
   } finally {
     await browser.close();
     server.close();

@@ -11,6 +11,7 @@
   "footer.home": "Home",
   "footer.pages": "Pages",
   "footer.sources": "Sources",
+  "footer.languages": "Languages",
   "home.title": "Noctis - Browser Proxy",
   "home.description": "Route your browser through VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard & more via a local proxy engine — sing-box, xray, or mihomo.",
   "home.hero.h1": "VLESS Browser Extension for Chrome",

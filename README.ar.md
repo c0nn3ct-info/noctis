@@ -13,7 +13,7 @@
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn"><img src="https://img.shields.io/chrome-web-store/v/nmhobajopepdpihahepaddpdifdcenpn?label=Chrome%20Web%20Store&color=4285F4" alt="Chrome Web Store"></a>
   <a href="./site/LICENSE.md"><img src="https://img.shields.io/badge/license-EULA-blue" alt="الترخيص: EULA"></a>
-  <a href="https://github.com/c0nn3ct-info/noctis"><img src="https://img.shields.io/badge/helper-MIT-green" alt="المساعد: MIT"></a>
+  <a href="https://github.com/c0nn3ct-info/noctis"><img src="https://img.shields.io/badge/helper-MIT-green" alt="المكوّن المحلي: MIT"></a>
   <a href="https://noctis.c0nn3ct.info"><img src="https://img.shields.io/badge/site-noctis.c0nn3ct.info-7c3aed" alt="الموقع"></a>
 </p>
 
@@ -25,9 +25,9 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis وكيل للمتصفّح — وليس VPN على مستوى النظام. يُوجَّه ترافيك Chrome وحده؛ أمّا بقية نظام التشغيل فتبقى على اتصالك الحقيقي. الإضافة مجانية بترخيص EULA مملوك؛ والمساعد الأصلي مفتوح المصدر (MIT).
+> Noctis وكيل للمتصفّح — وليس VPN على مستوى النظام. يُوجَّه ترافيك Chrome وحده؛ أمّا بقية نظام التشغيل فتبقى على اتصالك الحقيقي. الإضافة مجانية بترخيص EULA مملوك؛ والمكوّن المحلي مفتوح المصدر (MIT).
 
-Noctis إضافة متصفّح مجانية توجّه ترافيك Chrome عبر خوادم VLESS وVMess وTrojan وShadowsocks وHysteria2 وReality وغيرها من خلال مساعد محلي يشغّل محرّك وكيل قابلًا للتبديل — sing-box أو xray-core أو mihomo. لا VPN على مستوى النظام، ولا نافذة عميل منفصلة — يبقى التوكيل داخل المتصفّح.
+Noctis إضافة متصفّح مجانية توجّه ترافيك Chrome عبر خوادم VLESS وVMess وTrojan وShadowsocks وHysteria2 وReality وغيرها من خلال مكوّن محلي يشغّل محرّك وكيل قابلًا للتبديل — sing-box أو xray-core أو mihomo. لا VPN على مستوى النظام، ولا نافذة عميل منفصلة — يبقى التوكيل داخل المتصفّح.
 
 ## ✨ المزايا
 
@@ -70,27 +70,27 @@ Noctis إضافة متصفّح مجانية توجّه ترافيك Chrome عب�
                                             └──────────────────┘
 ```
 
-يأتي Noctis افتراضيًا مع sing-box ويمكنه أيضًا تشغيل xray-core وmihomo. يشرف مساعد أصلي صغير على المحرّك على جهازك، ويختار Noctis المحرّك المناسب لكل خادم تلقائيًا — فتعمل البروتوكولات التي لا يستطيع محرّك واحد التعامل معها ببساطة. يفتح xray قدرات xhttp/splithttp وأنواع تدفّق XTLS (REALITY-vision)؛ ويضيف mihomo Snell وSSR وMieru. لا ترسل إضافة المتصفّح سوى قرارات التوجيه — ولا ترسل أبدًا ترافيكًا خامًا.
+يأتي Noctis افتراضيًا مع sing-box ويمكنه أيضًا تشغيل xray-core وmihomo. يشرف مكوّن محلي صغير على المحرّك على جهازك، ويختار Noctis المحرّك المناسب لكل خادم تلقائيًا — فتعمل البروتوكولات التي لا يستطيع محرّك واحد التعامل معها ببساطة. يفتح xray قدرات xhttp/splithttp وأنواع تدفّق XTLS (REALITY-vision)؛ ويضيف mihomo Snell وSSR وMieru. لا ترسل إضافة المتصفّح سوى قرارات التوجيه — ولا ترسل أبدًا ترافيكًا خامًا.
 
 ## 📥 التثبيت
 
-تحتاج إضافة Noctis إلى مساعد أصلي صغير يعمل على جهازك. يشرف المساعد على محرّك الوكيل — sing-box أو xray أو mihomo — الذي يقوم فعليًا بالتوكيل.
+تحتاج إضافة Noctis إلى مكوّن محلي صغير يعمل على جهازك. يشرف المكوّن المحلي على محرّك الوكيل — sing-box أو xray أو mihomo — الذي يقوم فعليًا بالتوكيل.
 
 ### قبل أن تبدأ
 
 - متصفّح مبني على Chromium، الإصدار 120 أو أحدث (Chrome وChromium وEdge وBrave وArc وVivaldi وOpera وYandex Browser).
-- نحو 100 ميغابايت من مساحة القرص الحرّة للمساعد ومحرّكات الوكيل.
+- نحو 100 ميغابايت من مساحة القرص الحرّة للمكوّن ومحرّكات الوكيل.
 - دون صلاحيات مسؤول / root — يُثبَّت كل شيء داخل حساب المستخدم الخاص بك.
 
 ### ثبّت الإضافة
 
-ثبّت Noctis من [Chrome Web Store](https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn). افتح الإضافة بعد التثبيت — ستكتشف غياب المساعد وتعرض نافذة إعداد بأمر من سطر واحد مُعبّأ مسبقًا لجهازك.
+ثبّت Noctis من [Chrome Web Store](https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn). افتح الإضافة بعد التثبيت — ستكتشف غياب المكوّن المحلي وتعرض نافذة إعداد بأمر من سطر واحد مُعبّأ مسبقًا لجهازك.
 
-### شغّل مثبّت المساعد
+### شغّل مثبّت المكوّن المحلي
 
-انسخ الأمر من نافذة Helper Setup في الإضافة والصقه في الطرفية. معرّف الإضافة الخاص بك مُعبّأ مسبقًا — لا حاجة للبحث عنه. للمرجع، يبدو الأمر هكذا:
+انسخ الأمر من نافذة إعداد المكوّن المحلي في الإضافة والصقه في الطرفية. معرّف الإضافة مُدرج مسبقًا، فلا حاجة إلى البحث عنه. يبدو الأمر هكذا:
 
-مصدر المساعد: <https://github.com/c0nn3ct-info/noctis>
+مصدر المكوّن المحلي: <https://github.com/c0nn3ct-info/noctis>
 
 **macOS**
 ```bash
@@ -109,7 +109,7 @@ $env:NOCTIS_EXT_ID='nmhobajopepdpihahepaddpdifdcenpn'; iwr -useb https://noctis.
 
 يُنزّل المثبّت noctis-host ومحرّكات الوكيل (sing-box وxray وmihomo) إلى دليل بيانات المستخدم ويكتب بيان المراسلة الأصلية لكل متصفّح مدعوم.
 
-في أول مرة تتواصل فيها الإضافة مع المساعد، قد يعرض متصفّحك مطالبة مراسلة أصلية تظهر مرة واحدة — وافِق عليها.
+في أول مرة تتواصل فيها الإضافة مع المكوّن المحلي، قد يعرض متصفّحك مطالبة مراسلة أصلية تظهر مرة واحدة — وافِق عليها.
 
 ### التشغيل الأول
 
@@ -135,16 +135,16 @@ VLESS بروتوكول وكيل خفيف من عائلة V2Ray/Xray. لا يحم
 تُنفِّق شبكة VPN كل تطبيق على نظامك عبر اتصال واحد وتحتاج عادةً إلى صلاحيات مسؤول. أمّا إضافة وكيل المتصفّح مثل Noctis فتوجّه المتصفّح فقط، ولا تتطلّب صلاحيات root أو مسؤول، وتتيح لك إبقاء Zoom وSteam وTelegram desktop والتورنت على شبكتك الحقيقية في الوقت نفسه.
 
 **هل يدعم Noctis تقنية VLESS Reality؟**
-نعم. ينقل Noctis معاملات Reality (Server Name وFingerprint وSNI وDest والمفتاح العام وShort ID) إلى المساعد دون تغيير ويشغّل الخادم على محرّك يدعمها — يوفّر xray تدفّق XTLS-vision الكامل. الصق رابط مشاركة `vless://...flow=xtls-rprx-vision&security=reality` وتستورد الإضافة كل حقل.
+نعم. ينقل Noctis معاملات Reality (Server Name وFingerprint وSNI وDest والمفتاح العام وShort ID) إلى المكوّن المحلي دون تغيير ويشغّل الخادم على محرّك يدعمها — يوفّر xray تدفّق XTLS-vision الكامل. الصق رابط مشاركة `vless://...flow=xtls-rprx-vision&security=reality` وتستورد الإضافة كل حقل.
 
 **ما بروتوكولات الوكيل التي يدعمها Noctis؟**
 VLESS وVMess وTrojan وShadowsocks وHysteria2 وTUIC وWireGuard وAnyTLS وShadowTLS — إضافةً إلى xhttp/splithttp وSnell وSSR وغيرها عبر xray وmihomo. وتعمل روابط مشاركة V2Ray وXray كما هي.
 
 **هل استخدام إضافة وكيل لـ Chrome آمن؟**
-أكثر أمانًا من معظمها. لا يرسل Noctis أي شيء إلى مطوّره — لا تحليلات ولا قياس عن بُعد ولا إعدادات بعيدة. تبقى إعدادات الخوادم في تخزين المتصفّح. يعمل المساعد الأصلي دون صلاحيات مسؤول. تجد قائمة الصلاحيات الكاملة ومبرّراتها في [سياسة الخصوصية](./site/PRIVACY.md).
+أكثر أمانًا من معظمها. لا يرسل Noctis أي شيء إلى مطوّره — لا تحليلات ولا قياس عن بُعد ولا إعدادات بعيدة. تبقى إعدادات الخوادم في تخزين المتصفّح. يعمل المكوّن المحلي دون صلاحيات مسؤول. تجد قائمة الصلاحيات الكاملة ومبرّراتها في [سياسة الخصوصية](./site/PRIVACY.md).
 
 **هل يعمل Noctis على Windows وmacOS وLinux؟**
-نعم — على المتصفّحات المبنية على Chromium في Windows وmacOS وLinux (Chrome وEdge وBrave وArc وVivaldi وOpera وYandex Browser). للمساعد الأصلي سكربتات تثبيت من سطر واحد لكل منصّة.
+نعم — على المتصفّحات المبنية على Chromium في Windows وmacOS وLinux (Chrome وEdge وBrave وArc وVivaldi وOpera وYandex Browser). للمكوّن الأصلي سكربتات تثبيت من سطر واحد لكل منصّة.
 
 **هل يمكنني استخدام رابط اشتراك لتحديث الخوادم تلقائيًا؟**
 نعم. الصق رابط اشتراك مرة واحدة ويحدّثه Noctis وفق جدول زمني. تتحدّث قوائم الخوادم تلقائيًا؛ وتبقى التحديدات المثبّتة والنشطة عبر التحديثات.
@@ -156,7 +156,7 @@ Noctis في حدّ ذاته مجرّد عميل وكيل — يوجّه متصف
 نعم. مفتاح اختياري يحظر UDP خارج الوكيل كي لا يكشف WebRTC عنوان IP الحقيقي الخاص بك أثناء عمل الوكيل.
 
 **كم يكلّف Noctis؟**
-مجاني. الإضافة مجانية في Chrome Web Store والمساعد الأصلي مفتوح المصدر بترخيص MIT. أنت تدفع فقط مقابل خوادم الوكيل التي تختار استخدامها.
+مجاني. الإضافة مجانية في Chrome Web Store والمكوّن المحلي مفتوح المصدر بترخيص MIT. أنت تدفع فقط مقابل خوادم الوكيل التي تختار استخدامها.
 
 ## 🙏 شكر وتقدير
 
@@ -167,5 +167,5 @@ Noctis في حدّ ذاته مجرّد عميل وكيل — يوجّه متصف
 
 - الترخيص — EULA مملوك: انظر [LICENSE](./site/LICENSE.md) أو <https://noctis.c0nn3ct.info/ar/license/>.
 - الخصوصية — انظر [PRIVACY](./site/PRIVACY.md) أو <https://noctis.c0nn3ct.info/ar/privacy/>.
-- المساعد الأصلي — بترخيص MIT: انظر <https://github.com/c0nn3ct-info/noctis>.
+- المكوّن المحلي — بترخيص MIT: انظر <https://github.com/c0nn3ct-info/noctis>.
 - محرّكات الوكيل — sing-box (GPL-3.0) وxray-core (MPL-2.0) وmihomo (GPL-3.0)، يُعاد توزيع كلٍّ منها بترخيصه الأصلي.

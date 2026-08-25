@@ -11,6 +11,7 @@
   "footer.home": "خانه",
   "footer.pages": "صفحه‌ها",
   "footer.sources": "کد منبع",
+  "footer.languages": "زبان‌ها",
   "home.title": "Noctis — پراکسی مرورگر",
   "home.description": "ترافیک مرورگر خود را از طریق VLESS، VMess، Trojan، Shadowsocks، Hysteria/2، TUIC، WireGuard و موارد دیگر، با یک موتور پراکسی محلی (sing-box، xray یا mihomo) مسیریابی کنید.",
   "home.hero.h1": "افزونه VLESS برای مرورگر Chrome",

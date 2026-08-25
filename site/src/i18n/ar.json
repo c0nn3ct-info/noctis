@@ -11,6 +11,7 @@
   "footer.home": "الرئيسية",
   "footer.pages": "الصفحات",
   "footer.sources": "الشفرة المصدرية",
+  "footer.languages": "اللغات",
   "home.title": "Noctis — وكيل للمتصفّح",
   "home.description": "وجّه متصفّحك عبر VLESS وVMess وTrojan وShadowsocks وHysteria/2 وTUIC وWireGuard وغيرها من خلال محرّك وكيل محلي (sing-box أو xray أو mihomo).",
   "home.hero.h1": "إضافة VLESS لمتصفّح Chrome",
