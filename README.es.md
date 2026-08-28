@@ -72,6 +72,26 @@ Los navegadores no pueden ejecutar por sí solos un motor de proxy. Tres piezas 
 
 Noctis incluye sing-box de forma predeterminada y también puede controlar xray-core y mihomo. Un pequeño componente local supervisa el motor en tu equipo, y Noctis elige el adecuado para cada servidor automáticamente — así los protocolos que un solo motor no puede manejar simplemente funcionan. xray habilita xhttp/splithttp y las variantes de flujo XTLS (REALITY-vision); mihomo añade Snell, SSR y Mieru. La extensión del navegador solo envía decisiones de enrutamiento, nunca tráfico en bruto.
 
+## 🧭 Reglas de enrutamiento
+
+Un perfil de enrutamiento son tres grupos de reglas y el orden en que se comprueban. Los chips de **Evaluation order** en la pantalla del perfil muestran ese orden y se pueden arrastrar.
+
+| Grupo | Qué ocurre con una coincidencia |
+| --- | --- |
+| **Direct** | Sale por tu conexión real, sin pasar por el proxy. |
+| **Proxy** | Sale por el servidor activo. |
+| **Block** | La petición se descarta. Noctis muestra su página de bloqueo e indica la regla que coincidió. |
+
+Gana la primera coincidencia, así que el orden resuelve los conflictos. Con el orden por defecto `Direct → Proxy → Block`, un host que aparece en Direct y en Block sale directo.
+
+Cada grupo admite tres tipos de entradas: **Domains** (`example.com`, `*.example.com`), **Geosite** (un nombre de categoría como `youtube` o `ads`), **Geoip** (un código de país como `cn`, o un rango CIDR).
+
+Lo que no coincide con ningún grupo sale directo. Los grupos solo se aplican en el modo Rules: Global envía todo el tráfico por el proxy y Direct lo omite por completo.
+
+### Cuándo añadir algo a Block
+
+Block descarta el tráfico en lugar de enrutarlo: dominios de publicidad y rastreadores, puntos de telemetría, un sitio que no quieres abrir en este navegador. Las reglas incluidas ya envían las familias `geosite:ads` a Block, así que lo normal es dejarlo vacío. Si una página aparece bloqueada por sorpresa, la página de bloqueo nombra el perfil y la regla, y permite eliminarla desde ahí.
+
 ## 📥 Instalación
 
 La extensión Noctis necesita un pequeño componente local ejecutándose en tu equipo. El componente local supervisa el motor de proxy —sing-box, xray o mihomo— que realmente hace el proxy.
@@ -157,6 +177,9 @@ Sí. Un interruptor opcional bloquea el UDP fuera del proxy para que WebRTC no p
 
 **¿Cuánto cuesta Noctis?**
 Es gratis. La extensión es gratuita en Chrome Web Store y el componente local es de código abierto bajo MIT. Solo pagas por los servidores proxy que decidas usar.
+
+**¿Qué hace la sección Block de un perfil de enrutamiento?**
+Block descarta las peticiones que coinciden en lugar de enviarlas a algún sitio: ni proxy ni conexión directa. Noctis muestra su página de bloqueo e indica la regla que coincidió. La cadena completa está en [Reglas de enrutamiento](#-reglas-de-enrutamiento).
 
 ## 🙏 Agradecimientos
 

@@ -72,6 +72,26 @@ Browsers can't run a proxy engine on their own. Three pieces split the work acro
 
 Noctis ships sing-box by default and can also drive xray-core and mihomo. A small native helper supervises the engine on your machine, and Noctis picks the right one for each server automatically — so protocols a single engine can't handle just work. xray unlocks xhttp/splithttp and the XTLS flow variants (REALITY-vision); mihomo adds Snell, SSR and Mieru. The browser extension only ever sends routing decisions — never raw traffic.
 
+## 🧭 Routing rules
+
+A routing profile is three groups of rules plus the order they are checked in. The **Evaluation order** chips on the profile screen show that order, and you can drag them.
+
+| Group | What happens to a match |
+| --- | --- |
+| **Direct** | Leaves through your real connection, skipping the proxy. |
+| **Proxy** | Leaves through the active server. |
+| **Block** | The request is dropped. Noctis shows its own block page and names the rule that matched. |
+
+The first match wins, so the order settles conflicts. With the default `Direct → Proxy → Block`, a host listed in Direct and in Block goes direct.
+
+Each group takes three kinds of entries: **Domains** (`example.com`, `*.example.com`), **Geosite** (a category name such as `youtube` or `ads`), **Geoip** (a country code such as `cn`, or a CIDR range).
+
+Anything that matches no group goes direct. Groups only apply in Rules mode: Global sends all traffic through the proxy, Direct skips the proxy entirely.
+
+### When to add something to Block
+
+Block drops traffic instead of routing it: ad and tracker domains, telemetry endpoints, a site you do not want opening in this browser. The bundled rules already send the `geosite:ads` families to Block, so an empty Block is the normal case. If a page turns out blocked unexpectedly, the block page names the profile and the rule, and lets you remove it from there.
+
 ## 📥 Install
 
 The Noctis extension needs a small native helper running on your machine. The helper supervises the proxy engine — sing-box, xray, or mihomo — that actually does the proxying.
@@ -159,6 +179,9 @@ Yes. An optional toggle blocks UDP outside the proxy so WebRTC can't reveal your
 
 **How much does Noctis cost?**
 Free. The extension is free in the Chrome Web Store and the native helper is open-source under MIT. You only pay for the proxy servers you choose to use.
+
+**What does the Block section in a routing profile do?**
+Block drops matching requests instead of sending them anywhere - no proxy, no direct connection. Noctis shows its own block page and names the rule that matched. See [Routing rules](#-routing-rules) for the full chain.
 
 ## 🙏 Acknowledgments
 

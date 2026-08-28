@@ -72,6 +72,26 @@ Noctis 支持 VLESS（包括 VLESS Reality）、VMess、Trojan、Shadowsocks、H
 
 Noctis 默认自带 sing-box，也能驱动 xray-core 和 mihomo。一个小型本机组件在你的机器上管理引擎，Noctis 会为每台服务器自动挑选合适的引擎——因此单一引擎无法处理的协议也能直接使用。xray 解锁 xhttp/splithttp 和 XTLS 流变体（REALITY-vision）；mihomo 增加 Snell、SSR 和 Mieru。浏览器扩展只发送路由决策——绝不传输原始流量。
 
+## 🧭 路由规则
+
+一个路由配置由三组规则和它们的检查顺序组成。配置页面的 **Evaluation order** 芯片显示当前顺序，可以拖动调整。
+
+| 分组 | 命中后的行为 |
+| --- | --- |
+| **Direct** | 走本机真实连接，绕过代理。 |
+| **Proxy** | 走当前生效的服务器。 |
+| **Block** | 请求被丢弃。Noctis 显示自己的拦截页面，并写出命中的规则。 |
+
+先命中先生效，因此顺序决定冲突的结果。默认顺序 `Direct → Proxy → Block` 下，同时出现在 Direct 和 Block 的主机走直连。
+
+每个分组接受三类条目：**Domains**（`example.com`、`*.example.com`）、**Geosite**（类别名，例如 `youtube` 或 `ads`）、**Geoip**（国家代码，例如 `cn`，或 CIDR 网段）。
+
+没有命中任何分组的流量走直连。分组只在 Rules 模式下生效：Global 让全部流量走代理，Direct 完全不使用代理。
+
+### 什么时候往 Block 里加东西
+
+Block 丢弃流量，而不是转发流量：广告和跟踪域名、遥测上报地址、不希望在这个浏览器里打开的站点。内置规则已经把 `geosite:ads` 系列送进 Block，所以 Block 保持为空是常态。如果某个页面被意外拦截，拦截页面会写出配置名和规则，并可以直接删除它。
+
 ## 📥 安装
 
 Noctis 扩展需要在你的机器上运行一个小型本机组件。该本机组件负责管理代理引擎——sing-box、xray 或 mihomo——也就是真正执行代理的引擎。
@@ -157,6 +177,9 @@ Noctis 本身只是一个代理客户端——它把你的浏览器路由到你�
 
 **Noctis 收费吗？**
 免费。扩展在 Chrome Web Store 上免费，本机组件在 MIT 许可下开源。你只需为自己选用的代理服务器付费。
+
+**路由配置里的 Block 分组是做什么的？**
+Block 丢弃命中的请求，而不是把它们发往任何地方：既不走代理，也不走直连。Noctis 显示自己的拦截页面，并写出命中的规则。完整链路见[路由规则](#-路由规则)。
 
 ## 🙏 致谢
 

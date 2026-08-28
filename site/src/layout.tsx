@@ -14,6 +14,7 @@ interface LayoutProps {
 }
 
 const REPO = 'https://github.com/c0nn3ct-info/noctis';
+const ORG_SITE = 'https://c0nn3ct.info';
 
 // One list, used by the header on wide screens and the footer everywhere, so the
 // two can never drift apart.
@@ -79,7 +80,19 @@ export function Layout({ current, children }: LayoutProps) {
 
       <footer className="mx-auto w-full max-w-3xl px-4 py-8 text-label-medium text-on-surface-variant sm:px-6 lg:max-w-5xl">
         <div className="border-t border-outline-variant pt-6 flex flex-wrap items-start gap-x-12 gap-y-6">
-          <div className="text-label-small">{t('footer.by')}</div>
+          {/* The by-line points at the org site, not this one: noctis.c0nn3ct.info
+              is the product, c0nn3ct.info is who made it. */}
+          <div className="text-label-small">
+            {t('footer.by')}{' '}
+            <a
+              className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              href={ORG_SITE}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              c0nn3ct.info
+            </a>
+          </div>
           {/* The nav element already carries the group name, so the visible
               label stays a label instead of adding a heading to every outline. */}
           <nav aria-label={t('footer.pages')}>

@@ -30,7 +30,9 @@ describe('Layout', () => {
     ).toBeInTheDocument();
 
     expect(within(screen.getByRole('main')).getByTestId('page')).toBeInTheDocument();
-    expect(within(footer()).getByText(t('footer.by'))).toBeInTheDocument();
+    const by = within(footer()).getByRole('link', { name: 'c0nn3ct.info' });
+    expect(by).toHaveAttribute('href', 'https://c0nn3ct.info');
+    expect(by.parentElement).toHaveTextContent(`${t('footer.by')} c0nn3ct.info`);
   });
 
   it('links every page and both source repos from the footer', () => {
@@ -38,6 +40,8 @@ describe('Layout', () => {
     const links = within(footer()).getAllByRole('link');
 
     expect(links.map((a) => a.getAttribute('href'))).toEqual([
+      // The by-line: the org that made Noctis, not the product site.
+      'https://c0nn3ct.info',
       '/',
       '/install/',
       '/privacy/',
@@ -53,7 +57,7 @@ describe('Layout', () => {
       '/fa/install/',
       '/ar/install/',
     ]);
-    expect(links.slice(0, 6).map((a) => a.textContent)).toEqual([
+    expect(links.slice(1, 7).map((a) => a.textContent)).toEqual([
       t('footer.home'),
       t('nav.install'),
       t('nav.privacy'),
@@ -61,7 +65,7 @@ describe('Layout', () => {
       t('footer.site'),
       t('footer.helper'),
     ]);
-    expect(links.slice(6).map((a) => a.getAttribute('hreflang'))).toEqual([
+    expect(links.slice(7).map((a) => a.getAttribute('hreflang'))).toEqual([
       'en',
       'ru',
       'es',
@@ -69,7 +73,7 @@ describe('Layout', () => {
       'fa',
       'ar',
     ]);
-    for (const external of links.slice(4, 6)) {
+    for (const external of links.slice(5, 7)) {
       expect(external).toHaveAttribute('target', '_blank');
       expect(external).toHaveAttribute('rel', 'noreferrer noopener');
     }
@@ -96,7 +100,7 @@ describe('Layout', () => {
     expect(
       within(footer())
         .getAllByRole('link')
-        .slice(0, 4)
+        .slice(1, 5)
         .map((a) => a.getAttribute('href')),
     ).toEqual(['/ru/', '/ru/install/', '/ru/privacy/', '/ru/license/']);
     expect(within(footer()).getByText(t('footer.pages'))).toBeInTheDocument();
@@ -108,7 +112,7 @@ describe('Layout', () => {
     expect(
       within(footer())
         .getAllByRole('link')
-        .slice(6)
+        .slice(7)
         .map((a) => a.getAttribute('href')),
     ).toEqual(['/privacy/', '/ru/privacy/', '/es/privacy/', '/zh-CN/privacy/', '/fa/privacy/', '/ar/privacy/']);
   });
