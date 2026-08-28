@@ -68,55 +68,122 @@ func coreByID(id string) (Core, error) {
 	return c, nil
 }
 
-// installedCores probes every registered core and reports availability +
-// version in a stable order. The extension gates which cores it offers, and
-// uses the sing-box version to pick the config schema (>=1.12 modern, else the
-// legacy schema) — so a helper paired with an old sing-box still works.
+// coreOrder is the order cores are reported in, and the priority `auto` follows.
+var coreOrder = []string{"sing-box", "xray", "mihomo"}
+
+// versionBudget caps how long an ack waits for version probes it does not
+// already have cached. The probes keep running past it and land in the cache,
+// so a later ack reports what this one had to leave out. It sits well under the
+// extension's hello timeout on purpose: a cold first exec of a core binary
+// (Gatekeeper on macOS, a virus scanner on Windows) took the serial probes past
+// that timeout, and an installed helper then looked absent.
+// A var so tests can shorten it.
+var versionBudget = 1200 * time.Millisecond
+
+// installedCores reports every registered core's availability and version in a
+// stable order. Availability is a stat of the binary; the version needs a
+// subprocess, so the probes run concurrently and only for as long as
+// versionBudget allows. The extension gates which cores it offers, and uses the
+// sing-box version to pick the config schema (>=1.12 modern, else the legacy
+// schema) — a version that misses the budget reads as modern, which the
+// extension's schema retry corrects if that sing-box is in fact old.
 func installedCores() []map[string]any {
+	type slot struct {
+		entry *versionEntry
+		out   map[string]any
+	}
 	out := []map[string]any{}
-	for _, id := range []string{"sing-box", "xray", "mihomo"} {
+	var pending []slot
+	for _, id := range coreOrder {
 		c, ok := cores[id]
 		if !ok {
 			continue
 		}
 		_, err := c.Locate()
 		entry := map[string]any{"id": id, "available": err == nil}
-		if err == nil {
-			if v := coreVersion(c); v != "" {
-				entry["version"] = v
-			}
-		}
 		out = append(out, entry)
+		if err == nil {
+			pending = append(pending, slot{entry: versionAsync(c), out: entry})
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), versionBudget)
+	defer cancel()
+	for _, p := range pending {
+		select {
+		case <-p.entry.done:
+		case <-ctx.Done():
+		}
+		if v := p.entry.value(); v != "" {
+			p.out["version"] = v
+		}
 	}
 	return out
 }
 
+// warmVersions starts a version probe for every core and waits for none of
+// them. Called at startup so the first hello finds a warm cache instead of
+// paying for a cold exec of each core binary on the request path.
+func warmVersions() {
+	for _, id := range coreOrder {
+		if c, ok := cores[id]; ok {
+			versionAsync(c)
+		}
+	}
+}
+
 var semverRe = regexp.MustCompile(`\d+\.\d+\.\d+`)
+
+// versionEntry is one core's memoized version probe. done closes when the probe
+// finishes, and val is only meaningful after that: a caller that gives up on
+// versionBudget reads "" and asks again on a later ack.
+type versionEntry struct {
+	done chan struct{}
+	val  string
+}
+
+func (e *versionEntry) value() string {
+	versionCacheMu.Lock()
+	defer versionCacheMu.Unlock()
+	return e.val
+}
 
 // versionCache memoizes a core's version for the helper's lifetime — the
 // binaries don't change while we run, and re-probing on every hello/connect
 // would add needless subprocess latency.
 var (
 	versionCacheMu sync.Mutex
-	versionCache   = map[string]string{}
+	versionCache   = map[string]*versionEntry{}
 )
 
-// coreVersion runs the core binary's version command and extracts a semver
-// (e.g. "1.13.13"). Best-effort: returns "" when it can't be determined.
-func coreVersion(c Core) string {
+// versionAsync returns the entry holding a core's version, starting the probe in
+// the background on the first ask. One probe per core however many callers ask,
+// so a startup warm-up and a hello arriving at the same moment share it.
+func versionAsync(c Core) *versionEntry {
 	id := c.ID()
 	versionCacheMu.Lock()
-	if v, ok := versionCache[id]; ok {
-		versionCacheMu.Unlock()
-		return v
+	defer versionCacheMu.Unlock()
+	if e, ok := versionCache[id]; ok {
+		return e
 	}
-	versionCacheMu.Unlock()
+	e := &versionEntry{done: make(chan struct{})}
+	versionCache[id] = e
+	go func() {
+		v := probeVersion(c)
+		versionCacheMu.Lock()
+		e.val = v
+		versionCacheMu.Unlock()
+		close(e.done)
+	}()
+	return e
+}
 
-	v := probeVersion(c)
-	versionCacheMu.Lock()
-	versionCache[id] = v
-	versionCacheMu.Unlock()
-	return v
+// coreVersion waits for a core's version probe to finish and extracts a semver
+// (e.g. "1.13.13"). Best-effort: returns "" when it can't be determined. Used
+// off the request path, where waiting for a cold probe is free.
+func coreVersion(c Core) string {
+	e := versionAsync(c)
+	<-e.done
+	return e.value()
 }
 
 func probeVersion(c Core) string {
@@ -217,6 +284,23 @@ type supervisor struct {
 	sessionStart time.Time
 	statsCancel  context.CancelFunc
 	lastStats    atomic.Value // TrafficSample
+	// bindPref is the extension's interface preference ("auto", "none" or an
+	// adapter name), carried on start/reload and remembered so a later restart
+	// binds the same way.
+	bindPref string
+}
+
+func (s *supervisor) setBindPref(pref string) {
+	s.mu.Lock()
+	s.bindPref = pref
+	s.mu.Unlock()
+}
+
+func (s *supervisor) boundInterface() string {
+	s.mu.Lock()
+	pref := s.bindPref
+	s.mu.Unlock()
+	return resolveBindInterface(pref)
 }
 
 func newSupervisor(notify notifyFn) *supervisor {
@@ -263,63 +347,212 @@ var (
 	interfaceAddrs = func(iface net.Interface) ([]net.Addr, error) { return iface.Addrs() }
 )
 
-// defaultPhysicalInterface returns the name of an up, non-loopback, non-tunnel
-// interface that has at least one IPv4 address. Used to bypass TUN-mode VPNs
-// that would otherwise mangle the proxy's outbound TLS/REALITY handshake.
+// Device-name prefixes of tunnel interfaces on unix-likes. Matched
+// case-sensitively: these are kernel device names, not free text.
+var tunnelPrefixes = []string{"utun", "tun", "tap", "ppp", "awdl", "llw", "bridge", "ap", "anpi", "gif", "stf"}
+
+// Markers of an adapter belonging to a VPN, a virtualizer or a LAN emulator
+// rather than to real hardware. Binding outbounds to one of those is how a
+// tunnel ends up connected while carrying nothing: Hamachi, for one, holds a
+// 25.x.x.x address that routes nowhere near the internet, and a machine running
+// it reported "auto · hamachi" while every page hung. Matched case-insensitively
+// as substrings, because Windows adapter names are prose ("vEthernet (WSL)",
+// "LogMeIn Hamachi Virtual Ethernet Adapter").
+var virtualAdapterMarkers = []string{
+	"hamachi", "radmin", "zerotier", "tailscale", "wireguard", "wintun",
+	"openvpn", "nordlynx", "proton", "softether", "vmware", "virtualbox",
+	"vbox", "hyper-v", "vethernet", "docker", "teredo", "npcap", "loopback",
+	"bluetooth", "tunnel", "vpn",
+}
+
+// IPv4 blocks no physical uplink hands out: Hamachi's 25/8, Radmin VPN's 26/8
+// and the 100.64/10 CGNAT space overlay networks assign. An interface whose
+// only address sits in one of these is not a way out to the internet.
+var overlayBlocks = func() []*net.IPNet {
+	var out []*net.IPNet
+	for _, cidr := range []string{"25.0.0.0/8", "26.0.0.0/8", "100.64.0.0/10"} {
+		if _, n, err := net.ParseCIDR(cidr); err == nil {
+			out = append(out, n)
+		}
+	}
+	return out
+}()
+
+// routeLocalIP reports the local address the OS would use to reach the public
+// internet, which names the adapter owning the default route. A UDP dial picks
+// the route without sending a packet. A seam for tests; nil when there is no
+// route at all.
+var routeLocalIP = func() net.IP {
+	c, err := net.Dial("udp4", "8.8.8.8:53")
+	if err != nil {
+		return nil
+	}
+	defer c.Close()
+	if a, ok := c.LocalAddr().(*net.UDPAddr); ok {
+		return a.IP
+	}
+	return nil
+}
+
+func isVirtualAdapter(name string) bool {
+	lower := strings.ToLower(name)
+	for _, m := range virtualAdapterMarkers {
+		if strings.Contains(lower, m) {
+			return true
+		}
+	}
+	return false
+}
+
+func isTunnelDevice(name string) bool {
+	for _, p := range tunnelPrefixes {
+		if strings.HasPrefix(name, p) {
+			return true
+		}
+	}
+	return false
+}
+
+func isOverlayAddr(ip net.IP) bool {
+	for _, n := range overlayBlocks {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func isPrivateLAN(ip net.IP) bool {
+	return ip.IsPrivate() && !isOverlayAddr(ip)
+}
+
+// ifaceIPv4s returns an interface's routable IPv4 addresses, dropping loopback
+// and link-local ones.
+func ifaceIPv4s(iface net.Interface) []net.IP {
+	addrs, err := interfaceAddrs(iface)
+	if err != nil {
+		return nil
+	}
+	var out []net.IP
+	for _, a := range addrs {
+		ipNet, ok := a.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		ip := ipNet.IP
+		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.To4() == nil {
+			continue
+		}
+		out = append(out, ip)
+	}
+	return out
+}
+
+// ifaceInfo describes one adapter for the extension's interface picker.
+// Recommended is false for a tunnel, a virtual adapter or an overlay-only
+// address: those are offered but not chosen on their own.
+type ifaceInfo struct {
+	Name        string `json:"name"`
+	Addr        string `json:"addr"`
+	Recommended bool   `json:"recommended"`
+}
+
+// listInterfaces reports every up, non-loopback adapter holding a routable IPv4
+// address, so the user can override a bad automatic pick by hand.
+func listInterfaces() []ifaceInfo {
+	ifs, err := netInterfaces()
+	if err != nil {
+		return []ifaceInfo{}
+	}
+	out := []ifaceInfo{}
+	for _, iface := range ifs {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		ips := ifaceIPv4s(iface)
+		if len(ips) == 0 {
+			continue
+		}
+		usable := false
+		for _, ip := range ips {
+			if !isOverlayAddr(ip) {
+				usable = true
+				break
+			}
+		}
+		out = append(out, ifaceInfo{
+			Name:        iface.Name,
+			Addr:        ips[0].String(),
+			Recommended: usable && !isTunnelDevice(iface.Name) && !isVirtualAdapter(iface.Name),
+		})
+	}
+	return out
+}
+
+// resolveBindInterface maps the extension's stored preference to the adapter
+// outbounds get bound to. "none" leaves the OS to route, which is what a user
+// wants when the automatic pick and every manual one are wrong.
+func resolveBindInterface(pref string) string {
+	switch pref {
+	case "", "auto":
+		return defaultPhysicalInterface()
+	case "none":
+		return ""
+	default:
+		return pref
+	}
+}
+
+// defaultPhysicalInterface returns the name of the interface outbound
+// connections should bind to: up, non-loopback, and neither a tunnel nor a
+// virtual adapter. Used to bypass TUN-mode VPNs that would otherwise mangle the
+// proxy's outbound TLS/REALITY handshake.
+//
+// Candidates are scored rather than taken in enumeration order, which used to
+// hand the pick to whichever adapter the OS listed first. Owning the default
+// route wins; a private LAN address comes next; en0 breaks a tie on macOS. An
+// interface holding only an overlay address is dropped, because binding to it
+// is worse than not binding at all: an empty name leaves the OS to route.
 func defaultPhysicalInterface() string {
 	ifs, err := netInterfaces()
 	if err != nil {
 		return ""
 	}
-	skipPrefix := []string{"utun", "tun", "tap", "ppp", "awdl", "llw", "bridge", "ap", "anpi", "gif", "stf"}
-	var fallback string
+	routeIP := routeLocalIP()
+
+	best, bestScore := "", 0
 	for _, iface := range ifs {
-		if iface.Flags&net.FlagUp == 0 {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
 			continue
 		}
-		if iface.Flags&net.FlagLoopback != 0 {
+		if isTunnelDevice(iface.Name) || isVirtualAdapter(iface.Name) {
 			continue
 		}
-		skip := false
-		for _, p := range skipPrefix {
-			if strings.HasPrefix(iface.Name, p) {
-				skip = true
-				break
-			}
-		}
-		if skip {
-			continue
-		}
-		addrs, err := interfaceAddrs(iface)
-		if err != nil {
-			continue
-		}
-		hasV4 := false
-		for _, a := range addrs {
-			ipNet, ok := a.(*net.IPNet)
-			if !ok {
+		score := 0
+		for _, ip := range ifaceIPv4s(iface) {
+			if isOverlayAddr(ip) {
 				continue
 			}
-			ip := ipNet.IP
-			if ip.IsLoopback() || ip.IsLinkLocalUnicast() {
-				continue
-			}
-			if ip.To4() != nil {
-				hasV4 = true
-				break
+			switch {
+			case routeIP != nil && ip.Equal(routeIP):
+				score = max(score, 6)
+			case isPrivateLAN(ip):
+				score = max(score, 4)
+			default:
+				score = max(score, 2)
 			}
 		}
-		if !hasV4 {
+		if score == 0 {
 			continue
 		}
 		if iface.Name == "en0" {
-			return "en0"
+			score++
 		}
-		if fallback == "" {
-			fallback = iface.Name
+		if score > bestScore {
+			best, bestScore = iface.Name, score
 		}
 	}
-	return fallback
+	return best
 }
 
 func writeTempConfig(payload []byte, ext string) (string, error) {
@@ -416,7 +649,7 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if iface := defaultPhysicalInterface(); iface != "" {
+	if iface := s.boundInterface(); iface != "" {
 		if p2, err := core.InjectBindInterface(patched, iface); err == nil {
 			patched = p2
 			fmt.Fprintf(os.Stderr, "noctis-host: bind_interface=%s\n", iface)

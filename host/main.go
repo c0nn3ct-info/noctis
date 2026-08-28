@@ -14,7 +14,7 @@ import (
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.2.2"
+var hostVersion = "1.2.3"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`
@@ -66,6 +66,11 @@ func main() {
 	// Leftovers from sessions that are gone; harmless but they accumulate.
 	reapStaleConfigs()
 
+	// Probe the core versions now, in the background, so the first hello can
+	// answer from a warm cache. A cold exec of a core binary can take seconds,
+	// and hello used to pay for all three of them in series.
+	warmVersions()
+
 	in := bufio.NewReaderSize(os.Stdin, 64*1024)
 	out := bufio.NewWriterSize(os.Stdout, 64*1024)
 	defer out.Flush()
@@ -114,6 +119,11 @@ func main() {
 type startArgs struct {
 	Core   string          `json:"core"`
 	Config json.RawMessage `json:"config"`
+	// BindInterface is the extension's adapter preference: "auto" (or absent),
+	// "none", or a name from the `interfaces` ack. An automatic pick can land on
+	// a LAN emulator like Hamachi, where every outbound dial dies silently, so
+	// the user gets the last word.
+	BindInterface string `json:"bindInterface"`
 }
 
 func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
@@ -130,11 +140,11 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 				// The adapter outbound connections get bound to. Reported so the
 				// extension can show the real one instead of a guess: a wrong pick
 				// (a virtual adapter on Windows) kills every dial silently.
-				"bindInterface": defaultPhysicalInterface(),
+				"bindInterface": sup.boundInterface(),
 				// Capabilities added after 1.1.2, advertised for future use. The
 				// extension gates on the host version instead (helper-compat.ts):
 				// a helper without "fetch" reads as outdated, not incompatible.
-				"features": []string{"fetch", "route"},
+				"features": []string{"fetch", "route", "interfaces"},
 			},
 		}
 	case "cores":
@@ -171,6 +181,13 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 			return ack{ID: msg.ID, Type: "ack", OK: true, Data: v}
 		}
 		return ack{ID: msg.ID, Type: "ack", OK: true, Data: nil}
+	case "interfaces":
+		// The picker's source: every adapter that could carry traffic, plus what
+		// "auto" resolves to right now, so the UI can label the automatic choice.
+		return ack{ID: msg.ID, Type: "ack", OK: true, Data: map[string]any{
+			"interfaces": listInterfaces(),
+			"auto":       defaultPhysicalInterface(),
+		}}
 	case "ping":
 		// corePort is the port a running core listens on, 0 when none runs under
 		// this helper. The extension needs the difference: a helper that answers
@@ -195,6 +212,7 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 		if err != nil {
 			return errAck(msg.ID, err)
 		}
+		sup.setBindPref(args.BindInterface)
 		port, err := sup.start(core, raw)
 		if err != nil {
 			logger.Printf("start failed: %v", err)
@@ -217,6 +235,7 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 		if err != nil {
 			return errAck(msg.ID, err)
 		}
+		sup.setBindPref(args.BindInterface)
 		port, err := sup.reload(core, raw)
 		if err != nil {
 			logger.Printf("reload failed: %v", err)

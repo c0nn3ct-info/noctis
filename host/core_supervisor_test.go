@@ -209,6 +209,144 @@ func TestDefaultPhysicalInterface(t *testing.T) {
 	_ = defaultPhysicalInterface()
 }
 
+// ifaceAddr builds an *net.IPNet addr the way net.Interface.Addrs reports one.
+func ifaceAddr(t *testing.T, cidr string) net.Addr {
+	t.Helper()
+	ip, n, err := net.ParseCIDR(cidr)
+	if err != nil {
+		t.Fatalf("parse %s: %v", cidr, err)
+	}
+	return &net.IPNet{IP: ip, Mask: n.Mask}
+}
+
+// stubInterfaces points the interface seams at a synthetic adapter list, keyed
+// by index for the addresses, plus a fixed default-route address.
+func stubInterfaces(t *testing.T, ifs []net.Interface, addrs map[int][]net.Addr, route net.IP) {
+	t.Helper()
+	origIfs, origAddrs, origRoute := netInterfaces, interfaceAddrs, routeLocalIP
+	t.Cleanup(func() {
+		netInterfaces, interfaceAddrs, routeLocalIP = origIfs, origAddrs, origRoute
+	})
+	netInterfaces = func() ([]net.Interface, error) { return ifs, nil }
+	interfaceAddrs = func(i net.Interface) ([]net.Addr, error) { return addrs[i.Index], nil }
+	routeLocalIP = func() net.IP { return route }
+}
+
+func TestDefaultPhysicalInterfaceSkipsVirtualAdapters(t *testing.T) {
+	// The shape a Windows machine running Hamachi reports: the LAN emulator is
+	// listed first and used to win the pick, which bound every outbound dial to
+	// a 25.x.x.x address that goes nowhere.
+	ifs := []net.Interface{
+		{Index: 1, Name: "Hamachi", Flags: net.FlagUp},
+		{Index: 2, Name: "vEthernet (WSL)", Flags: net.FlagUp},
+		{Index: 3, Name: "Ethernet", Flags: net.FlagUp},
+	}
+	stubInterfaces(t, ifs, map[int][]net.Addr{
+		1: {ifaceAddr(t, "25.44.1.9/8")},
+		2: {ifaceAddr(t, "172.28.0.1/20")},
+		3: {ifaceAddr(t, "192.168.1.24/24")},
+	}, nil)
+
+	if got := defaultPhysicalInterface(); got != "Ethernet" {
+		t.Fatalf("bind interface = %q, want Ethernet", got)
+	}
+}
+
+func TestDefaultPhysicalInterfaceDropsOverlayOnlyAddresses(t *testing.T) {
+	// An innocuous name over a CGNAT-only address is still not a way out, and
+	// binding to it is worse than leaving the OS to route.
+	ifs := []net.Interface{{Index: 1, Name: "Ethernet 2", Flags: net.FlagUp}}
+	stubInterfaces(t, ifs, map[int][]net.Addr{
+		1: {ifaceAddr(t, "100.100.5.5/10")},
+	}, nil)
+
+	if got := defaultPhysicalInterface(); got != "" {
+		t.Fatalf("bind interface = %q, want empty", got)
+	}
+}
+
+func TestDefaultPhysicalInterfacePrefersTheDefaultRoute(t *testing.T) {
+	ifs := []net.Interface{
+		{Index: 1, Name: "Ethernet", Flags: net.FlagUp},
+		{Index: 2, Name: "Wi-Fi", Flags: net.FlagUp},
+	}
+	stubInterfaces(t, ifs, map[int][]net.Addr{
+		1: {ifaceAddr(t, "192.168.1.24/24")},
+		2: {ifaceAddr(t, "10.0.5.7/24")},
+	}, net.ParseIP("10.0.5.7"))
+
+	if got := defaultPhysicalInterface(); got != "Wi-Fi" {
+		t.Fatalf("bind interface = %q, want Wi-Fi (it owns the route)", got)
+	}
+}
+
+func TestListInterfacesMarksRecommendation(t *testing.T) {
+	ifs := []net.Interface{
+		{Index: 1, Name: "Hamachi", Flags: net.FlagUp},
+		{Index: 2, Name: "Ethernet", Flags: net.FlagUp},
+		{Index: 3, Name: "utun4", Flags: net.FlagUp},
+		{Index: 4, Name: "Ethernet 3", Flags: net.FlagUp}, // no addresses: not offered
+	}
+	stubInterfaces(t, ifs, map[int][]net.Addr{
+		1: {ifaceAddr(t, "25.44.1.9/8")},
+		2: {ifaceAddr(t, "192.168.1.24/24")},
+		3: {ifaceAddr(t, "10.8.0.2/24")},
+	}, nil)
+
+	got := listInterfaces()
+	if len(got) != 3 {
+		t.Fatalf("listInterfaces() = %+v, want 3 entries", got)
+	}
+	want := map[string]bool{"Hamachi": false, "Ethernet": true, "utun4": false}
+	for _, i := range got {
+		rec, ok := want[i.Name]
+		if !ok {
+			t.Fatalf("unexpected interface %q", i.Name)
+		}
+		if i.Recommended != rec {
+			t.Fatalf("%s recommended = %v, want %v", i.Name, i.Recommended, rec)
+		}
+	}
+	if got[0].Addr != "25.44.1.9" {
+		t.Fatalf("Hamachi addr = %q", got[0].Addr)
+	}
+}
+
+func TestResolveBindInterface(t *testing.T) {
+	ifs := []net.Interface{{Index: 1, Name: "Ethernet", Flags: net.FlagUp}}
+	stubInterfaces(t, ifs, map[int][]net.Addr{1: {ifaceAddr(t, "192.168.1.24/24")}}, nil)
+
+	for _, c := range []struct{ pref, want string }{
+		{"", "Ethernet"},       // absent: auto
+		{"auto", "Ethernet"},   // auto
+		{"none", ""},           // user opted out of binding
+		{"Wi-Fi", "Wi-Fi"},     // explicit override, taken verbatim
+		{"Hamachi", "Hamachi"}, // even one auto would never pick
+	} {
+		if got := resolveBindInterface(c.pref); got != c.want {
+			t.Fatalf("resolveBindInterface(%q) = %q, want %q", c.pref, got, c.want)
+		}
+	}
+}
+
+func TestSupervisorRemembersBindPreference(t *testing.T) {
+	ifs := []net.Interface{{Index: 1, Name: "Ethernet", Flags: net.FlagUp}}
+	stubInterfaces(t, ifs, map[int][]net.Addr{1: {ifaceAddr(t, "192.168.1.24/24")}}, nil)
+
+	sup := newSupervisor(nil)
+	if got := sup.boundInterface(); got != "Ethernet" {
+		t.Fatalf("default preference resolved to %q, want Ethernet", got)
+	}
+	sup.setBindPref("none")
+	if got := sup.boundInterface(); got != "" {
+		t.Fatalf("none resolved to %q, want empty", got)
+	}
+	sup.setBindPref("Wi-Fi")
+	if got := sup.boundInterface(); got != "Wi-Fi" {
+		t.Fatalf("override resolved to %q", got)
+	}
+}
+
 func TestSupervisorStartStop(t *testing.T) {
 	stashVersionCache(t)
 	t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.13.13")) // >=1.12: Clash API gets injected
@@ -643,6 +781,58 @@ func TestInstalledCoresWithVersions(t *testing.T) {
 		if c["version"] != want[id] {
 			t.Fatalf("%s version = %v, want %s", id, c["version"], want[id])
 		}
+	}
+}
+
+func TestInstalledCoresGivesUpOnSlowProbe(t *testing.T) {
+	stashVersionCache(t)
+	saved := versionBudget
+	versionBudget = 20 * time.Millisecond
+	t.Cleanup(func() { versionBudget = saved })
+
+	t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.13.13"))
+	t.Setenv("XRAY_BIN", "")
+	t.Setenv("MIHOMO_BIN", "")
+	t.Setenv("PATH", t.TempDir())
+
+	// A probe that never finishes, standing in for a cold exec of a core binary.
+	// The ack still has to come back — with availability, and no version.
+	versionCacheMu.Lock()
+	versionCache["sing-box"] = &versionEntry{done: make(chan struct{})}
+	versionCacheMu.Unlock()
+
+	start := time.Now()
+	cs := installedCores()
+	if elapsed := time.Since(start); elapsed > time.Second {
+		t.Fatalf("installedCores waited %v for an in-flight probe", elapsed)
+	}
+	if cs[0]["id"] != "sing-box" || cs[0]["available"] != true {
+		t.Fatalf("sing-box entry = %v", cs[0])
+	}
+	if _, ok := cs[0]["version"]; ok {
+		t.Fatalf("want no version while the probe is in flight: %v", cs[0])
+	}
+}
+
+func TestWarmVersionsProbesEveryCoreOnce(t *testing.T) {
+	stashVersionCache(t)
+	t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.13.13"))
+
+	warmVersions()
+	versionCacheMu.Lock()
+	n := len(versionCache)
+	versionCacheMu.Unlock()
+	if n != len(coreOrder) {
+		t.Fatalf("warmVersions started %d probes, want %d", n, len(coreOrder))
+	}
+	// coreVersion joins the warm-up's probe instead of starting a second one.
+	if v := coreVersion(singBoxCore{}); v != "1.13.13" {
+		t.Fatalf("version after warm-up = %q", v)
+	}
+	// And the answer is now cached: a broken binary can't change it.
+	t.Setenv("SINGBOX_BIN", "/nonexistent")
+	if v := coreVersion(singBoxCore{}); v != "1.13.13" {
+		t.Fatalf("cached version = %q", v)
 	}
 }
 

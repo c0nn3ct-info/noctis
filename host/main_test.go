@@ -22,6 +22,39 @@ import (
 	"time"
 )
 
+func TestDispatchInterfaces(t *testing.T) {
+	lg := log.New(io.Discard, "", 0)
+	a := dispatch(msgFor(t, `{"id":"7","type":"interfaces"}`), newSupervisor(nil), lg)
+	if !a.OK {
+		t.Fatalf("interfaces ack not ok: %+v", a)
+	}
+	data, ok := a.Data.(map[string]any)
+	if !ok {
+		t.Fatalf("data = %T", a.Data)
+	}
+	if _, ok := data["interfaces"].([]ifaceInfo); !ok {
+		t.Fatalf("interfaces = %T", data["interfaces"])
+	}
+	if _, ok := data["auto"].(string); !ok {
+		t.Fatalf("auto = %T", data["auto"])
+	}
+}
+
+func TestDispatchStartCarriesBindPreference(t *testing.T) {
+	lg := log.New(io.Discard, "", 0)
+	sup := newSupervisor(nil)
+	// A start that fails past the preference still has to have recorded it: the
+	// binding is chosen before the core is located.
+	dispatch(msgFor(t, `{"id":"8","type":"start","core":"sing-box","config":{},"bindInterface":"none"}`), sup, lg)
+	if got := sup.boundInterface(); got != "" {
+		t.Fatalf("bound interface = %q, want empty after a \"none\" start", got)
+	}
+	dispatch(msgFor(t, `{"id":"9","type":"reload","core":"sing-box","config":{},"bindInterface":"Wi-Fi"}`), sup, lg)
+	if got := sup.boundInterface(); got != "Wi-Fi" {
+		t.Fatalf("bound interface = %q, want Wi-Fi after a reload override", got)
+	}
+}
+
 func TestIncomingMsgUnmarshal(t *testing.T) {
 	var m incomingMsg
 	data := []byte(`{"id":"7","type":"ping","extra":1}`)

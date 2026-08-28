@@ -121,7 +121,7 @@ func stashVersionCache(t *testing.T) {
 	t.Helper()
 	versionCacheMu.Lock()
 	saved := versionCache
-	versionCache = map[string]string{}
+	versionCache = map[string]*versionEntry{}
 	versionCacheMu.Unlock()
 	t.Cleanup(func() {
 		versionCacheMu.Lock()
@@ -132,8 +132,10 @@ func stashVersionCache(t *testing.T) {
 
 func seedVersion(t *testing.T, id, v string) {
 	t.Helper()
+	done := make(chan struct{})
+	close(done)
 	versionCacheMu.Lock()
-	versionCache[id] = v
+	versionCache[id] = &versionEntry{done: done, val: v}
 	versionCacheMu.Unlock()
 }
 

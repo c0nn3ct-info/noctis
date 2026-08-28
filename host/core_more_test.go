@@ -108,9 +108,7 @@ func TestSingBoxSupportsClashAPI(t *testing.T) {
 	if !(singBoxCore{}).SupportsClashAPI() {
 		t.Fatal("1.13 should support the Clash API")
 	}
-	versionCacheMu.Lock()
-	versionCache["sing-box"] = "1.11.9"
-	versionCacheMu.Unlock()
+	seedVersion(t, "sing-box", "1.11.9")
 	if (singBoxCore{}).SupportsClashAPI() {
 		t.Fatal("1.11 should not support the Clash API")
 	}
@@ -133,9 +131,7 @@ func TestSingboxAtLeast(t *testing.T) {
 		{"0.99.0", false}, // older major
 	}
 	for _, c := range cases {
-		versionCacheMu.Lock()
-		versionCache["sing-box"] = c.version
-		versionCacheMu.Unlock()
+		seedVersion(t, "sing-box", c.version)
 		if got := singboxAtLeast(singBoxCore{}, 1, 12); got != c.want {
 			t.Fatalf("singboxAtLeast(%q, 1, 12) = %v, want %v", c.version, got, c.want)
 		}
