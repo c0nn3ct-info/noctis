@@ -371,6 +371,22 @@ func TestMigrateLegacySingBoxMinimal(t *testing.T) {
 		t.Fatalf("rule = %#v", last)
 	}
 
+	// A wildcard routing entry arrives as domain_regex; the migration keeps it
+	// (dropping it would leave the rule matching nothing).
+	doc2b := map[string]any{
+		"route": map[string]any{"rules": []any{
+			map[string]any{"domain_regex": []any{"^rutracker\\..*$"}, "outbound": "proxy-out"},
+		}},
+	}
+	migrateLegacySingBox(doc2b)
+	rules2b := doc2b["route"].(map[string]any)["rules"].([]any)
+	if len(rules2b) != 2 {
+		t.Fatalf("rules2b = %#v", rules2b)
+	}
+	if rules2b[1].(map[string]any)["domain_regex"] == nil {
+		t.Fatalf("domain_regex dropped: %#v", rules2b[1])
+	}
+
 	// Existing rule_set from a previous shape is dropped when unused.
 	doc3 := map[string]any{"route": map[string]any{"rule_set": []any{"old"}}}
 	migrateLegacySingBox(doc3)

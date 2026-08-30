@@ -297,8 +297,13 @@ func migrateLegacySingBox(doc map[string]any) {
 			continue
 		}
 		nr := map[string]any{}
-		if ds, ok := m["domain_suffix"]; ok {
-			nr["domain_suffix"] = ds
+		// Domain matchers carry over verbatim: 1.12 changed the geo fields, not
+		// these. domain_regex is how a wildcard routing entry ("rutracker.*")
+		// reaches the router, so dropping it here would silently unroute it.
+		for _, k := range []string{"domain", "domain_suffix", "domain_keyword", "domain_regex"} {
+			if v, ok := m[k]; ok {
+				nr[k] = v
+			}
 		}
 		var tags []any
 		if gs, ok := m["geosite"].([]any); ok {

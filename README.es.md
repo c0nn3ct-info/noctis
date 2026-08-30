@@ -39,7 +39,7 @@ Noctis es una extensión de navegador gratuita que enruta Chrome a través de VL
 - **Lista de servidores fijados** — Mantén tres favoritos en la parte superior de la ventana emergente. Cambia el servidor activo sin abrir el panel completo.
 - **Flujo de registros en vivo** — La salida stdout y stderr del motor de proxy se transmite a la extensión. Diagnostica problemas de conexión sin salir del navegador.
 - **Protección contra fugas de WebRTC** — Un interruptor opcional bloquea el UDP fuera del proxy para que WebRTC no pueda revelar tu IP real.
-- **Reglas integradas de bloqueo de anuncios y rastreadores** — Las familias `geosite:ads` se enrutan a bloqueo de forma predeterminada. Desactívalo si prefieres gestionarlo en otro sitio.
+- **Bloqueo de anuncios y rastreadores en una regla** — La familia `category-ads-all` aparece en las sugerencias del campo Geosite. Añádela al grupo Block y el perfil descartará anuncios y rastreadores.
 
 ## 🔌 Protocolos de proxy compatibles
 
@@ -90,7 +90,7 @@ Lo que no coincide con ningún grupo sale directo. Los grupos solo se aplican en
 
 ### Cuándo añadir algo a Block
 
-Block descarta el tráfico en lugar de enrutarlo: dominios de publicidad y rastreadores, puntos de telemetría, un sitio que no quieres abrir en este navegador. Las reglas incluidas ya envían las familias `geosite:ads` a Block, así que lo normal es dejarlo vacío. Si una página aparece bloqueada por sorpresa, la página de bloqueo nombra el perfil y la regla, y permite eliminarla desde ahí.
+Block descarta el tráfico en lugar de enrutarlo: dominios de publicidad y rastreadores, puntos de telemetría, un sitio que no quieres abrir en este navegador. Un perfil nuevo empieza vacío, porque Noctis no añade reglas propias. Para descartar anuncios, añade la familia `category-ads-all` a Block; el campo Geosite la ofrece como sugerencia. Si una página aparece bloqueada por sorpresa, la página de bloqueo nombra el perfil y la regla, y permite eliminarla desde ahí.
 
 ## 📥 Instalación
 

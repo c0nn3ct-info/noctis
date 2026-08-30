@@ -39,7 +39,7 @@ Noctis is a free browser extension that routes Chrome through VLESS, VMess, Troj
 - **Pinned-server shortlist** — Keep three favorites at the top of the popup. Switch active server without opening the full panel.
 - **Live log stream** — the proxy engine's stdout and stderr stream into the extension. Diagnose connection issues without leaving the browser.
 - **WebRTC leak guard** — Optional toggle blocks UDP outside the proxy so WebRTC can't reveal your real IP.
-- **Bundled ad and tracker block rules** — `geosite:ads` families route to block by default. Toggle off if you prefer to handle it elsewhere.
+- **Ad and tracker blocking in one rule** — The `category-ads-all` family sits in the Geosite field's suggestions. Add it to the Block group and the profile drops ads and trackers.
 
 ## 🔌 Supported proxy protocols
 
@@ -90,7 +90,7 @@ Anything that matches no group goes direct. Groups only apply in Rules mode: Glo
 
 ### When to add something to Block
 
-Block drops traffic instead of routing it: ad and tracker domains, telemetry endpoints, a site you do not want opening in this browser. The bundled rules already send the `geosite:ads` families to Block, so an empty Block is the normal case. If a page turns out blocked unexpectedly, the block page names the profile and the rule, and lets you remove it from there.
+Block drops traffic instead of routing it: ad and tracker domains, telemetry endpoints, a site you do not want opening in this browser. A new profile starts empty, since Noctis adds no rules of its own. To drop ads, add the `category-ads-all` family to Block; the Geosite field offers it as a suggestion. If a page turns out blocked unexpectedly, the block page names the profile and the rule, and lets you remove it from there.
 
 ## 📥 Install
 
