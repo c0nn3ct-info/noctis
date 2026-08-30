@@ -53,10 +53,20 @@ INSTALL_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/noctis"
 mkdir -p "$INSTALL_DIR"
 HOST_BIN="$INSTALL_DIR/noctis-host"
 
-# Stop any helper/core still running from a previous install so the binaries can
-# be replaced cleanly; the browser respawns the helper from the new build on its
-# next native message.
+# Stop any helper/core still running from a previous install; the browser
+# respawns the helper from the new build on its next native message. This is a
+# courtesy, not a guarantee — the browser can respawn it while this script is
+# still downloading, so every binary below is written beside its target and
+# renamed over it (install_bin), which succeeds against a running process.
 pkill -f "$INSTALL_DIR/" 2>/dev/null || true
+
+# Replace a binary that may be running: write <dst>.new, then rename over <dst>.
+# The live process keeps the old inode and the next spawn picks up the new file,
+# where writing to <dst> in place would fail with ETXTBSY.
+install_bin() {
+  install -m 0755 "$1" "$2.new"
+  mv -f "$2.new" "$2"
+}
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -79,7 +89,7 @@ ARCHIVE="noctis-host-${TAG}-${OS}-${ARCH}.tar.gz"
 echo "→ downloading $ARCHIVE"
 curl -fL --progress-bar "https://github.com/$REPO/releases/download/$TAG/$ARCHIVE" -o "$TMP/$ARCHIVE"
 tar -xzf "$TMP/$ARCHIVE" -C "$TMP"
-install -m 0755 "$TMP/noctis-host-${TAG}-${OS}-${ARCH}/noctis-host" "$HOST_BIN"
+install_bin "$TMP/noctis-host-${TAG}-${OS}-${ARCH}/noctis-host" "$HOST_BIN"
 
 # --- proxy cores from upstream (pinned in cores.env) ---
 fetch_singbox() {
@@ -87,7 +97,7 @@ fetch_singbox() {
   echo "→ sing-box ${v}"
   curl -fL --progress-bar "https://github.com/SagerNet/sing-box/releases/download/v${v}/${name}.tar.gz" -o "$TMP/sb.tar.gz"
   tar -xzf "$TMP/sb.tar.gz" -C "$TMP"
-  install -m 0755 "$TMP/${name}/sing-box" "$INSTALL_DIR/sing-box"
+  install_bin "$TMP/${name}/sing-box" "$INSTALL_DIR/sing-box"
 }
 fetch_xray() {
   local v="$XRAY_VERSION" xos xarch
@@ -96,14 +106,14 @@ fetch_xray() {
   echo "→ xray ${v}"
   curl -fL --progress-bar "https://github.com/XTLS/Xray-core/releases/download/${v}/Xray-${xos}-${xarch}.zip" -o "$TMP/xray.zip"
   unzip -oq "$TMP/xray.zip" -d "$TMP/xray"
-  install -m 0755 "$TMP/xray/xray" "$INSTALL_DIR/xray"
+  install_bin "$TMP/xray/xray" "$INSTALL_DIR/xray"
 }
 fetch_mihomo() {
   local v="$MIHOMO_VERSION" name="mihomo-${OS}-${ARCH}-${MIHOMO_VERSION}"
   echo "→ mihomo ${v}"
   curl -fL --progress-bar "https://github.com/MetaCubeX/mihomo/releases/download/${v}/${name}.gz" -o "$TMP/mihomo.gz"
-  gunzip -c "$TMP/mihomo.gz" > "$INSTALL_DIR/mihomo"
-  chmod +x "$INSTALL_DIR/mihomo"
+  gunzip -c "$TMP/mihomo.gz" > "$TMP/mihomo"
+  install_bin "$TMP/mihomo" "$INSTALL_DIR/mihomo"
 }
 fetch_geo() {
   echo "→ geo assets (geoip, geosite)"

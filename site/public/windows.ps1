@@ -105,9 +105,32 @@ New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
 # Stop any helper/core still running from the install dir so the (locked) .exe
 # files can be overwritten; the browser respawns the helper from the new build.
-Get-CimInstance Win32_Process |
-  Where-Object { $_.ExecutablePath -and $_.ExecutablePath -like "$installDir\*" } |
-  ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+function Stop-NoctisProcesses {
+  Get-CimInstance Win32_Process |
+    Where-Object { $_.ExecutablePath -and $_.ExecutablePath -like "$installDir\*" } |
+    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+}
+
+# Windows refuses to overwrite a running .exe, and killing once up front is not
+# enough: the browser respawns the helper on its next native message, which lands
+# while this script is still downloading. So each binary is copied through here,
+# which stops whatever holds the file and retries — no need to close the browser.
+function Copy-Binary($src, $dst) {
+  for ($i = 1; $i -le 6; $i++) {
+    Stop-NoctisProcesses
+    try {
+      Copy-Item $src $dst -Force -ErrorAction Stop
+      return
+    } catch {
+      if ($i -eq 6) {
+        throw "Could not replace $dst - it is still in use. Close the browser and re-run this command.`n$($_.Exception.Message)"
+      }
+      Start-Sleep -Milliseconds 400
+    }
+  }
+}
+
+Stop-NoctisProcesses
 
 $hostBin = Join-Path $installDir 'noctis-host.exe'
 # xray arch token differs from the Go arch: amd64 -> 64, arm64 -> arm64-v8a.
@@ -126,7 +149,7 @@ try {
   Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile (Join-Path $tmp $archive)
   Expand-Archive -Path (Join-Path $tmp $archive) -DestinationPath $tmp -Force
   $src = Join-Path $tmp "noctis-host-$tag-windows-$arch"
-  Copy-Item (Join-Path $src 'noctis-host.exe') $hostBin -Force
+  Copy-Binary (Join-Path $src 'noctis-host.exe') $hostBin
 
   foreach ($c in $wantCores) {
     switch ($c) {
@@ -136,14 +159,14 @@ try {
         $z = Join-Path $tmp 'sb.zip'
         Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/SagerNet/sing-box/releases/download/v$singboxVersion/$name.zip" -OutFile $z
         Expand-Archive -Path $z -DestinationPath (Join-Path $tmp 'sb') -Force
-        Copy-Item (Join-Path $tmp "sb\$name\sing-box.exe") (Join-Path $installDir 'sing-box.exe') -Force
+        Copy-Binary (Join-Path $tmp "sb\$name\sing-box.exe") (Join-Path $installDir 'sing-box.exe')
       }
       'xray' {
         Write-Host "-> xray $xrayVersion"
         $z = Join-Path $tmp 'xray.zip'
         Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/XTLS/Xray-core/releases/download/$xrayVersion/Xray-windows-$xarch.zip" -OutFile $z
         Expand-Archive -Path $z -DestinationPath (Join-Path $tmp 'xray') -Force
-        Copy-Item (Join-Path $tmp 'xray\xray.exe') (Join-Path $installDir 'xray.exe') -Force
+        Copy-Binary (Join-Path $tmp 'xray\xray.exe') (Join-Path $installDir 'xray.exe')
         $needGeo = $true
       }
       'mihomo' {
@@ -153,7 +176,7 @@ try {
         Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/MetaCubeX/mihomo/releases/download/$mihomoVersion/$name.zip" -OutFile $z
         Expand-Archive -Path $z -DestinationPath (Join-Path $tmp 'mihomo') -Force
         $exe = Get-ChildItem -Path (Join-Path $tmp 'mihomo') -Filter *.exe -Recurse | Select-Object -First 1
-        Copy-Item $exe.FullName (Join-Path $installDir 'mihomo.exe') -Force
+        Copy-Binary $exe.FullName (Join-Path $installDir 'mihomo.exe')
         $needGeo = $true
       }
     }
