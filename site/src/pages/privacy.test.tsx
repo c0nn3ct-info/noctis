@@ -59,14 +59,14 @@ describe('PrivacyPage', () => {
 
     // The section header carries the permission count.
     const heading = screen.getByRole('heading', { name: t('privacy.permissions.h2'), level: 2 });
-    expect(heading.parentElement).toHaveTextContent('8');
+    expect(heading.parentElement).toHaveTextContent('10');
 
     const table = container.querySelector('table') as HTMLTableElement;
     expect(within(table).getByText(t('privacy.permissions.col1'))).toBeInTheDocument();
     expect(within(table).getByText(t('privacy.permissions.col2'))).toBeInTheDocument();
 
     const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLTableRowElement[];
-    expect(rows).toHaveLength(8);
+    expect(rows).toHaveLength(10);
     expect(rows.map((r) => r.cells[0].textContent)).toEqual([
       'proxy',
       'storage',
@@ -74,7 +74,9 @@ describe('PrivacyPage', () => {
       'privacy',
       'alarms',
       'tabs',
+      'webNavigation',
       'declarativeNetRequestWithHostAccess',
+      'clipboardRead',
       'host_permissions: <all_urls>',
     ]);
     expect(rows.map((r) => r.cells[1].textContent)).toEqual([
@@ -84,7 +86,9 @@ describe('PrivacyPage', () => {
       t('privacy.perm.privacy'),
       t('privacy.perm.alarms'),
       t('privacy.perm.tabs'),
+      t('privacy.perm.webNavigation'),
       t('privacy.perm.dnr'),
+      t('privacy.perm.clipboardRead'),
       t('privacy.perm.hosts'),
     ]);
     // Zebra striping alternates, starting with the un-striped tone.

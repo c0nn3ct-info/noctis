@@ -11,7 +11,9 @@ const PERMISSIONS: ReadonlyArray<{ name: string; key: string }> = [
   { name: 'privacy', key: 'privacy.perm.privacy' },
   { name: 'alarms', key: 'privacy.perm.alarms' },
   { name: 'tabs', key: 'privacy.perm.tabs' },
+  { name: 'webNavigation', key: 'privacy.perm.webNavigation' },
   { name: 'declarativeNetRequestWithHostAccess', key: 'privacy.perm.dnr' },
+  { name: 'clipboardRead', key: 'privacy.perm.clipboardRead' },
   { name: 'host_permissions: <all_urls>', key: 'privacy.perm.hosts' },
 ];
 
