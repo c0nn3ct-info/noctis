@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   AppWindow,
   Apple,
+  Bug,
   Check,
   ChevronDown,
   Chrome,
@@ -28,6 +29,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { WEBSTORE_EXT_ID, WEBSTORE_URL } from '../constants';
+
+// The issue form the installers point at when a step dies; keeping the link in
+// one place means the page and the scripts cannot drift apart.
+const INSTALL_ISSUE_URL =
+  'https://github.com/c0nn3ct-info/noctis/issues/new?template=install_failure.yml';
 import { t } from '../i18n';
 import { Layout } from '../layout';
 
@@ -270,6 +276,23 @@ export function InstallPage() {
         <Section header={t('install.step3.title')} icon={PlayCircle} headingLevel={2}>
           <div className="max-w-[68ch] space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
             <p>{t('install.step3.body')}</p>
+          </div>
+        </Section>
+
+        {/* An installer that fails leaves the user with a terminal and nobody
+            to tell. The script prints a report block for exactly this form. */}
+        <Section header={t('install.trouble.title')} icon={Bug} headingLevel={2}>
+          <div className="max-w-[68ch] space-y-3 px-2 py-2 text-body-large text-on-surface-variant">
+            <p>{t('install.trouble.body')}</p>
+            <div>
+              <Button asChild variant="outlined" size="s">
+                <a href={INSTALL_ISSUE_URL} target="_blank" rel="noreferrer noopener">
+                  <Github />
+                  {t('install.trouble.cta')}
+                  <ExternalLink />
+                </a>
+              </Button>
+            </div>
           </div>
         </Section>
       </div>
