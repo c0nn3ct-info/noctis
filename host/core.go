@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -228,6 +229,10 @@ func binaryNameVariants(name, goos string) []string {
 	return []string{name}
 }
 
+// osExecutable is a seam for tests: the helper's own path is what "beside the
+// helper" means, and a test binary lives somewhere else entirely.
+var osExecutable = os.Executable
+
 // locateBinary finds a core binary: an explicit env override, then beside the
 // helper executable (name and embed/name), then on $PATH.
 func locateBinary(envVar string, names []string) (string, error) {
@@ -238,7 +243,7 @@ func locateBinary(envVar string, names []string) (string, error) {
 			}
 		}
 	}
-	if exePath, err := os.Executable(); err == nil {
+	if exePath, err := osExecutable(); err == nil {
 		dir := filepath.Dir(exePath)
 		for _, name := range names {
 			for _, n := range binaryNameVariants(name, runtime.GOOS) {
@@ -268,7 +273,80 @@ func coreDataDir(id string) (string, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", err
 	}
+	// Only mihomo reads its geo databases out of the data dir; sing-box does not
+	// use them and xray finds them beside its own binary. Copying tens of
+	// megabytes for those two would buy nothing.
+	if id == "mihomo" {
+		if err := provisionGeoAssets(dir); err != nil {
+			fmt.Fprintf(helperStderr, "noctis-host: geo assets for %s: %v\n", id, err)
+		}
+	}
 	return dir, nil
+}
+
+// geoAssetNames are the routing databases a core reads off disk for GEOSITE /
+// GEOIP rules.
+var geoAssetNames = []string{"geoip.dat", "geosite.dat"}
+
+// provisionGeoAssets copies the geo databases the installers put beside the
+// helper into a core's data dir. xray reads them next to its own binary, but
+// mihomo only looks in the directory passed to `-d`, and a mihomo that cannot
+// find them downloads them at startup — over the very connection the user is
+// running Noctis to get. Best effort: a core with no geo rules never touches
+// them, so a failure here is worth a log line and nothing more.
+func provisionGeoAssets(dir string) error {
+	exePath, err := osExecutable()
+	if err != nil {
+		return err
+	}
+	src := filepath.Dir(exePath)
+	var firstErr error
+	for _, name := range geoAssetNames {
+		from := filepath.Join(src, name)
+		fi, err := os.Stat(from)
+		if err != nil || fi.IsDir() {
+			continue // not shipped with this install
+		}
+		to := filepath.Join(dir, name)
+		if di, err := os.Stat(to); err == nil && di.Size() == fi.Size() && !di.ModTime().Before(fi.ModTime()) {
+			continue // already the same copy
+		}
+		if err := copyFile(from, to); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
+}
+
+// copyFile writes through a temp file in the destination directory and renames
+// it into place, so a core reading the directory never sees a half-written
+// database.
+func copyFile(from, to string) error {
+	src, err := os.Open(from)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	tmp := to + ".new"
+	// Streamed rather than read whole: a geo database runs to tens of megabytes.
+	dst, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(dst, src); err != nil {
+		dst.Close()
+		_ = os.Remove(tmp)
+		return err
+	}
+	if err := dst.Close(); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	if err := os.Rename(tmp, to); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	return nil
 }
 
 type supervisor struct {
@@ -283,7 +361,12 @@ type supervisor struct {
 	notify       notifyFn
 	sessionStart time.Time
 	statsCancel  context.CancelFunc
-	lastStats    atomic.Value // TrafficSample
+	// childDone is closed by supervise once the running child has been reaped.
+	// It is how stop() learns the process is gone: cmd.ProcessState is only
+	// valid after Wait() returns and must not be read beside it, so polling it
+	// from the escalation goroutine was a data race.
+	childDone chan struct{}
+	lastStats atomic.Value // TrafficSample
 	// bindPref is the extension's interface preference ("auto", "none" or an
 	// adapter name), carried on start/reload and remembered so a later restart
 	// binds the same way.
@@ -628,6 +711,31 @@ func processAlive(pid int) bool {
 	return true
 }
 
+// helperLog puts one line in both places it can be read: the browser's capture
+// of our stderr, and the extension's own log view.
+func (s *supervisor) helperLog(format string, args ...any) {
+	line := fmt.Sprintf(format, args...)
+	fmt.Fprintf(helperStderr, "noctis-host: %s\n", line)
+	if s.notify != nil {
+		s.notify("log", map[string]any{"stream": "helper", "line": line})
+	}
+}
+
+// clashAPIParams picks the loopback address and bearer secret the Clash API
+// controller binds to. Both stay internal to the helper and are never sent to
+// the extension.
+func clashAPIParams() (addr, secret string, err error) {
+	p, err := freePort()
+	if err != nil {
+		return "", "", fmt.Errorf("pick controller port: %w", err)
+	}
+	secret, err = randomSecret()
+	if err != nil {
+		return "", "", fmt.Errorf("controller secret: %w", err)
+	}
+	return fmt.Sprintf("127.0.0.1:%d", p), secret, nil
+}
+
 func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 	bin, err := core.Locate()
 	if err != nil {
@@ -650,19 +758,15 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 		return 0, err
 	}
 	if iface := s.boundInterface(); iface != "" {
+		// Surfaced in the extension's log view either way: binding outbounds to
+		// the wrong adapter is invisible from the browser side (the core starts,
+		// the SOCKS port binds, and every dial then goes nowhere), and so is not
+		// binding at all when the user asked for it.
 		if p2, err := core.InjectBindInterface(patched, iface); err == nil {
 			patched = p2
-			fmt.Fprintf(os.Stderr, "noctis-host: bind_interface=%s\n", iface)
-			// Also surface it in the extension's log view: binding outbounds to
-			// the wrong adapter is invisible from the browser side (the core
-			// starts, the SOCKS port binds, and every dial then goes nowhere),
-			// so the picked name has to be readable without a terminal.
-			if s.notify != nil {
-				s.notify("log", map[string]any{
-					"stream": "helper",
-					"line":   "bind_interface=" + iface,
-				})
-			}
+			s.helperLog("bind_interface=%s", iface)
+		} else {
+			s.helperLog("bind_interface=%s not applied: %v", iface, err)
 		}
 	}
 	// Enable the Clash API for live traffic stats on cores that support it. The
@@ -670,15 +774,20 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 	// both stay internal to the helper and are never sent to the extension.
 	var statsAddr, statsSecret string
 	if core.SupportsClashAPI() {
-		if p, err := freePort(); err == nil {
-			if secret, err := randomSecret(); err == nil {
-				addr := fmt.Sprintf("127.0.0.1:%d", p)
-				if p2, err := core.InjectClashAPI(patched, addr, secret); err == nil {
-					patched = p2
-					statsAddr = addr
-					statsSecret = secret
-				}
+		// Stats are a nicety — a core that runs without them is still a working
+		// tunnel — but the failure has to be readable, or the traffic view is
+		// simply empty with nothing anywhere saying why.
+		addr, secret, err := clashAPIParams()
+		if err == nil {
+			var p2 []byte
+			if p2, err = core.InjectClashAPI(patched, addr, secret); err == nil {
+				patched = p2
+				statsAddr = addr
+				statsSecret = secret
 			}
+		}
+		if err != nil {
+			s.helperLog("clash api not enabled, live stats unavailable: %v", err)
 		}
 	}
 	dataDir, err := coreDataDir(core.ID())
@@ -708,6 +817,7 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 
 	statsCtx, statsCancel := context.WithCancel(ctx)
 	now := time.Now()
+	done := make(chan struct{})
 	s.mu.Lock()
 	s.cmd = cmd
 	s.cancel = cancel
@@ -715,9 +825,10 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 	s.cfgPath = cfgPath
 	s.sessionStart = now
 	s.statsCancel = statsCancel
+	s.childDone = done
 	s.mu.Unlock()
 
-	go s.supervise(cmd, port)
+	go s.supervise(cmd, port, done)
 
 	if err := waitPort(port, 5*time.Second); err != nil {
 		s.stop()
@@ -753,8 +864,12 @@ func (s *supervisor) currentPort() int {
 	return s.port
 }
 
-func (s *supervisor) supervise(cmd *exec.Cmd, port int) {
+func (s *supervisor) supervise(cmd *exec.Cmd, port int, done chan struct{}) {
 	err := cmd.Wait()
+	// Announced before anything else: stop()'s escalation is waiting on this to
+	// decide whether a SIGKILL is still needed, and every read of ProcessState
+	// below is safe only now that Wait has returned.
+	close(done)
 	s.mu.Lock()
 	owned := s.cmd == cmd
 	if owned {
@@ -778,12 +893,17 @@ func (s *supervisor) supervise(cmd *exec.Cmd, port int) {
 	}
 }
 
+// How long a child gets to honour SIGTERM before it is killed outright.
+// A var so tests can shorten it.
+var stopGrace = 2 * time.Second
+
 func (s *supervisor) stop() {
 	s.mu.Lock()
 	cmd := s.cmd
 	cancel := s.cancel
 	statsCancel := s.statsCancel
 	cfgPath := s.cfgPath
+	done := s.childDone
 	s.statsCancel = nil
 	s.cfgPath = ""
 	s.mu.Unlock()
@@ -799,9 +919,19 @@ func (s *supervisor) stop() {
 		return
 	}
 	_ = cmd.Process.Signal(syscall.SIGTERM)
+	// Read on the caller's goroutine, not inside the escalation: the value is
+	// only ever changed by a test, and reading it here keeps that change ordered
+	// behind the stop() that observes it.
+	grace := stopGrace
 	go func() {
-		time.Sleep(2 * time.Second)
-		if cmd.ProcessState == nil {
+		timer := time.NewTimer(grace)
+		defer timer.Stop()
+		select {
+		case <-done:
+			// SIGTERM was enough and supervise has reaped it. Releasing the
+			// context now rather than sleeping out the grace period is the
+			// point of waiting on a signal instead of a clock.
+		case <-timer.C:
 			_ = cmd.Process.Kill()
 		}
 		if cancel != nil {
@@ -848,29 +978,46 @@ func newLogPipe(notify notifyFn, stream string) *logPipe {
 	return &logPipe{notify: notify, stream: stream}
 }
 
+// maxLogLine caps one log line. A core that writes without newlines would
+// otherwise grow the buffer without bound, and a single line past 1 MiB is a
+// frame Chrome cannot carry at all.
+const maxLogLine = 16 << 10
+
 func (p *logPipe) Write(b []byte) (int, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.buf.Write(b)
 	for {
 		idx := bytes.IndexByte(p.buf.Bytes(), '\n')
+		// No newline in sight, or one too far away: ship what fits and carry on
+		// with the rest as if it were the next line.
+		if (idx < 0 && p.buf.Len() > maxLogLine) || idx > maxLogLine {
+			line := string(p.buf.Bytes()[:maxLogLine])
+			p.buf.Next(maxLogLine)
+			p.emit(line)
+			continue
+		}
 		if idx < 0 {
 			break
 		}
 		line := string(p.buf.Bytes()[:idx])
 		p.buf.Next(idx + 1)
-		if p.route != nil {
-			p.route.consume(p.coreID, line, nowMillis())
-			if routeLineHidden(p.coreID, line) {
-				continue
-			}
-		}
-		if p.notify != nil {
-			p.notify("log", map[string]any{
-				"stream": p.stream,
-				"line":   line,
-			})
-		}
+		p.emit(line)
 	}
 	return len(b), nil
+}
+
+func (p *logPipe) emit(line string) {
+	if p.route != nil {
+		p.route.consume(p.coreID, line, nowMillis())
+		if routeLineHidden(p.coreID, line) {
+			return
+		}
+	}
+	if p.notify != nil {
+		p.notify("log", map[string]any{
+			"stream": p.stream,
+			"line":   line,
+		})
+	}
 }

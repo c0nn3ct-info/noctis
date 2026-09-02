@@ -1,0 +1,53 @@
+name: Bug report
+description: Something in Noctis does not work
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Пишите по-русски, если так удобнее — мы читаем оба языка.
+        Write in Russian if that is easier — we read both.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        I pressed Connect on a VLESS server and the popup stayed on "Connecting…".
+        After about 15 seconds it said the helper was not responding.
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: >
+        Filled in for you when you open this issue from the extension —
+        the "Report a problem" button in the error toast, in the helper dialog,
+        or under Settings → Advanced → Diagnostics. If the block did not fit in
+        the link, it is on your clipboard: paste it here.
+        It carries versions, core paths and recent log lines, with server
+        addresses, keys, subscription links and visited sites already removed.
+      render: text
+      placeholder: |
+        --- noctis report ---
+        surface: toast
+        code: helper-timeout
+        ...
+        --- end ---
+
+  - type: input
+    id: protocol
+    attributes:
+      label: Protocol, if the problem is with one server
+      placeholder: vless + reality, shadowsocks-2022, trojan + ws …
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I re-ran the install command from the setup dialog, and it still happens
+        - label: I looked at the diagnostics block above and I am willing to post it publicly

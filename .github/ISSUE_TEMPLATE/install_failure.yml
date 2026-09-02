@@ -1,0 +1,48 @@
+name: Installation failure
+description: The helper installer did not finish
+labels: ["bug", "install"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Это про установку помощника — когда команда из диалога настройки
+        завершилась с ошибкой. / This is for the helper installer failing.
+
+        Если помощник установился, но расширение его не видит, используйте
+        «Bug report» — там диалог помощника соберёт диагностику за вас.
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+    validations:
+      required: true
+
+  - type: textarea
+    id: report
+    attributes:
+      label: The block the installer printed
+      description: >
+        The installer prints a short report when it fails, between
+        `--- noctis install report ---` and `--- end ---`. On Windows it is
+        already on your clipboard. It carries the step that failed, the versions
+        it was fetching and the exit code — no paths from your home directory.
+      render: text
+      placeholder: |
+        --- noctis install report ---
+        os=darwin arch=arm64 tag=v1.2.4 step=xray
+        pins: singbox=1.13.13 xray=v26.3.27 mihomo=v1.19.27
+        exit=22 line=118
+        --- end ---
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Full terminal output, if you still have it
+      render: shell

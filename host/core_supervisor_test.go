@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
@@ -8,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -93,6 +95,83 @@ func TestCoreDataDir(t *testing.T) {
 	if _, err := coreDataDir("sing-box"); err == nil {
 		t.Fatal("want error when temp dir is not creatable")
 	}
+}
+
+// mihomo only reads geo databases from the directory passed to `-d`; the
+// installers put them beside the helper. Without the copy it downloads them at
+// startup, over the connection the user has not got yet.
+func TestCoreDataDirProvisionsGeoAssets(t *testing.T) {
+	installDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(installDir, "geoip.dat"), []byte("ip-v1"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(installDir, "geosite.dat"), []byte("site-v1"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stubExecutable(t, filepath.Join(installDir, "noctis-host"))
+	t.Setenv("TMPDIR", t.TempDir())
+
+	dir, err := coreDataDir("mihomo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, want := range map[string]string{"geoip.dat": "ip-v1", "geosite.dat": "site-v1"} {
+		got, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			t.Fatalf("%s not provisioned: %v", name, err)
+		}
+		if string(got) != want {
+			t.Fatalf("%s = %q, want %q", name, got, want)
+		}
+	}
+
+	// sing-box has no use for them and xray reads them beside its own binary;
+	// neither should pay for a copy.
+	sbDir, err := coreDataDir("sing-box")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if entries, _ := os.ReadDir(sbDir); len(entries) != 0 {
+		t.Fatalf("sing-box data dir got %d files", len(entries))
+	}
+
+	// A newer copy beside the helper replaces the one already in the data dir.
+	newer := []byte("ip-v2-longer")
+	if err := os.WriteFile(filepath.Join(installDir, "geoip.dat"), newer, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := coreDataDir("mihomo"); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := os.ReadFile(filepath.Join(dir, "geoip.dat")); string(got) != string(newer) {
+		t.Fatalf("stale copy kept: %q", got)
+	}
+}
+
+func TestProvisionGeoAssetsTolerantOfMissingSources(t *testing.T) {
+	stubExecutable(t, filepath.Join(t.TempDir(), "noctis-host"))
+	dir := t.TempDir()
+	if err := provisionGeoAssets(dir); err != nil {
+		t.Fatalf("no assets shipped is not an error: %v", err)
+	}
+	entries, _ := os.ReadDir(dir)
+	if len(entries) != 0 {
+		t.Fatalf("wrote %d files with nothing to copy", len(entries))
+	}
+
+	// An unreadable helper path is reported rather than silently skipped.
+	osExecutable = func() (string, error) { return "", errors.New("no exe") }
+	if err := provisionGeoAssets(dir); err == nil {
+		t.Fatal("want the executable lookup error to surface")
+	}
+}
+
+// stubExecutable points "beside the helper" at a directory the test controls.
+func stubExecutable(t *testing.T, path string) {
+	t.Helper()
+	prev := osExecutable
+	osExecutable = func() (string, error) { return path, nil }
+	t.Cleanup(func() { osExecutable = prev })
 }
 
 func TestWriteTempConfig(t *testing.T) {
@@ -511,6 +590,45 @@ func TestSupervisorStopKillsStubbornChild(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 }
 
+// stop() used to poll cmd.ProcessState to decide whether the child still needed
+// a SIGKILL, which is a read of state that cmd.Wait() writes from the supervise
+// goroutine - a data race, and the shape below is what tripped it: a child that
+// exits on its own while several stops escalate against it. Run under -race.
+func TestSupervisorStopRacesChildExit(t *testing.T) {
+	stashVersionCache(t)
+	seedVersion(t, "sing-box", "1.11.0")
+	t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.11.0"))
+	notify, events := collectNotify()
+	sup := newSupervisor(notify)
+	// Short grace so the escalation goroutine reaches its verdict inside the
+	// test rather than after it: the old read happened only on that path, and a
+	// test that returned first never gave -race anything to see.
+	saved := stopGrace
+	stopGrace = 50 * time.Millisecond
+	t.Cleanup(func() { stopGrace = saved })
+
+	if _, err := sup.start(singBoxCore{}, socksConfig(map[string]any{"test_behavior": "dieafterbind"})); err != nil {
+		t.Fatalf("start: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sup.stop()
+		}()
+	}
+	wg.Wait()
+
+	waitEvent(t, events, "child_exit", 5*time.Second)
+	// Outlast the escalation so its goroutine has run before the test ends.
+	time.Sleep(4 * stopGrace)
+	if got := sup.currentPort(); got != 0 {
+		t.Fatalf("currentPort after stop = %d", got)
+	}
+}
+
 // TestSupervisorChildDiesNaturally covers the supervise path where the child
 // exits on its own (not via stop()), so the stats context is still armed and
 // supervise itself must cancel it.
@@ -593,7 +711,7 @@ func TestSuperviseNotOwned(t *testing.T) {
 	s.mu.Lock()
 	s.cmd = exec.Command("/usr/bin/true") // different *exec.Cmd: not owned
 	s.mu.Unlock()
-	s.supervise(cmd, 1234)
+	s.supervise(cmd, 1234, make(chan struct{}))
 	select {
 	case ev := <-events:
 		t.Fatalf("unexpected event for un-owned child: %+v", ev)
@@ -654,6 +772,38 @@ func TestLogPipe(t *testing.T) {
 	quiet := newLogPipe(nil, "stderr")
 	if n, err := quiet.Write([]byte("dropped\n")); err != nil || n != 8 {
 		t.Fatalf("nil notify write: %d %v", n, err)
+	}
+}
+
+// A core that writes without newlines must not grow the buffer without bound,
+// and no single line may exceed what one native-messaging frame can carry.
+func TestLogPipeCapsRunawayLine(t *testing.T) {
+	notify, events := collectNotify()
+	p := newLogPipe(notify, "stdout")
+
+	if _, err := p.Write(bytes.Repeat([]byte("x"), maxLogLine+10)); err != nil {
+		t.Fatal(err)
+	}
+	ev := waitEvent(t, events, "log", time.Second)
+	line, _ := ev.payload.(map[string]any)["line"].(string)
+	if len(line) != maxLogLine {
+		t.Fatalf("emitted line of %d bytes, want the %d-byte cap", len(line), maxLogLine)
+	}
+	if p.buf.Len() != 10 {
+		t.Fatalf("buffered %d bytes after the cut, want the 10-byte remainder", p.buf.Len())
+	}
+
+	// A newline further away than the cap is cut too, rather than shipped whole.
+	if _, err := p.Write(append(bytes.Repeat([]byte("y"), maxLogLine), '\n')); err != nil {
+		t.Fatal(err)
+	}
+	first, _ := waitEvent(t, events, "log", time.Second).payload.(map[string]any)["line"].(string)
+	if len(first) != maxLogLine {
+		t.Fatalf("first chunk = %d bytes", len(first))
+	}
+	rest, _ := waitEvent(t, events, "log", time.Second).payload.(map[string]any)["line"].(string)
+	if len(rest) != 10 {
+		t.Fatalf("tail chunk = %d bytes, want 10", len(rest))
 	}
 }
 
@@ -767,6 +917,20 @@ func TestInstalledCoresWithVersions(t *testing.T) {
 	t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.13.13"))
 	t.Setenv("XRAY_BIN", fakeCoreBin(t, "25.6.8"))
 	t.Setenv("MIHOMO_BIN", fakeCoreBin(t, "1.19.2"))
+
+	// Join the probes first. installedCores only waits versionBudget for one it
+	// does not already have, and a version that misses that budget is reported
+	// as unknown by design — correct behaviour that would fail a test about
+	// reporting a version. Late in a -race run the process carries enough
+	// threads to make three fork+execs cost that much. coreVersion has no such
+	// budget, and production warms the same cache at startup for the same
+	// reason; the budget's own expiry is covered by
+	// TestInstalledCoresGivesUpOnSlowProbe.
+	for _, c := range []Core{singBoxCore{}, xrayCore{}, mihomoCore{}} {
+		if v := coreVersion(c); v == "" {
+			t.Fatalf("%s probe reported no version", c.ID())
+		}
+	}
 
 	cs := installedCores()
 	if len(cs) != 3 {

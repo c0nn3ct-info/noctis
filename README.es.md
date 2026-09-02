@@ -38,6 +38,7 @@ Noctis es una extensión de navegador gratuita que enruta Chrome a través de VL
 - **Comprobaciones de estado + conmutación automática** — Sondeos de latencia en segundo plano; ping manual con un toque por servidor. Los servidores que fallan salen de la ruta activa.
 - **Lista de servidores fijados** — Mantén tres favoritos en la parte superior de la ventana emergente. Cambia el servidor activo sin abrir el panel completo.
 - **Flujo de registros en vivo** — La salida stdout y stderr del motor de proxy se transmite a la extensión. Diagnostica problemas de conexión sin salir del navegador.
+- **Copia de seguridad y traslado** — Exporta servidores, suscripciones, perfiles y ajustes a un solo archivo JSON, e impórtalo de vuelta. Un perfil de enrutamiento se guarda además en su propio archivo, así un conjunto de reglas pasa de un navegador o un equipo a otro sin volver a escribirlo.
 - **Protección contra fugas de WebRTC** — Un interruptor opcional bloquea el UDP fuera del proxy para que WebRTC no pueda revelar tu IP real.
 - **Bloqueo de anuncios y rastreadores en una regla** — La familia `category-ads-all` aparece en las sugerencias del campo Geosite. Añádela al grupo Block y el perfil descartará anuncios y rastreadores.
 

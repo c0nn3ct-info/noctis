@@ -38,6 +38,7 @@ Noctis is a free browser extension that routes Chrome through VLESS, VMess, Troj
 - **Health checks + automatic failover** — Background latency probes; one-tap manual ping per server. Failing servers drop out of the active route.
 - **Pinned-server shortlist** — Keep three favorites at the top of the popup. Switch active server without opening the full panel.
 - **Live log stream** — the proxy engine's stdout and stderr stream into the extension. Diagnose connection issues without leaving the browser.
+- **Backup and transfer** — Export servers, subscriptions, profiles and preferences to one JSON file, and import that file back. A single routing profile also saves to a file of its own, so a rule set moves between browsers or machines without retyping it.
 - **WebRTC leak guard** — Optional toggle blocks UDP outside the proxy so WebRTC can't reveal your real IP.
 - **Ad and tracker blocking in one rule** — The `category-ads-all` family sits in the Geosite field's suggestions. Add it to the Block group and the profile drops ads and trackers.
 

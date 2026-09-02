@@ -530,17 +530,105 @@ func TestMainHappyFlow(t *testing.T) {
 
 func TestMainReadError(t *testing.T) {
 	h := startMainHarness(t)
-	// An oversized length prefix is a protocol error: log + stop + exit.
+	// An oversized length prefix with a truncated body leaves the stream
+	// unreadable: log + stop + exit.
 	var big [4]byte
 	binary.LittleEndian.PutUint32(big[:], maxMessageSize+1)
 	if _, err := h.stdinW.Write(big[:]); err != nil {
 		t.Fatal(err)
 	}
+	h.stdinW.Close()
 	select {
 	case <-h.done:
 	case <-time.After(10 * time.Second):
 		t.Fatal("main did not exit on read error")
 	}
+}
+
+// A complete frame past the size limit is dropped, not fatal. The extension
+// keeps one port for every request, so exiting here took the running core down
+// with it and read to the user as a helper that had stopped answering.
+func TestMainSkipsOversizedInboundFrame(t *testing.T) {
+	h := startMainHarness(t)
+
+	var big [4]byte
+	binary.LittleEndian.PutUint32(big[:], maxMessageSize+1)
+	if _, err := h.stdinW.Write(big[:]); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := h.stdinW.Write(bytes.Repeat([]byte("x"), maxMessageSize+1)); err != nil {
+		t.Fatal(err)
+	}
+	h.awaitStderr(t, "dropped inbound frame")
+
+	h.send(t, map[string]any{"id": "after", "type": "ping"})
+	if ack := h.msgs.awaitAck("after"); ack["ok"] != true {
+		t.Fatalf("ping after an oversized frame = %#v", ack)
+	}
+	h.stdinW.Close()
+}
+
+// A dropped frame that still named its request is answered rather than left to
+// time out: the caller's budget is spent on nothing otherwise, and the timeout
+// it reports says nothing about the config having been too big to carry.
+func TestMainAnswersOversizedInboundFrameWithASalvagedID(t *testing.T) {
+	h := startMainHarness(t)
+
+	body := append([]byte(`{"id":"fat","type":"start","core":"sing-box","config":"`),
+		bytes.Repeat([]byte("x"), maxMessageSize+1)...)
+	body = append(body, '"', '}')
+	var size [4]byte
+	binary.LittleEndian.PutUint32(size[:], uint32(len(body)))
+	if _, err := h.stdinW.Write(size[:]); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := h.stdinW.Write(body); err != nil {
+		t.Fatal(err)
+	}
+
+	ack := h.msgs.awaitAck("fat")
+	if ack["ok"] != false {
+		t.Fatalf("oversized start ack = %#v", ack)
+	}
+	if msg, _ := ack["error"].(string); !strings.Contains(msg, "frame too large") {
+		t.Fatalf("error = %q, want it to name the frame size", msg)
+	}
+
+	h.send(t, map[string]any{"id": "after", "type": "ping"})
+	if a := h.msgs.awaitAck("after"); a["ok"] != true {
+		t.Fatalf("ping after an answered oversized frame = %#v", a)
+	}
+	h.stdinW.Close()
+}
+
+// An answer that cannot fit one frame comes back as an error ack. Nothing was
+// written for the real answer, so the stream is free for a smaller one — and
+// the caller learns why instead of watching its port die.
+func TestMainAnswersOversizeWithErrorAck(t *testing.T) {
+	// NUL bytes are valid UTF-8 and each escapes to six characters in JSON, so
+	// a body well inside the fetch cap still overflows a native-messaging frame.
+	body := bytes.Repeat([]byte{0}, 300<<10)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write(body)
+	}))
+	defer srv.Close()
+
+	h := startMainHarness(t)
+	h.send(t, map[string]any{"id": "1", "type": "fetch", "url": srv.URL})
+	ack := h.msgs.awaitAck("1")
+	if ack["ok"] != false {
+		t.Fatalf("oversized fetch ack = %#v", ack)
+	}
+	if msg, _ := ack["error"].(string); !strings.Contains(msg, "payload too large") {
+		t.Fatalf("error = %q, want it to name the payload size", msg)
+	}
+
+	// Still serving.
+	h.send(t, map[string]any{"id": "2", "type": "ping"})
+	if a := h.msgs.awaitAck("2"); a["ok"] != true {
+		t.Fatalf("ping after an oversized answer = %#v", a)
+	}
+	h.stdinW.Close()
 }
 
 func TestMainWriteAndNotifyErrors(t *testing.T) {

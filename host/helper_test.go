@@ -99,8 +99,14 @@ func fakeCoreMain() {
 	time.Sleep(30 * time.Second) // parked until SIGTERM / SIGKILL
 }
 
-// fakeCoreBin writes an executable shell wrapper that re-execs the test binary
-// in fake-core mode reporting the given version.
+// fakeCoreBin writes an executable shell wrapper: it answers a version probe
+// itself, and re-execs the test binary in fake-core mode for everything else.
+//
+// The version answer stays in the script on purpose. Starting the test binary
+// costs a process launch that instrumentation makes expensive — under -race it
+// outran probeVersion's own 2s exec budget on a loaded machine, and the version
+// then read as unknown. Nothing about answering `version` needs Go, and every
+// test that probes one is faster for not paying it.
 func fakeCoreBin(t *testing.T, version string) string {
 	t.Helper()
 	exe, err := os.Executable()
@@ -108,7 +114,10 @@ func fakeCoreBin(t *testing.T, version string) string {
 		t.Fatalf("os.Executable: %v", err)
 	}
 	path := filepath.Join(t.TempDir(), "fake-core")
-	script := fmt.Sprintf("#!/bin/sh\nNOCTIS_FAKE_CORE=1 NOCTIS_FAKE_VERSION=%q exec %q \"$@\"\n", version, exe)
+	script := fmt.Sprintf(
+		"#!/bin/sh\ncase \"$1\" in\nversion|-v) echo \"fake core version %s (test)\"; exit 0;;\nesac\nNOCTIS_FAKE_CORE=1 NOCTIS_FAKE_VERSION=%q exec %q \"$@\"\n",
+		version, version, exe,
+	)
 	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
 		t.Fatalf("write fake core: %v", err)
 	}

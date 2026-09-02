@@ -328,3 +328,39 @@ func TestSocks5DialContextDeadlinePropagates(t *testing.T) {
 		t.Fatalf("deadline not honored: %s", elapsed)
 	}
 }
+
+func TestFetchBudget(t *testing.T) {
+	if got := fetchBudget(0); got != fetchTimeout {
+		t.Fatalf("fetchBudget(0) = %v, want %v", got, fetchTimeout)
+	}
+	if got := fetchBudget(-5); got != fetchTimeout {
+		t.Fatalf("fetchBudget(-5) = %v, want %v", got, fetchTimeout)
+	}
+	if got := fetchBudget(5000); got != 5*time.Second {
+		t.Fatalf("fetchBudget(5000) = %v, want 5s", got)
+	}
+	// A caller cannot buy more time than the helper is willing to spend.
+	if got := fetchBudget(60000); got != fetchTimeout {
+		t.Fatalf("fetchBudget(60000) = %v, want the ceiling %v", got, fetchTimeout)
+	}
+}
+
+// The budget has to reach the request, not just the struct: a caller that gave
+// up long ago must not leave the helper dialling on its behalf.
+func TestFetchHonoursCallerBudget(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		time.Sleep(3 * time.Second)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	start := time.Now()
+	_, err := doFetch(fetchArgs{URL: srv.URL, TimeoutMs: 300}, 0)
+	elapsed := time.Since(start)
+	if err == nil {
+		t.Fatal("want a timeout error")
+	}
+	if elapsed > time.Second {
+		t.Fatalf("fetch ran %v, past its 300ms budget", elapsed)
+	}
+}

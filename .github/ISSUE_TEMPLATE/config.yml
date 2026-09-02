@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Installation guide
+    url: https://noctis.c0nn3ct.info/install/
+    about: The one-liners for macOS, Linux and Windows, and the usual fixes.
+  - name: Releases
+    url: https://github.com/c0nn3ct-info/noctis/releases
+    about: What changed in each helper release.

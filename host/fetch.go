@@ -29,10 +29,26 @@ const (
 	socksDialLimit = 8 * time.Second
 )
 
+// fetchBudget is the caller's timeout, capped at our own ceiling. It exists so
+// the extension's budget can be the larger of the two: a caller that gave up at
+// 6s while we kept dialling for 15s left the helper working on an answer nobody
+// was waiting for, and every request behind it paid for that.
+func fetchBudget(ms int) time.Duration {
+	if ms <= 0 {
+		return fetchTimeout
+	}
+	if d := time.Duration(ms) * time.Millisecond; d < fetchTimeout {
+		return d
+	}
+	return fetchTimeout
+}
+
 type fetchArgs struct {
 	URL      string            `json:"url"`
 	Headers  map[string]string `json:"headers"`
 	ViaProxy bool              `json:"viaProxy"`
+	// Optional caller budget in milliseconds, capped at fetchTimeout.
+	TimeoutMs int `json:"timeoutMs"`
 }
 
 type fetchResult struct {
@@ -55,10 +71,15 @@ func doFetch(args fetchArgs, socksPort int) (*fetchResult, error) {
 		return nil, fmt.Errorf("fetch: unsupported scheme %q", u.Scheme)
 	}
 
+	budget := fetchBudget(args.TimeoutMs)
+	tlsLimit := 10 * time.Second
+	if budget < tlsLimit {
+		tlsLimit = budget
+	}
 	transport := &http.Transport{
 		Proxy:               nil, // never inherit the OS proxy: it may point back at us
 		DisableCompression:  false,
-		TLSHandshakeTimeout: 10 * time.Second,
+		TLSHandshakeTimeout: tlsLimit,
 	}
 	via := "direct"
 	if args.ViaProxy {
@@ -72,7 +93,7 @@ func doFetch(args fetchArgs, socksPort int) (*fetchResult, error) {
 		via = "socks5:" + strconv.Itoa(socksPort)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	defer cancel()
 
 	req, err := newRequest(ctx, http.MethodGet, u.String(), nil)
@@ -88,7 +109,7 @@ func doFetch(args fetchArgs, socksPort int) (*fetchResult, error) {
 		req.Header.Set("Accept", "*/*")
 	}
 
-	client := &http.Client{Transport: transport, Timeout: fetchTimeout}
+	client := &http.Client{Transport: transport, Timeout: budget}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch: %w", err)
