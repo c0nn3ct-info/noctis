@@ -22,8 +22,11 @@ import { ServerMonogram } from '@/components/m3/server-monogram';
 import { AmbientWave } from '@/components/ambient-wave';
 import { cn } from '@/lib/utils';
 
-const WAVE_N = 44;
-const WAVE_MAX = 3_000_000; // fixed scale (bytes/s) so the wave doesn't rescale each tick
+// Both exported for Storybook: `AmbientWave`'s own stories draw the popup's
+// sample buffers, and they have to share the buffer length and the ceiling or
+// the shapes stop comparing.
+export const WAVE_N = 44;
+export const WAVE_MAX = 3_000_000; // fixed scale (bytes/s) so the wave doesn't rescale each tick
 
 // One step of the traffic random-walk: AR(1) low-pass (gentle peaks) + an
 // occasional small burst. Shared by the seed and the live tick so the opening
@@ -65,9 +68,14 @@ function fmtSpeed(bps: number): { value: string; unit: string } {
 
 // Live mock traffic: a rolling buffer that scrolls a new sample in each second,
 // driving the ambient wave + the ↓/↑ readout (same walk as the seed).
-function useMockTraffic() {
+function useMockTraffic(paused: boolean) {
   const [buf, setBuf] = useState<{ down: number; up: number }[]>(seedTraffic);
   useEffect(() => {
+    // Paused keeps the mulberry32 seed frame on screen forever: no interval, so
+    // nothing switches to Math.random and the popup stays byte-for-byte the
+    // same render every time. That is what a docs page, a story snapshot or a
+    // store capture needs — a live walk makes each of them a different image.
+    if (paused) return;
     const rnd = () => Math.random();
     const id = setInterval(() => {
       setBuf((b) => {
@@ -76,7 +84,7 @@ function useMockTraffic() {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [paused]);
   return buf;
 }
 
@@ -108,8 +116,17 @@ const SERVERS: ReadonlyArray<MockServer> = [
   },
 ];
 
-export function PopupMock({ className }: { className?: string }) {
-  const buf = useMockTraffic();
+interface PopupMockProps {
+  className?: string;
+  /**
+   * Freeze the mock on its deterministic opening frame instead of walking the
+   * traffic forward once a second.
+   */
+  paused?: boolean;
+}
+
+export function PopupMock({ className, paused = false }: PopupMockProps) {
+  const buf = useMockTraffic(paused);
   const latest = buf[buf.length - 1];
   const dn = fmtSpeed(latest.down);
   const up = fmtSpeed(latest.up);

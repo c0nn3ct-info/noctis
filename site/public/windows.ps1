@@ -90,6 +90,22 @@ $arch = switch -Wildcard ((Get-CimInstance Win32_Processor | Select-Object -Firs
   default { 'amd64' }
 }
 
+# Whether a tag carries a helper build for this machine. A tag name is a guess
+# until the archive answers: the release job builds `v*` and nothing else, but
+# nothing keeps another release line in this repository from tagging in the same
+# shape, and a guess that is wrong here becomes a 404 with the download already
+# announced. One HEAD on the fallback path, none on the path usually taken.
+function Test-HostRelease($candidate) {
+  $probe = "https://github.com/$repo/releases/download/$candidate/noctis-host-$candidate-windows-$arch.zip"
+  try {
+    Invoke-WebRequest -UseBasicParsing -Method Head -Uri $probe `
+      -Headers @{ 'User-Agent' = 'noctis-installer' } | Out-Null
+    return $true
+  } catch {
+    return $false
+  }
+}
+
 $script:Step = "release lookup"
 # Resolve latest noctis-host tag via the GitHub API. The redirect from
 # github.com/.../releases/latest is unreliable across PowerShell versions:
@@ -105,17 +121,42 @@ if (-not $tag) {
   # api.github.com is rate limited per IP (60/h unauthenticated), and one office
   # or one carrier-grade NAT shares that budget — a 403 there is not a reason to
   # abandon the install. The releases atom feed is plain HTML hosting, no quota.
+  #
+  # The feed carries every tag in the repository, not only the ones with a
+  # release attached, and this repository tags the site (bare `0.5.1`) beside the
+  # helper (`v1.2.5`). Taking the newest entry resolved a site version as the
+  # helper version, and the install died on a 404 for an archive the release job
+  # never built. Entries come newest first, so walk them and keep the first tag
+  # that has the archive this machine is about to download: the shape check skips
+  # the obvious misses without spending a round trip on them, and what settles it
+  # is the archive.
   try {
     $feed = Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/$repo/releases.atom" `
       -Headers @{ 'User-Agent' = 'noctis-installer' }
-    $m = [regex]::Match([string]$feed.Content, '/releases/tag/([^"<]+)')
-    if ($m.Success) { $tag = $m.Groups[1].Value }
+    $seen = @()
+    foreach ($m in [regex]::Matches([string]$feed.Content, '/releases/tag/([^"<]+)')) {
+      $candidate = $m.Groups[1].Value
+      if ($seen -contains $candidate) { continue }
+      $seen += $candidate
+      if ($candidate -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+') { continue }
+      if (Test-HostRelease $candidate) { $tag = $candidate; break }
+    }
+    if (-not $tag -and $seen.Count -gt 0) {
+      Write-Host "-> no noctis-host release among the feed's $($seen.Count) newest tags"
+    }
   } catch {
     Write-Host "-> release feed unavailable ($($_.Exception.Message))"
   }
 }
 if (-not $tag) {
   Write-Error 'Failed to resolve latest noctis-host release tag.'
+  exit 1
+}
+# Whichever lookup answered, the tag has to be one the release job built for.
+# Refusing here costs a line and replaces a 404 halfway through the download
+# with a message that names what was resolved.
+if ($tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+') {
+  Write-Error "Resolved '$tag', which is not a noctis-host release tag (expected vX.Y.Z)."
   exit 1
 }
 

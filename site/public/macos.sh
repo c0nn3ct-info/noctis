@@ -75,6 +75,15 @@ if [[ -z "$TAG" || "$TAG" == *"/releases/latest"* ]]; then
   echo "Failed to resolve latest noctis-host release tag." >&2
   exit 1
 fi
+# The repository carries site tags (bare `0.5.1`) beside helper tags (`v1.2.5`),
+# and only the helper ones have an archive built for them. The redirect above
+# resolves to a published release, so it gets this right today; the check is what
+# keeps a wrong answer from becoming a 404 halfway through the download, with
+# nothing on screen naming the version it went looking for.
+if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+  echo "Resolved '$TAG', which is not a noctis-host release tag (expected vX.Y.Z)." >&2
+  exit 1
+fi
 
 INSTALL_DIR="$HOME/.local/share/noctis"
 mkdir -p "$INSTALL_DIR"

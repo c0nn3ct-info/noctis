@@ -47,8 +47,8 @@ describe('Layout', () => {
       '/privacy/',
       '/license/',
       // Two labels, two destinations: they used to resolve to the same page.
-      'https://github.com/c0nn3ct-info/noctis/tree/master/site',
-      'https://github.com/c0nn3ct-info/noctis/tree/master/host',
+      'https://github.com/c0nn3ct-info/noctis/tree/main/site',
+      'https://github.com/c0nn3ct-info/noctis/tree/main/host',
       // Every locale of *this* page, as markup a crawler can follow.
       '/install/',
       '/ru/install/',

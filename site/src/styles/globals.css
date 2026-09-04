@@ -218,7 +218,13 @@
     --surface-container-highest: 270 14% 21%;
   }
   :root[data-accent='cyan'] {
-    --primary: 190 75% 30%;
+    /* 28%, not 30%: at 30% this accent's --primary is 4.23:1 as text on
+       --surface-container-highest and 4.33:1 on --surface-variant, the two
+       surfaces in the set it does not clear 4.5:1 against. 28% removes that
+       (4.71 worst, 6.13:1 white-on-primary) and matches the extension, where
+       the same accent was corrected. The dark blocks below are unaffected:
+       their --primary is a light tone read against dark surfaces. */
+    --primary: 190 75% 28%;
     --on-primary: 0 0% 100%;
     --primary-container: 190 70% 90%;
     --on-primary-container: 190 80% 18%;

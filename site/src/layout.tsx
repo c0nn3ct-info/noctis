@@ -125,7 +125,7 @@ export function Layout({ current, children }: LayoutProps) {
               <li>
                 <a
                   className="inline-flex items-center gap-2 py-1 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  href={`${REPO}/tree/master/site`}
+                  href={`${REPO}/tree/main/site`}
                   target="_blank"
                   rel="noreferrer noopener"
                 >
@@ -136,7 +136,7 @@ export function Layout({ current, children }: LayoutProps) {
               <li>
                 <a
                   className="inline-flex items-center gap-2 py-1 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  href={`${REPO}/tree/master/host`}
+                  href={`${REPO}/tree/main/host`}
                   target="_blank"
                   rel="noreferrer noopener"
                 >

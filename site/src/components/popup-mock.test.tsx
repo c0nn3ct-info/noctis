@@ -126,6 +126,20 @@ describe('PopupMock', () => {
     expect(readout()).toEqual({ down: '600B/s', up: '72B/s' });
   });
 
+  it('holds the seeded frame when paused', () => {
+    const { container } = render(<PopupMock paused />);
+    const seeded = readout();
+    expect(seeded).toEqual({ down: '874KB/s', up: '105KB/s' });
+
+    // No ticker at all, so a minute of wall clock leaves the frame alone —
+    // what a docs page or a screenshot needs from the mock.
+    tick(60, 0.9);
+    expect(readout()).toEqual(seeded);
+
+    const line = container.querySelectorAll('svg > path')[1].getAttribute('d') ?? '';
+    expect(line.split('C')).toHaveLength(44);
+  });
+
   it('stops the ticker when it unmounts', () => {
     const clear = vi.spyOn(globalThis, 'clearInterval');
     const view = render(<PopupMock />);

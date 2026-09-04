@@ -1,6 +1,6 @@
 {
   "name": "noctis-site",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Marketing site for Noctis (noctis.c0nn3ct.info)",
   "private": true,
   "type": "module",
@@ -9,7 +9,9 @@
     "build": "tsc --noEmit && vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "storybook": "storybook dev -p 6007 --no-open",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.42.4",
@@ -23,6 +25,9 @@
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.3",
@@ -36,6 +41,7 @@
     "postcss": "^8.4.49",
     "puppeteer": "^25.0.4",
     "serve-handler": "^6.1.7",
+    "storybook": "^10.6.0",
     "tailwindcss": "^3.4.15",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.6.3",

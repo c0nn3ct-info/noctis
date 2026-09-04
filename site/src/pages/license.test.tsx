@@ -47,7 +47,7 @@ describe('LicensePage', () => {
     // Points at the helper's own subtree, not the repository root.
     expect(screen.getByRole('link', { name: t('license.helper.body_link') })).toHaveAttribute(
       'href',
-      'https://github.com/c0nn3ct-info/noctis/tree/master/host',
+      'https://github.com/c0nn3ct-info/noctis/tree/main/host',
     );
 
     expect(

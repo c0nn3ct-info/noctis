@@ -37,31 +37,38 @@ const INSTALL_ISSUE_URL =
 import { t } from '../i18n';
 import { Layout } from '../layout';
 
-const INSTALL_CORES = ['sing-box', 'xray', 'mihomo'] as const;
+// Exported for Storybook alongside `macosCmd`: the full set is the state the
+// page loads in, and a story that wants the default command has to name it.
+export const INSTALL_CORES = ['sing-box', 'xray', 'mihomo'] as const;
 type SiteCore = (typeof INSTALL_CORES)[number];
 
 // Cores argument, or null when the selection is the full set (installer default)
 // or empty — both mean "install everything". Mirrors the extension's builder.
-function coresArg(sel: SiteCore[]): string | null {
+function coresArg(sel: readonly SiteCore[]): string | null {
   const ordered = INSTALL_CORES.filter((c) => sel.includes(c));
   if (ordered.length === 0 || ordered.length === INSTALL_CORES.length) return null;
   return ordered.join(',');
 }
 
-function macosCmd(sel: SiteCore[]): string {
+// Exported for Storybook: `CodeBlock`'s stories show a real command, and
+// building it here rather than restating it keeps the story from drifting when
+// the install URL or the extension id changes.
+export function macosCmd(sel: readonly SiteCore[]): string {
   const a = coresArg(sel);
   return `curl -fsSL https://noctis.c0nn3ct.info/macos.sh | bash -s -- ${WEBSTORE_EXT_ID}${a ? ` ${a}` : ''}`;
 }
-function linuxCmd(sel: SiteCore[]): string {
+function linuxCmd(sel: readonly SiteCore[]): string {
   const a = coresArg(sel);
   return `curl -fsSL https://noctis.c0nn3ct.info/linux.sh | bash -s -- ${WEBSTORE_EXT_ID}${a ? ` ${a}` : ''}`;
 }
-function windowsCmd(sel: SiteCore[]): string {
+function windowsCmd(sel: readonly SiteCore[]): string {
   const a = coresArg(sel);
   return `${a ? `$env:NOCTIS_CORES='${a}'; ` : ''}$env:NOCTIS_EXT_ID='${WEBSTORE_EXT_ID}'; iwr -useb https://noctis.c0nn3ct.info/windows.ps1 | iex`;
 }
 
-function CodeBlock({ children, label }: { children: string; label: string }) {
+// Exported for Storybook: the copy button's success and blocked-clipboard
+// states are two branches a page-level story cannot reach on its own.
+export function CodeBlock({ children, label }: { children: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -118,7 +125,9 @@ function CodeBlock({ children, label }: { children: string; label: string }) {
   );
 }
 
-function CoreMultiSelect({
+// Exported for Storybook: the picker is a controlled component, so a story
+// can show a selection the page itself only reaches through clicks.
+export function CoreMultiSelect({
   selected,
   onToggle,
   label,

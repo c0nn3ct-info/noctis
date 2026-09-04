@@ -16,7 +16,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**'],
-      exclude: [...coverageConfigDefaults.exclude, 'src/test/**'],
+      exclude: [
+        ...coverageConfigDefaults.exclude,
+        'src/test/**',
+        'src/**/*.stories.tsx',
+        'src/storybook/**',
+      ],
       thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },
