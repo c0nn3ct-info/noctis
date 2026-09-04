@@ -8,16 +8,39 @@ body:
         Пишите по-русски, если так удобнее — мы читаем оба языка.
         Write in Russian if that is easier — we read both.
 
+        **Пришли из расширения?** Диагностика уже подставлена в поле
+        «Diagnostics» ниже, второй раз её вставлять не нужно. Не хватает
+        только того, чего в ней нет: что именно пошло не так. Без этого
+        видно, что делала программа, но не то, что увидели вы.
+
+        **Came from the extension?** The diagnostics below are already filled
+        in — no need to paste them a second time. The one thing they cannot
+        carry is what actually went wrong for you, and that is what the first
+        field is for.
+
   - type: textarea
     id: what
     attributes:
       label: What happened?
-      description: What you did, what you expected, and what happened instead.
+      description: >
+        Словами: что вы сделали, чего ожидали и что произошло вместо этого.
+        Блок диагностики сюда вставлять не нужно — для него поле ниже.
+        In your own words: what you did, what you expected, and what happened
+        instead. The diagnostics block goes in the field below, not here.
       placeholder: |
+        Нажал «Подключиться» на сервере VLESS, попап остался на «Подключение…».
+        Секунд через 15 написал, что помощник не отвечает.
+
         I pressed Connect on a VLESS server and the popup stayed on "Connecting…".
         After about 15 seconds it said the helper was not responding.
     validations:
       required: true
+
+  - type: input
+    id: protocol
+    attributes:
+      label: Protocol, if the problem is with one server
+      placeholder: vless + reality, shadowsocks-2022, trojan + ws …
 
   - type: textarea
     id: diagnostics
@@ -26,8 +49,11 @@ body:
       description: >
         Filled in for you when you open this issue from the extension —
         the "Report a problem" button in the error toast, in the helper dialog,
-        or under Settings → Advanced → Diagnostics. If the block did not fit in
-        the link, it is on your clipboard: paste it here.
+        or under Settings → Advanced → Diagnostics.
+        Если в подставленном блоке сказано, что логи опущены, замените его
+        полным отчётом из буфера обмена — здесь же, в этом поле.
+        If the block below says the logs were omitted, replace it with the full
+        report from your clipboard — here, in this field, not in the one above.
         It carries versions, core paths and recent log lines, with server
         addresses, keys, subscription links and visited sites already removed.
       render: text
@@ -37,12 +63,6 @@ body:
         code: helper-timeout
         ...
         --- end ---
-
-  - type: input
-    id: protocol
-    attributes:
-      label: Protocol, if the problem is with one server
-      placeholder: vless + reality, shadowsocks-2022, trojan + ws …
 
   - type: checkboxes
     id: checks

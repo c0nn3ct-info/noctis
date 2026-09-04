@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestLineRingKeepsTheLastLines(t *testing.T) {
@@ -91,12 +92,41 @@ func TestDiagnosticsDescribesTheInstall(t *testing.T) {
 		t.Fatalf("bindInterface = %#v", bind)
 	}
 	core := d["core"].(map[string]any)
-	if core["running"] != false || core["socksPort"] != 0 {
+	if core["running"] != false || core["socksPort"] != 0 || core["id"] != "" {
 		t.Fatalf("core = %#v", core)
 	}
 	// The whole thing has to survive the trip to the extension.
 	if _, err := json.Marshal(d); err != nil {
 		t.Fatalf("diagnostics not serializable: %v", err)
+	}
+}
+
+// The core the helper is running is not the core the user picked: the extension
+// routes a server to whichever engine can carry its protocol. A report that
+// names only the preference reads as sing-box above an xray log.
+func TestDiagnosticsNamesTheRunningCore(t *testing.T) {
+	stashVersionCache(t)
+	seedVersion(t, "sing-box", "1.13.13")
+	t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.13.13"))
+	t.Setenv("XRAY_BIN", "")
+	t.Setenv("MIHOMO_BIN", "")
+	notify, events := collectNotify()
+	sup := newSupervisor(notify)
+
+	port, err := sup.start(singBoxCore{}, socksConfig(nil))
+	if err != nil {
+		t.Fatalf("start: %v", err)
+	}
+	core := sup.diagnostics()["core"].(map[string]any)
+	if core["running"] != true || core["id"] != "sing-box" || core["socksPort"] != port {
+		t.Fatalf("core while running = %#v", core)
+	}
+
+	sup.stop()
+	waitEvent(t, events, "child_exit", 5*time.Second)
+	core = sup.diagnostics()["core"].(map[string]any)
+	if core["running"] != false || core["id"] != "" {
+		t.Fatalf("core after stop = %#v", core)
 	}
 }
 

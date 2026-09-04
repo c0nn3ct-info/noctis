@@ -15,7 +15,7 @@ import (
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.2.5"
+var hostVersion = "1.2.6"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`

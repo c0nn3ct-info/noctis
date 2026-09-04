@@ -11,6 +11,18 @@ body:
         Если помощник установился, но расширение его не видит, используйте
         «Bug report» — там диалог помощника соберёт диагностику за вас.
 
+        Установщик печатает две разные вещи: строки хода установки, каждая
+        с `->`, и в самом конце отчёт об ошибке — между
+        `--- noctis install report ---` и `--- end ---`. Нужен отчёт: только
+        в нём есть шаг, на котором всё сломалось, и текст самой ошибки.
+        Строки с `->` тоже пригодятся, для них отведено последнее поле.
+
+        The installer prints two different things: progress lines, each
+        starting with `->`, and at the very end a failure report between
+        `--- noctis install report ---` and `--- end ---`. The report is the
+        one that names the failing step and the error; the `->` lines have a
+        field of their own at the bottom.
+
   - type: dropdown
     id: os
     attributes:
@@ -25,18 +37,23 @@ body:
   - type: textarea
     id: report
     attributes:
-      label: The block the installer printed
+      label: The report block, between "--- noctis install report ---" and "--- end ---"
       description: >
-        The installer prints a short report when it fails, between
-        `--- noctis install report ---` and `--- end ---`. On Windows it is
-        already on your clipboard. It carries the step that failed, the versions
-        it was fetching and the exit code — no paths from your home directory.
+        Печатается последним, когда установка уже прервалась. На Windows он
+        сразу оказывается в буфере обмена. В нём шаг, версии, которые
+        скачивались, и текст ошибки — без путей из вашей домашней папки.
+        Printed last, once the install has already stopped. On Windows it is
+        put on your clipboard for you. It carries the step that failed, the
+        versions it was fetching and the error — no paths from your home
+        directory.
       render: text
       placeholder: |
         --- noctis install report ---
-        os=darwin arch=arm64 tag=v1.2.4 step=xray
+        os=darwin arch=arm64 step=xray exit=22 line=118
+        tag=v1.2.5 cores=sing-box,xray,mihomo
         pins: singbox=1.13.13 xray=v26.3.27 mihomo=v1.19.27
-        exit=22 line=118
+        curl=8.7.1 bash=5.2.37
+        browsers_written=0
         --- end ---
     validations:
       required: true
@@ -44,5 +61,11 @@ body:
   - type: textarea
     id: output
     attributes:
-      label: Full terminal output, if you still have it
+      label: Everything else the terminal showed
+      description: >
+        Строки хода установки с `->` и всё, что было до отчёта.
+        The `->` progress lines and whatever else came before the report.
       render: shell
+      placeholder: |
+        -> release API unavailable (403); trying the release feed
+        -> downloading noctis-host-v1.2.5-windows-amd64.zip

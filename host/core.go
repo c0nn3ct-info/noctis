@@ -371,6 +371,11 @@ type supervisor struct {
 	// adapter name), carried on start/reload and remembered so a later restart
 	// binds the same way.
 	bindPref string
+	// coreID names the engine the running child is, which is not the engine the
+	// user picked in settings: the extension routes a server to whichever core
+	// can carry its protocol. A problem report that names only the preference
+	// puts a sing-box label above an xray log.
+	coreID string
 }
 
 func (s *supervisor) setBindPref(pref string) {
@@ -822,6 +827,7 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 	s.cmd = cmd
 	s.cancel = cancel
 	s.port = port
+	s.coreID = core.ID()
 	s.cfgPath = cfgPath
 	s.sessionStart = now
 	s.statsCancel = statsCancel
@@ -882,6 +888,7 @@ func (s *supervisor) supervise(cmd *exec.Cmd, port int, done chan struct{}) {
 			s.statsCancel = nil
 		}
 		s.port = 0
+		s.coreID = ""
 	}
 	s.mu.Unlock()
 	if owned && s.notify != nil {

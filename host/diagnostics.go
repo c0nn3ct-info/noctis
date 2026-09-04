@@ -131,6 +131,7 @@ func (s *supervisor) diagnostics() map[string]any {
 	pref := s.bindPref
 	port := s.port
 	running := s.cmd != nil
+	runningCore := s.coreID
 	sessionStart := s.sessionStart
 	s.mu.Unlock()
 
@@ -153,6 +154,7 @@ func (s *supervisor) diagnostics() map[string]any {
 		},
 		"core": map[string]any{
 			"running":   running,
+			"id":        runningCore,
 			"socksPort": port,
 			"sessionMs": sessionMs,
 		},
