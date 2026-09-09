@@ -104,20 +104,54 @@ func (singBoxCore) InjectBindInterface(raw []byte, iface string) ([]byte, error)
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		return nil, err
 	}
-	obs, ok := doc["outbounds"].([]any)
-	if !ok {
-		return raw, nil
+	if obs, ok := doc["outbounds"].([]any); ok {
+		for _, ob := range obs {
+			m, ok := ob.(map[string]any)
+			if !ok {
+				continue
+			}
+			if t, _ := m["type"].(string); isProxyOutboundType(t) {
+				m["bind_interface"] = iface
+			}
+		}
 	}
-	for _, ob := range obs {
-		m, ok := ob.(map[string]any)
+	bindDirectResolvers(doc, iface)
+	return json.MarshalIndent(doc, "", "  ")
+}
+
+// bindDirectResolvers puts the same interface under the DNS servers that dial
+// for themselves. One of them resolves the proxy server's own hostname, and an
+// unbound query follows the default route -- into a system VPN's tunnel, where
+// the answer is that VPN's to give: with fake-ip DNS it is an address in
+// 198.18/16 that the bound outbound cannot reach at all, and the tunnel then
+// fails to form with nothing anywhere saying why.
+//
+// Two are left alone. A resolver naming a detour dials through that outbound,
+// which is already bound if it is a proxy. And a legacy (pre-1.12) resolver,
+// recognised by having no `type`, knows no dial fields at all: writing one in
+// would have the old sing-box that config belongs to reject it outright.
+func bindDirectResolvers(doc map[string]any, iface string) {
+	dns, ok := doc["dns"].(map[string]any)
+	if !ok {
+		return
+	}
+	servers, ok := dns["servers"].([]any)
+	if !ok {
+		return
+	}
+	for _, s := range servers {
+		m, ok := s.(map[string]any)
 		if !ok {
 			continue
 		}
-		if t, _ := m["type"].(string); isProxyOutboundType(t) {
-			m["bind_interface"] = iface
+		if t, _ := m["type"].(string); t == "" {
+			continue
 		}
+		if detour, _ := m["detour"].(string); detour != "" {
+			continue
+		}
+		m["bind_interface"] = iface
 	}
-	return json.MarshalIndent(doc, "", "  ")
 }
 
 // singboxAtLeast reports whether the located sing-box is >= major.minor. An

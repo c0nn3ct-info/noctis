@@ -16,8 +16,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -111,9 +113,10 @@ func msgFor(t *testing.T, raw string) *incomingMsg {
 func TestDispatchProbe(t *testing.T) {
 	sup := newSupervisor(nil)
 	lg := log.New(io.Discard, "", 0)
+	stubStackCaptured(t, false)
 	orig := probeDial
 	t.Cleanup(func() { probeDial = orig })
-	probeDial = func(context.Context, string) (net.Conn, error) {
+	probeDial = func(context.Context, string, string) (net.Conn, error) {
 		return &scriptedConn{reader: strings.NewReader("")}, nil
 	}
 
@@ -127,7 +130,7 @@ func TestDispatchProbe(t *testing.T) {
 	}
 
 	// A dial that finds nothing is the server's answer, reported as an error.
-	probeDial = func(context.Context, string) (net.Conn, error) {
+	probeDial = func(context.Context, string, string) (net.Conn, error) {
 		return nil, errors.New("connect: connection refused")
 	}
 	if a := dispatch(msgFor(t, `{"id":"2","type":"probe","host":"h.example","port":443}`), sup, lg); a.OK ||
@@ -719,5 +722,50 @@ func TestReapStaleConfigs(t *testing.T) {
 		if _, err := os.Stat(p); err != nil {
 			t.Fatalf("%s was removed: %v", filepath.Base(p), err)
 		}
+	}
+}
+
+// Chrome closing the pipe is the ordinary end, and stdin EOF stops the core
+// along with the helper. A signal was the other end and stopped nothing: a
+// logout, a `pkill`, Activity Monitor — the helper died alone and the core it
+// had spawned kept running, holding a tunnel and a port with nobody left to
+// stop it. The next helper then started a second core beside the orphan.
+func TestStopOnSignalRunsTheShutdownPath(t *testing.T) {
+	orig := signalNotify
+	t.Cleanup(func() { signalNotify = orig })
+	var ch chan<- os.Signal
+	var asked []os.Signal
+	signalNotify = func(c chan<- os.Signal, s ...os.Signal) { ch, asked = c, s }
+
+	origExit := exitProcess
+	t.Cleanup(func() { exitProcess = origExit })
+	var buf bytes.Buffer
+	var order []string
+	done := make(chan struct{})
+	exitProcess = func(code int) {
+		order = append(order, fmt.Sprintf("exit(%d)", code))
+		close(done)
+	}
+	stopOnSignal(log.New(&buf, "", 0), func() { order = append(order, "shutdown") })
+
+	for _, want := range []os.Signal{os.Interrupt, syscall.SIGTERM} {
+		if !slices.Contains(asked, want) {
+			t.Fatalf("registered %v, want %v among them", asked, want)
+		}
+	}
+	ch <- syscall.SIGTERM
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("the shutdown path never ran")
+	}
+	// Closing stdin does not wake a read blocked on fd 0, so the process has to
+	// be ended outright — after the core is stopped, never instead of it.
+	if got := strings.Join(order, ","); got != "shutdown,exit(0)" {
+		t.Fatalf("order = %q, want the core stopped and then the process ended", got)
+	}
+	// Ordered by the goroutine itself: the line is written before shutdown runs.
+	if !strings.Contains(buf.String(), "terminated") {
+		t.Fatalf("log = %q, want it to name the signal", buf.String())
 	}
 }

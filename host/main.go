@@ -8,14 +8,16 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"runtime"
 	"sync"
+	"syscall"
 	"time"
 )
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.2.6"
+var hostVersion = "1.2.7"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`
@@ -105,17 +107,28 @@ func main() {
 
 	// A broken stdout used to be handled by returning from the loop below. Now
 	// that handlers answer off it, the failure can happen on any goroutine, so
-	// it closes stdin instead: the blocked read wakes with an error and main
-	// leaves through the same path it always did.
+	// it closes stdin instead: a pollable stdin wakes its blocked read with an
+	// error and main leaves through the same path it always did. Chrome's pipe
+	// on fd 0 is not pollable and does not wake -- see stopOnSignal, which is
+	// why a signal ends the process outright.
 	stdin := os.Stdin
-	var failOnce sync.Once
-	fail := func(err error) {
-		logger.Printf("write error: %v", err)
-		failOnce.Do(func() {
+	var stopOnce sync.Once
+	shutdown := func() {
+		stopOnce.Do(func() {
 			sup.stop()
 			_ = stdin.Close()
 		})
 	}
+	fail := func(err error) {
+		logger.Printf("write error: %v", err)
+		shutdown()
+	}
+	// Chrome closing the pipe is the ordinary end, and stdin EOF takes the core
+	// with it. A signal was the other end and took nothing: a logout, a `pkill`,
+	// Activity Monitor -- the helper died alone and the core it had spawned kept
+	// running, holding a tunnel and a port with nobody left to stop it, and the
+	// next helper started a second core beside the orphan.
+	stopOnSignal(logger, shutdown)
 	// The one way an answer leaves the helper. `kind` and `id` only name the
 	// request in the log; a dropped inbound frame answers through here too,
 	// with the id salvaged out of its head.
@@ -143,8 +156,12 @@ func main() {
 	// queued behind it time out in the extension — which then reports the
 	// helper as missing while it is merely busy. So only the core lifecycle
 	// keeps a single ordered queue (start/stop/reload must not interleave);
-	// every other handler is read-only or network I/O and answers on its own
-	// goroutine, capped so a burst of probes can't spawn unbounded work.
+	// every other handler answers on its own goroutine. The ones that leave
+	// the process — a dial, a fetch — share a capped pool, so a burst of
+	// probes can't spawn unbounded work. The rest never wait for that pool:
+	// they are local and answer in well under a second, and when eight dead
+	// fetches held every slot, a `hello` queued for a ninth read exactly like
+	// the blocked pipe this split was meant to end.
 	lifecycle := make(chan *incomingMsg, 64)
 	defer close(lifecycle)
 	go func() {
@@ -200,17 +217,56 @@ func main() {
 		// The semaphore is taken inside the goroutine on purpose: taking it here
 		// would put the read loop back behind the handlers it is meant to escape.
 		go func(msg *incomingMsg) {
-			sem <- struct{}{}
-			defer func() { <-sem }()
+			if isNetworkIO(msg.Type) {
+				sem <- struct{}{}
+				defer func() { <-sem }()
+			}
 			serve(msg)
 		}(&msg)
 	}
 }
 
-// How many non-lifecycle handlers may run at once. Enough that a popup's worth
-// of concurrent probes overlaps, low enough that a runaway caller cannot make
-// the helper fork work without bound.
+// signalNotify and exitProcess are seams for tests, never reassigned in
+// production.
+var (
+	signalNotify = signal.Notify
+	exitProcess  = os.Exit
+)
+
+// stopOnSignal stops the core and ends the process once the OS asks it to.
+// os.Interrupt carries a ctrl-c on every platform; SIGTERM is what a logout and
+// a plain `kill` send.
+func stopOnSignal(lg *log.Logger, shutdown func()) {
+	sigs := make(chan os.Signal, 1)
+	signalNotify(sigs, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		s := <-sigs
+		lg.Printf("%v received, stopping", s)
+		shutdown()
+		// Closing stdin is not enough to end this process. Chrome's pipe arrives
+		// on fd 0 in blocking mode, which Go leaves out of its poller, so the
+		// read blocked on it does not wake on a close -- the helper lingers with
+		// its core gone, answering requests it can no longer serve. The signal
+		// asked for the process to end, so end it.
+		exitProcess(0)
+	}()
+}
+
+// How many network handlers may run at once. Enough that a popup's worth of
+// concurrent probes overlaps, low enough that a runaway caller cannot make the
+// helper fork work without bound.
 const maxConcurrentHandlers = 8
+
+// Commands whose handler leaves the process: a dial or a fetch that hangs for
+// its whole budget when nothing routes out. Only these take a slot in the pool;
+// everything else is a stat, a cache read or a syscall, and answers at once.
+func isNetworkIO(t string) bool {
+	switch t {
+	case "fetch", "probe":
+		return true
+	}
+	return false
+}
 
 // Commands that change the running child. They answer one at a time, in arrival
 // order: a `start` racing the `stop` before it would leave two cores fighting
@@ -361,7 +417,7 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 		if err := json.Unmarshal(msg.Raw, &args); err != nil {
 			return errAck(msg.ID, fmt.Errorf("decode probe: %w", err))
 		}
-		result, err := doProbe(args)
+		result, err := doProbe(args, sup.boundInterface())
 		if err != nil {
 			return errAck(msg.ID, err)
 		}

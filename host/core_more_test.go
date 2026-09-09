@@ -58,10 +58,10 @@ func TestSingBoxInjectBindInterfaceEdgeCases(t *testing.T) {
 	if _, err := (singBoxCore{}).InjectBindInterface([]byte("nope"), "en0"); err == nil {
 		t.Fatal("want json error")
 	}
-	// No outbounds: unchanged.
-	raw := []byte(`{"route":{}}`)
-	out, err := (singBoxCore{}).InjectBindInterface(raw, "en0")
-	if err != nil || string(out) != string(raw) {
+	// Nothing to bind: nothing bound. The bytes are re-marshalled either way —
+	// the resolvers are walked whether or not the config carries outbounds.
+	out, err := (singBoxCore{}).InjectBindInterface([]byte(`{"route":{}}`), "en0")
+	if err != nil || strings.Contains(string(out), "bind_interface") {
 		t.Fatalf("out=%s err=%v", out, err)
 	}
 	// Non-map outbound entries are skipped.

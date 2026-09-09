@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -54,6 +55,52 @@ func TestSlowHandlerDoesNotBlockOthers(t *testing.T) {
 	}
 	if ack := h.msgs.awaitAck("slow"); ack["ok"] != true {
 		t.Fatalf("fetch = %#v", ack)
+	}
+
+	h.stdinW.Close()
+}
+
+// The pool that caps network handlers is finite, and a burst that filled it took
+// `hello` and `ping` down with it: eight fetches with no route out held every
+// slot for their full budget, the liveness checks queued for a ninth, and the
+// extension read the wait as a helper that had stopped answering — then sent the
+// user to reinstall one that was running the whole time. A liveness check leaves
+// the process for nothing, so it must not wait for the pool.
+func TestLivenessChecksBypassTheNetworkPool(t *testing.T) {
+	stashVersionCache(t)
+	seedVersion(t, "sing-box", "1.11.0")
+	t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.11.0"))
+	t.Setenv("XRAY_BIN", "")
+	t.Setenv("MIHOMO_BIN", "")
+	t.Setenv("PATH", t.TempDir())
+
+	slow := slowServer(t, 2*time.Second)
+	h := startMainHarness(t)
+
+	for i := 0; i < maxConcurrentHandlers; i++ {
+		h.send(t, map[string]any{"id": fmt.Sprintf("slow%d", i), "type": "fetch", "url": slow.URL})
+	}
+	// Let every fetch reach its dial before the checks arrive: the point is a
+	// full pool, not a race for the last slot.
+	time.Sleep(200 * time.Millisecond)
+
+	start := time.Now()
+	h.send(t, map[string]any{"id": "hi", "type": "hello"})
+	h.send(t, map[string]any{"id": "pg", "type": "ping"})
+
+	if ack := h.msgs.awaitAck("hi"); ack["ok"] != true {
+		t.Fatalf("hello = %#v", ack)
+	}
+	if ack := h.msgs.awaitAck("pg"); ack["ok"] != true {
+		t.Fatalf("ping = %#v", ack)
+	}
+	if waited := time.Since(start); waited > time.Second {
+		t.Fatalf("hello/ping waited %v behind %d slow fetches", waited, maxConcurrentHandlers)
+	}
+	for i := 0; i < maxConcurrentHandlers; i++ {
+		if ack := h.msgs.awaitAck(fmt.Sprintf("slow%d", i)); ack["ok"] != true {
+			t.Fatalf("fetch %d = %#v", i, ack)
+		}
 	}
 
 	h.stdinW.Close()

@@ -327,3 +327,58 @@ func TestMigrateLegacySingBox(t *testing.T) {
 		t.Fatalf("geoip-cn rule_set url=%q", u)
 	}
 }
+
+// The direct resolver dials the proxy server's own hostname, and an unbound
+// query follows the default route — into a system VPN's tunnel, where the
+// answer is that VPN's to give. With fake-ip DNS that answer is an address in
+// 198.18/16 which the bound outbound then cannot reach at all. A resolver that
+// names a detour already dials through that outbound and is left alone.
+func TestSingBoxInjectBindInterfaceBindsTheDirectResolver(t *testing.T) {
+	raw := []byte(`{"dns":{"servers":[
+		{"tag":"remote","type":"https","server":"1.1.1.1","detour":"proxy-out"},
+		{"tag":"dns-direct","type":"udp","server":"1.1.1.1"}]},
+	 "outbounds":[{"type":"vless","tag":"proxy-out"},{"type":"direct","tag":"direct"}]}`)
+	out, err := singBoxCore{}.InjectBindInterface(raw, "en0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(out, &doc); err != nil {
+		t.Fatal(err)
+	}
+	servers := doc["dns"].(map[string]any)["servers"].([]any)
+	remote := servers[0].(map[string]any)
+	if _, ok := remote["bind_interface"]; ok {
+		t.Fatalf("remote resolver = %+v, want it left to its detour", remote)
+	}
+	direct := servers[1].(map[string]any)
+	if direct["bind_interface"] != "en0" {
+		t.Fatalf("direct resolver = %+v, want it bound to en0", direct)
+	}
+}
+
+// A pre-1.12 config keeps the legacy resolver shape (`address`, no `type`), and
+// that schema knows no dial fields: writing one in would have the old sing-box
+// reject the config outright. Those configs reach here only beside an old
+// sing-box, since InjectPort migrates the rest.
+func TestSingBoxInjectBindInterfaceLeavesALegacyResolverAlone(t *testing.T) {
+	raw := []byte(`{"dns":{"servers":[{"tag":"dns-direct","address":"1.1.1.1"}]},
+	 "outbounds":[{"type":"vless","tag":"proxy-out"}]}`)
+	out, err := singBoxCore{}.InjectBindInterface(raw, "en0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(out, &doc); err != nil {
+		t.Fatal(err)
+	}
+	server := doc["dns"].(map[string]any)["servers"].([]any)[0].(map[string]any)
+	if _, ok := server["bind_interface"]; ok {
+		t.Fatalf("legacy resolver = %+v, want it untouched", server)
+	}
+	// The outbound is still bound: that is the part both schemas share.
+	ob := doc["outbounds"].([]any)[0].(map[string]any)
+	if ob["bind_interface"] != "en0" {
+		t.Fatalf("outbound = %+v, want it bound", ob)
+	}
+}

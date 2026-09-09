@@ -1028,3 +1028,28 @@ func (p *logPipe) emit(line string) {
 		})
 	}
 }
+
+// interfaceDialIP is the local IPv4 a socket should leave `name` from: its
+// first routable address that is not an overlay's. Nil when the adapter is
+// gone, holds nothing usable, or was not named at all -- all of which mean
+// "let the OS route this one".
+func interfaceDialIP(name string) net.IP {
+	if name == "" {
+		return nil
+	}
+	ifs, err := netInterfaces()
+	if err != nil {
+		return nil
+	}
+	for _, iface := range ifs {
+		if iface.Name != name {
+			continue
+		}
+		for _, ip := range ifaceIPv4s(iface) {
+			if !isOverlayAddr(ip) {
+				return ip
+			}
+		}
+	}
+	return nil
+}
