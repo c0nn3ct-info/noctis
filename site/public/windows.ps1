@@ -53,8 +53,20 @@ $script:Step = $null
 function Write-InstallFailure($err) {
   if (-not $script:Step) { return }
   $msg = "$($err.Exception.Message)"
-  # An error message often quotes a path under the user's profile.
-  if ($env:USERNAME) { $msg = $msg -replace [regex]::Escape($env:USERNAME), '<user>' }
+  # An error message often quotes a path under the user's profile, and the
+  # account name appears there in more than one form. %TEMP% carries the 8.3
+  # short name on some profiles, which the long-name replace never matched --
+  # that is how a fragment of a real account reached a public issue. Collect
+  # the name out of every profile-rooted variable, then sweep anything left
+  # under \Users\ that has no whitespace in it.
+  $names = @($env:USERNAME)
+  foreach ($base in @($env:USERPROFILE, $env:TEMP, $env:LOCALAPPDATA, $env:APPDATA)) {
+    if ($base -match '(?i)^[A-Za-z]:\\Users\\([^\\]+)') { $names += $Matches[1] }
+  }
+  foreach ($n in ($names | Where-Object { $_ } | Select-Object -Unique)) {
+    $msg = $msg -replace [regex]::Escape($n), '<user>'
+  }
+  $msg = $msg -replace '(?i)([A-Za-z]:\\Users\\)[^\\\s]+', '${1}<user>'
   $report = @"
 --- noctis install report ---
 os=windows arch=$arch step=$script:Step
@@ -78,6 +90,19 @@ error=$msg
   Write-Host $report
 }
 trap { Write-InstallFailure $_; break }
+
+# Cleaning up a temporary path must never decide the outcome of an install.
+# `-ErrorAction SilentlyContinue` is not enough on its own: a path whose base
+# cannot be resolved fails during parameter binding with a PSArgumentException,
+# which is terminating and ignores the preference. Raised from a `finally` it
+# also replaces whatever error the `try` was already carrying, so a failed
+# download was reported as a failed delete and the real cause never reached the
+# report at all. Swallow everything here; a leftover file in %TEMP% is not worth
+# one line of a bug report.
+function Remove-Temp($path) {
+  if (-not $path) { return }
+  try { Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue } catch { }
+}
 
 
 # Select-Object -First 1: Win32_Processor returns one object per socket/core, so
@@ -174,10 +199,11 @@ try {
   Invoke-WebRequest -UseBasicParsing -Uri $coresEnvUrl -OutFile $tmpEnv
   $envText = Get-Content -Raw -Path $tmpEnv
 } catch {
-  Write-Error "Failed to fetch core version pins ($coresEnvUrl)."
-  exit 1
+  # throw, not Write-Error + exit: only the trap builds the report block, and
+  # exiting here left the person with one red line and nothing to paste.
+  throw "Failed to fetch core version pins ($coresEnvUrl): $($_.Exception.Message)"
 } finally {
-  Remove-Item -Force -ErrorAction SilentlyContinue $tmpEnv
+  Remove-Temp $tmpEnv
 }
 foreach ($line in ($envText -split "`n")) {
   $line = $line.Trim()
@@ -334,7 +360,7 @@ try {
     }
   }
 } finally {
-  Remove-Item -Recurse -Force $tmp
+  Remove-Temp $tmp
 }
 
 $manifestPath = Join-Path $installDir 'com.noctis.host.json'
