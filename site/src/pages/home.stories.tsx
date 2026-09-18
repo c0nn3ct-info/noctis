@@ -25,6 +25,10 @@ const meta = {
     // scroller and steal the sticky header from its own.
     docs: { story: { inline: false, iframeHeight: 900 } },
   },
+  // The shipped page, which every shell in `pages/` stamps `data-accent="planet"`
+  // on. The toolbar still sweeps the other four — this is where the story opens,
+  // not where it is pinned.
+  globals: { accent: 'planet' },
 } satisfies Meta<typeof HomePage>;
 
 export default meta;

@@ -341,7 +341,13 @@
    *
    * Unlike the other three this one also re-tints the text and the rules,
    * as `blue` does on aria2t: a violet ground under neutral-grey type reads
-   * as two palettes, not one. Status colours stay theme-fixed. */
+   * as two palettes, not one. Status colours stay theme-fixed.
+   *
+   * It is the site's palette, not a choice offered to the visitor: every shell
+   * in `pages/` carries `data-accent="planet"` on <html>, so it is in force
+   * before the first paint and the `theme-color` metas beside it name this
+   * ground rather than the neutral one. `applyAccent` exists for the Storybook
+   * toolbar, which sweeps all five. */
   :root[data-accent='planet'] {
     --background:                250 40% 99%;
     --surface:                   250 40% 99%;
@@ -758,13 +764,9 @@
   .shape-morph {
     transition: none !important;
   }
-  /* The landing page's three loops. The aurora and the aperture rings are
-   * atmosphere, so they hold their last frame; the capability lanes are the one
-   * place where readable content is in motion, so stopping them is not optional
-   * — a stopped lane is simply a row that overflows and can be scrolled. */
-  .animate-aurora-drift,
-  .animate-ring-cw,
-  .animate-ring-ccw,
+  /* The capability lanes are the one place on the page where readable content
+   * is in motion, so stopping them is not optional — a stopped lane is simply
+   * a row that overflows and can be scrolled. */
   .animate-lane-drift {
     animation: none !important;
   }
