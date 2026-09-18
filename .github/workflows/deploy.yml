@@ -22,17 +22,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 24, not 20, because of what it bundles: npm 11, which is the npm that
-      # writes site/package-lock.json. npm 10 refuses to install it — it wants
-      # `@emnapi/core` and `@emnapi/runtime` hoisted, where npm 11 leaves them
-      # under the `@oxc-*` wasm bindings that ask for them, and `npm ci` stops
-      # at "can only install packages when your package.json and
-      # package-lock.json are in sync". The runner also stopped warning that
-      # puppeteer, which the prerender drives, asks for node >= 22.12.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: site/package-lock.json
 
