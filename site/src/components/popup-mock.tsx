@@ -70,6 +70,12 @@ function useMockTraffic(paused: boolean, connected: boolean) {
     if (paused || !connected) return;
     const rnd = () => Math.random();
     const id = setInterval(() => {
+      // A background tab still runs timers on some engines; advancing the walk
+      // there only burns battery redrawing something nobody is looking at. The
+      // buffer holds only seconds that moved, so the wave picks up where it
+      // left off rather than replaying the time the tab sat out — the same
+      // guard the aria2t site puts on its shared landing clock.
+      if (document.hidden) return;
       setBuf((b) => {
         const down = stepDown(b[b.length - 1].down, rnd);
         return [...b.slice(1), { down, up: down * (0.1 + Math.random() * 0.06) }];

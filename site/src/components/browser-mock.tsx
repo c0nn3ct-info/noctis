@@ -31,7 +31,7 @@ export function BrowserMock({ children, className }: Props) {
               className="relative grid h-7 w-7 place-items-center rounded-md bg-primary-container text-primary-on-container ring-2 ring-primary/40"
               aria-hidden
             >
-              <NoctisLogo className="h-4 w-4" />
+              <NoctisLogo idSuffix="tab" className="h-4 w-4" />
               <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-success ring-2 ring-surface-container" />
             </span>
           </div>

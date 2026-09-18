@@ -31,7 +31,22 @@ export default defineConfig({
   publicDir: path.resolve(here, 'public'),
   plugins: [react()],
   resolve: {
-    alias: { '@': path.resolve(here, 'src') },
+    /* Array form, because one of these is a regex.
+     *
+     * The route HTML load their entry as `../src/entries/<page>.tsx`, and the
+     * two halves of Vite disagree about what that means. Rollup resolves it
+     * against the file on disk — `pages/../src` is `site/src`, so the build
+     * has always worked. The dev server resolves it against the URL: from `/`
+     * it becomes `/src/entries/home.tsx`, which under `root: pages` is
+     * `pages/src/entries/home.tsx` and does not exist, so every route answered
+     * with "Failed to load url /src/entries/<page>.tsx" and rendered nothing.
+     *
+     * Mapping that URL-shaped path back to the real directory fixes the dev
+     * server and leaves the build alone, which never produces it. */
+    alias: [
+      { find: /^\/src\//, replacement: `${path.resolve(here, 'src')}/` },
+      { find: '@', replacement: path.resolve(here, 'src') },
+    ],
   },
   build: {
     outDir: path.resolve(here, 'dist'),

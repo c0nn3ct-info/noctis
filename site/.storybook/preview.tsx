@@ -66,6 +66,7 @@ const ACCENT_TITLES: Record<Accent, string> = {
   storm: 'Storm',
   purple: 'Purple',
   cyan: 'Cyan',
+  planet: 'Planet',
 };
 
 /** `{ value, title }` items in declaration order. */

@@ -170,6 +170,32 @@ describe('useSectionEntrance', () => {
     expect(played[0].opts.easing).toBeTruthy();
   });
 
+  it('rises an element marked with the landing page’s gentler gesture', () => {
+    function SoftPage() {
+      useSectionEntrance();
+      return (
+        <div data-enter-section data-testid="soft-band">
+          <p data-enter="soft">block</p>
+          <ul data-enter-stagger="soft">
+            <li>one</li>
+            <li>two</li>
+          </ul>
+        </div>
+      );
+    }
+    const { getByTestId } = render(<SoftPage />);
+    observers[0].fire([getByTestId('soft-band')]);
+
+    // `soft` moves a transform and clips nothing: the clip reveal opens a hard
+    // edge across the element, which is what read as a block snapping in.
+    expect(played).toHaveLength(3);
+    for (const p of played) {
+      expect(p.frames[0]).toEqual({ opacity: 0, transform: 'translateY(12px) scale(0.985)' });
+      expect(p.frames[1]).toEqual({ opacity: 1, transform: 'none' });
+      expect(p.frames[0].clipPath).toBeUndefined();
+    }
+  });
+
   it('mirrors the line a sequence arrives along on a right-to-left page', () => {
     document.documentElement.dir = 'rtl';
     const { getByTestId } = render(<Page />);

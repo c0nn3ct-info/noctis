@@ -147,16 +147,26 @@ describe('Layout', () => {
 
   it('hands the page its own width when the page bleeds', () => {
     const { rerender } = render(<Layout current="home">x</Layout>);
-    expect(screen.getByRole('main').className).toContain('max-w-3xl');
-    expect(footer().className).toContain('max-w-3xl');
+    // A reading page stands in the band column and keeps its measure in a
+    // centred block inside it, so both gutters are the column's own.
+    const main = () => screen.getByRole('main');
+    expect(main().className).toContain('max-w-[1160px]');
+    expect(main().firstElementChild!.className).toContain('mx-auto');
+    expect(main().firstElementChild!.className).toContain('max-w-5xl');
+    // and the footer closes exactly that measure
+    expect(footer().className).toContain('max-w-[1160px]');
+    expect(footer().firstElementChild!.className).toContain('max-w-5xl');
 
     rerender(
       <Layout current="home" bleed>
         x
       </Layout>,
     );
-    expect(screen.getByRole('main').className).not.toContain('max-w-3xl');
-    // The footer still holds the band width, so its rule closes the content.
+    // A bleeding page lays itself out; the footer keeps the band width either
+    // way, and drops the reading measure so its rule closes the whole band.
+    expect(main().className).not.toContain('max-w-[1160px]');
+    expect(main().firstElementChild).toBeNull();
     expect(footer().className).toContain('max-w-[1160px]');
+    expect(footer().firstElementChild!.className).not.toContain('max-w-5xl');
   });
 });

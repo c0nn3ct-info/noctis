@@ -26,6 +26,20 @@
     --shadow-3: 0 4px 8px 3px rgb(0 0 0 / 0.06), 0 1px 3px 0 rgb(0 0 0 / 0.10);
     --shadow-4: 0 6px 10px 4px rgb(0 0 0 / 0.08), 0 2px 3px 0 rgb(0 0 0 / 0.10);
 
+    /* How hard the hero's scrim holds the planet down behind the copy.
+     *
+     * The alphas in the hero are authored for the dark stage, where the copy
+     * is light on dark over a lit globe and the figure has to be pushed a
+     * long way down for the words to win. Light inverts the problem: the copy
+     * is dark on light and the globe is already pale, so the text wins
+     * unaided and the identical wash is a white fog over white land — the
+     * violet ramp greys out and the whole figure goes flat. One variable
+     * holds the difference so both stages read off the same authored shape.
+     *
+     * The band's own seam fade is deliberately NOT scaled by this: dissolving
+     * the figure where it runs off the band is the same job in either theme. */
+    --hero-wash: 0.42;
+
     /* M3 tone-based surfaces — neutral palette tinted with source-color chroma.
      * Default (no accent): cool slate tint at low chroma per M3 baseline. */
     --background: 220 25% 99%;
@@ -92,6 +106,9 @@
 
   [data-theme='dark'],
   :root.dark {
+    /* The hero's washes were authored at full strength for this stage; see
+     * the note in the light block above. */
+    --hero-wash: 1;
     --background: 0 0% 7%;
     --on-background: 0 0% 92%;
     --surface: 0 0% 7%;
@@ -133,6 +150,7 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) {
       color-scheme: dark;
+      --hero-wash: 1;
       --background: 0 0% 7%;
       --on-background: 0 0% 92%;
       --surface: 0 0% 7%;
@@ -305,6 +323,76 @@
     --surface-container-highest: 230 17% 22%;
   }
 
+  /* Planet — the landing hero's own palette, lifted off the figure and spread
+   * over the page the way aria2t's `blue` spreads its comp. The hero-planet
+   * stage (src/components/landing/hero-planet-stage.ts) is fixed hex, so these
+   * are read off it by hand rather than shared:
+   *
+   *   primary   the land. Dark: the top of the violet pad ramp (#cdbcf7) —
+   *             lavender, pastel enough to carry dark type on a filled
+   *             button. Light: the ramp's middle (#6338c7) taken down to
+   *             ink so white type holds on it.
+   *   tertiary  the second rim light (#7dcfee). It is the rare voice on the
+   *             planet and stays rare here: icons, marks, selection. Light
+   *             takes the scene's own cyan ink (#0e7490).
+   *   ground    the night the globe hangs in. Its sea (#05070c) is blue and
+   *             its land violet, so the neutrals sit between the two, at a
+   *             chroma low enough to read as a tinted black, not a colour.
+   *
+   * Unlike the other three this one also re-tints the text and the rules,
+   * as `blue` does on aria2t: a violet ground under neutral-grey type reads
+   * as two palettes, not one. Status colours stay theme-fixed. */
+  :root[data-accent='planet'] {
+    --background:                250 40% 99%;
+    --surface:                   250 40% 99%;
+    --on-background:             250 22% 10%;
+    --on-surface:                250 22% 10%;
+    --on-surface-variant:        250 10% 35%;
+    --outline:                   250  9% 54%;
+    --outline-variant:           250 24% 85%;
+    --surface-container-low:     252 45% 97%;
+    --surface-container:         252 38% 94.5%;
+    --surface-container-high:    252 34% 91.5%;
+    --surface-container-highest: 252 30% 87.5%;
+    --surface-variant:           252 24% 89%;
+    --primary:                   258 56% 45%;
+    --on-primary:                0 0% 100%;
+    --primary-container:         256 85% 94%;
+    --on-primary-container:      258 60% 26%;
+    --secondary-container:       252 48% 90%;
+    --on-secondary-container:    256 40% 22%;
+    --tertiary:                  193 82% 30%;
+    --on-tertiary:               0 0% 100%;
+    --tertiary-container:        193 60% 91%;
+    --on-tertiary-container:     193 80% 18%;
+  }
+  :root[data-accent='planet'].dark,
+  :root[data-accent='planet'][data-theme='dark'] {
+    --background:                244 18%  6%;
+    --surface:                   244 18%  6%;
+    --on-background:             250 40% 95%;
+    --on-surface:                250 40% 95%;
+    --on-surface-variant:        248 14% 71%;
+    --outline:                   247 12% 46%;
+    --outline-variant:           247 16% 19%;
+    --surface-container-lowest:  245 22%  4%;
+    --surface-container-low:     248 18%  9.5%;
+    --surface-container:         248 17% 12%;
+    --surface-container-high:    248 16% 15.5%;
+    --surface-container-highest: 248 15% 20%;
+    --surface-variant:           248 14% 24%;
+    --primary:                   256 92% 86%;
+    --on-primary:                256 50% 18%;
+    --primary-container:         256 36% 30%;
+    --on-primary-container:      256 100% 93%;
+    --secondary-container:       248 16% 17%;
+    --on-secondary-container:    250 40% 95%;
+    --tertiary:                  196 77% 71%;
+    --on-tertiary:               196 70% 12%;
+    --tertiary-container:        196 45% 20%;
+    --on-tertiary-container:     196 80% 90%;
+  }
+
   /* System dark + accent: light accent has higher specificity than the base
    * media-query dark, so re-apply dark accent tokens here. */
   @media (prefers-color-scheme: dark) {
@@ -368,6 +456,31 @@
       --surface-variant: 0 0% 28%;
       --outline-variant: 0 0% 28%;
     }
+    :root[data-accent='planet']:not([data-theme='light']) {
+      --background:                244 18%  6%;
+      --surface:                   244 18%  6%;
+      --on-background:             250 40% 95%;
+      --on-surface:                250 40% 95%;
+      --on-surface-variant:        248 14% 71%;
+      --outline:                   247 12% 46%;
+      --outline-variant:           247 16% 19%;
+      --surface-container-lowest:  245 22%  4%;
+      --surface-container-low:     248 18%  9.5%;
+      --surface-container:         248 17% 12%;
+      --surface-container-high:    248 16% 15.5%;
+      --surface-container-highest: 248 15% 20%;
+      --surface-variant:           248 14% 24%;
+      --primary:                   256 92% 86%;
+      --on-primary:                256 50% 18%;
+      --primary-container:         256 36% 30%;
+      --on-primary-container:      256 100% 93%;
+      --secondary-container:       248 16% 17%;
+      --on-secondary-container:    250 40% 95%;
+      --tertiary:                  196 77% 71%;
+      --on-tertiary:               196 70% 12%;
+      --tertiary-container:        196 45% 20%;
+      --on-tertiary-container:     196 80% 90%;
+    }
   }
 }
 
@@ -390,12 +503,59 @@
   }
 }
 
+/* The surfaces a browser styles when nobody else does.
+ *
+ * Selection is the page's own: Chrome's blue belongs to no design system, and
+ * a landing page is read with the cursor as often as with the eye. The pair is
+ * a container pair rather than two picked colours, so it holds in both themes.
+ *
+ * The caret follows the same rule wherever a field is themed; `caret-tertiary`
+ * says so at the one field this site has. */
+@layer base {
+  ::selection {
+    background-color: hsl(var(--tertiary-container));
+    color: hsl(var(--on-tertiary-container));
+  }
+}
+
+@layer components {
+  /* A scrollbar on a band that scrolls sideways — the protocol matrix on a
+   * narrow phone, the popup mock at any phone width. Left alone it is the
+   * platform's, which on Windows is a 16px grey trough against a dark page. */
+  .scrollbar-quiet {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--outline-variant)) transparent;
+  }
+  .scrollbar-quiet::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  .scrollbar-quiet::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-quiet::-webkit-scrollbar-thumb {
+    background: hsl(var(--outline-variant));
+    border-radius: var(--shape-pill);
+  }
+  .scrollbar-quiet::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--outline));
+  }
+}
+
 @layer components {
   .m3-state-layer {
     position: relative;
     isolation: isolate;
   }
-  .m3-state-layer::after {
+  /* Hover alone, for a row that sits on the page rather than on a card: the
+   * press and focus fills linger on a bare background and read as a selected
+   * band. Ported from the aria2t site, whose landing FAQ has the same rows. */
+  .m3-hover-layer {
+    position: relative;
+    isolation: isolate;
+  }
+  .m3-state-layer::after,
+  .m3-hover-layer::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -405,7 +565,8 @@
     transition: opacity var(--dur-short) var(--ease-emph);
     border-radius: inherit;
   }
-  .m3-state-layer:hover::after {
+  .m3-state-layer:hover::after,
+  .m3-hover-layer:hover::after {
     opacity: 0.08;
   }
   .m3-state-layer:focus-visible::after {
@@ -506,6 +667,15 @@
     [data-enter-stagger='wipe'] > * {
       animation-name: enter-line;
     }
+    /* `soft` is the aria2t site's own gesture, and the reworked landing page
+     * uses it throughout. The clip reveal above opens a hard edge across the
+     * element, which on a band of thirteen tiles or three full-width rows reads
+     * as the block snapping in rather than arriving. A 12px rise under a
+     * hair of scale says the same thing without an edge to catch the eye. */
+    [data-enter='soft'],
+    [data-enter-stagger='soft'] > * {
+      animation-name: enter-soft;
+    }
     [dir='rtl'] [data-enter='wipe'],
     [dir='rtl'] [data-enter-stagger='wipe'] > * {
       animation-name: enter-line-rtl;
@@ -524,6 +694,12 @@
   from {
     opacity: 0;
     clip-path: inset(0 0 45% 0);
+  }
+}
+@keyframes enter-soft {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
   }
 }
 @keyframes enter-line {
@@ -581,6 +757,16 @@
   }
   .shape-morph {
     transition: none !important;
+  }
+  /* The landing page's three loops. The aurora and the aperture rings are
+   * atmosphere, so they hold their last frame; the capability lanes are the one
+   * place where readable content is in motion, so stopping them is not optional
+   * — a stopped lane is simply a row that overflows and can be scrolled. */
+  .animate-aurora-drift,
+  .animate-ring-cw,
+  .animate-ring-ccw,
+  .animate-lane-drift {
+    animation: none !important;
   }
   html {
     scroll-behavior: auto !important;

@@ -35,6 +35,7 @@ function Label({ children }: { children: string }) {
  * shrink below it.
  */
 export const Sizes: Story = {
+  args: { idSuffix: 'story' },
   render: () => (
     <Row gap={24} align="flex-end">
       {[
@@ -44,7 +45,7 @@ export const Sizes: Story = {
         ['96', 'h-24 w-24'],
       ].map(([label, size]) => (
         <Stack key={label} gap={8} align="center">
-          <NoctisLogo className={`${size} text-primary`} />
+          <NoctisLogo idSuffix="story" className={`${size} text-primary`} />
           <Label>{`${label}px`}</Label>
         </Stack>
       ))}
@@ -58,9 +59,10 @@ export const Sizes: Story = {
  * the home page.
  */
 export const HeaderTile: Story = {
+  args: { idSuffix: 'story' },
   render: () => (
     <span className="m3-state-layer inline-flex items-center gap-2 rounded-pill px-2 py-1 text-on-surface">
-      <NoctisLogo className="h-6 w-6 text-primary" />
+      <NoctisLogo idSuffix="story" className="h-6 w-6 text-primary" />
       <span className="text-title-medium tracking-tight">Noctis</span>
     </span>
   ),
@@ -73,12 +75,13 @@ export const HeaderTile: Story = {
  * artwork keeps its silhouette simple.
  */
 export const ToolbarTile: Story = {
+  args: { idSuffix: 'story' },
   render: () => (
     <span
       className="relative grid h-7 w-7 place-items-center rounded-md bg-primary-container text-primary-on-container ring-2 ring-primary/40"
       aria-hidden
     >
-      <NoctisLogo className="h-4 w-4" />
+      <NoctisLogo idSuffix="story" className="h-4 w-4" />
       <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-success ring-2 ring-surface-container" />
     </span>
   ),

@@ -48,6 +48,8 @@ describe('applyAccent', () => {
     expect(root.getAttribute('data-accent')).toBe('storm');
     applyAccent('cyan');
     expect(root.getAttribute('data-accent')).toBe('cyan');
+    applyAccent('planet');
+    expect(root.getAttribute('data-accent')).toBe('planet');
   });
 
   it('removes data-accent for the neutral accent', () => {

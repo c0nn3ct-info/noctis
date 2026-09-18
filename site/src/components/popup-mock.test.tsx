@@ -57,6 +57,24 @@ describe('PopupMock', () => {
     expect(line.split('C')).toHaveLength(44);
   });
 
+  it('does not advance the walk while the tab is in the background', () => {
+    // A background tab still runs timers on some engines; advancing the walk
+    // there only burns battery redrawing something nobody is looking at. The
+    // aria2t site's shared landing clock guards the same way.
+    const { container } = render(<PopupMock />);
+    const opening = wave(container);
+
+    const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+    tick(10, 0.5);
+    expect(wave(container)).toBe(opening);
+
+    // And picks up where it left off once the tab is back, rather than
+    // replaying the ten seconds it sat out.
+    hidden.mockReturnValue(false);
+    tick(1, 0.5);
+    expect(wave(container)).not.toBe(opening);
+  });
+
   it('merges a custom className onto the popup frame', () => {
     const bare = render(<PopupMock />).container.firstChild;
     expect(bare).toHaveClass('w-[380px]');

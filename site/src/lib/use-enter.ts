@@ -53,12 +53,20 @@ const STEP = 45;
 const MAX_DELAY = STEP * 5;
 
 /**
- * The same two gestures the stylesheet declares, kept in step by hand because a
- * keyframe rule and a keyframe object cannot share one definition. Clip and
- * opacity only: both stay off the layout, and neither moves an element the
- * reader has already started reading.
+ * The same gestures the stylesheet declares, kept in step by hand because a
+ * keyframe rule and a keyframe object cannot share one definition. All of them
+ * stay off the layout: the two clip gestures move nothing at all, and `soft`
+ * moves a transform, which is composited.
  */
 function keyframes(gesture: string, rtl: boolean): Keyframe[] {
+  // The reworked landing page's gesture, borrowed from the aria2t site: a rise
+  // under a hair of scale, with no edge for the eye to catch.
+  if (gesture === 'soft') {
+    return [
+      { opacity: 0, transform: 'translateY(12px) scale(0.985)' },
+      { opacity: 1, transform: 'none' },
+    ];
+  }
   // A sequence arrives along the line it is read on.
   if (gesture === 'wipe') {
     return [

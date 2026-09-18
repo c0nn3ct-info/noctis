@@ -1,5 +1,5 @@
 export type Theme = 'light' | 'dark' | 'system';
-export type Accent = 'neutral' | 'storm' | 'purple' | 'cyan';
+export type Accent = 'neutral' | 'storm' | 'purple' | 'cyan' | 'planet';
 
 export function applyAccent(accent: Accent): void {
   const root = document.documentElement;

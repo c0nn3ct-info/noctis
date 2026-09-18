@@ -190,13 +190,41 @@ export default {
           '85%': { opacity: '1' },
           '100%': { transform: 'translateX(0)', opacity: '0' },
         },
+        // The landing hero's aurora: a soft tertiary wash that never repeats the
+        // same path, because it runs `alternate` over an asymmetric pair of
+        // offsets. Transform and nothing else, so it costs a composite.
+        'aurora-drift': {
+          '0%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+          '50%': { transform: 'translate3d(-3%, 2%, 0) scale(1.08)' },
+          '100%': { transform: 'translate3d(2%, -2%, 0) scale(1.03)' },
+        },
+        // The aperture's rings. Two directions so neighbouring rings counter-turn
+        // and the stack reads as depth rather than one rotating object.
+        'spin-cw': {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
+        'spin-ccw': {
+          from: { transform: 'rotate(360deg)' },
+          to: { transform: 'rotate(0deg)' },
+        },
+        // A marquee lane. The track holds its items three times over, so one
+        // third of its width is exactly one loop and the seam never shows.
+        'lane-drift': {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-33.333%)' },
+        },
       },
       animation: {
         'pulse-ring': 'pulse-ring var(--pulse-dur, 3s) var(--ease-emph-decel) infinite',
-        breathe: 'breathe 3.6s var(--ease-emph) infinite',
+        breathe: 'breathe var(--breathe-dur, 3.6s) var(--ease-emph) infinite',
         'status-dot': 'status-dot 1.4s var(--ease-emph) infinite',
         'rail-march': 'rail-march 0.6s linear infinite',
         'rail-comet': 'rail-comet 4.2s linear infinite',
+        'aurora-drift': 'aurora-drift 22s ease-in-out infinite alternate',
+        'ring-cw': 'spin-cw var(--ring-dur, 26s) linear infinite',
+        'ring-ccw': 'spin-ccw var(--ring-dur, 26s) linear infinite',
+        'lane-drift': 'lane-drift var(--lane-dur, 28s) linear infinite',
       },
     },
   },

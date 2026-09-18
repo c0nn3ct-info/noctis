@@ -25,6 +25,20 @@ const OG_IMAGE_VERSION = JSON.parse(
 ).version;
 const OG_IMAGE = `${ORIGIN}/og-preview.jpg?v=${OG_IMAGE_VERSION}`;
 
+/* What the capture costs, and why it is still worth it.
+ *
+ * This script captures `document.documentElement.outerHTML`, and a DOM capture
+ * merges adjacent text nodes. React's own server renderer emits `<!-- -->`
+ * between them to keep the boundaries, so every page this script writes fails
+ * hydration on the first component that renders two text expressions side by
+ * side ("{flag} {name}" then " · via ") and React throws the captured DOM
+ * away and client-renders instead. Measured: 20 recovered hydration errors on
+ * `/` and each locale, 0 on `/install/`, which has neither the popup mock nor
+ * the diagram.
+ *
+ * Crawlers do not hydrate, so the capture still earns its keep: the indexed
+ * pages ship their content in the HTML either way. The fix, when it is worth
+ * doing, is `renderToString` instead of a capture. */
 const PAGE_PATH = {
   home: '/',
   install: '/install/',

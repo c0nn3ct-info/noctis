@@ -12,7 +12,11 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['src/test/setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // `scripts/` carries the build-time generators; the missing-story gate is
+    // pure given a file system, so it is unit-tested like anything else.
+    // Coverage stays scoped to `src/**` — the prerender generator has no tests
+    // yet, and a 100% threshold over `scripts/**` would fail on it.
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'scripts/**/*.test.mjs'],
     coverage: {
       provider: 'v8',
       include: ['src/**'],

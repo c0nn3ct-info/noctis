@@ -16,6 +16,11 @@ import { getLocale, withLocale, t, localePath } from './i18n';
 import { LanguageSwitcher, LOCALE_OPTIONS } from './components/language-switcher';
 import { GithubLink } from './components/github-link';
 
+/* The band gutter, from `LandingSection`. Named here because `main` and the
+ * footer take the same one as the landing's bands, and three copies of it drift
+ * apart the moment one of them is touched. */
+const GUTTER = 'px-5 sm:px-8 lg:px-10';
+
 type PageKey = 'home' | 'install' | 'privacy' | 'license';
 
 interface LayoutProps {
@@ -64,7 +69,16 @@ const NAV_LINKS: readonly NavLink[] = [
  * Only the product half is a link to home; the org half leaves the site, so it
  * is a separate anchor rather than one link that would go two places.
  */
-function BrandLockup({ homeHref, logoClass }: { homeHref: string; logoClass: string }) {
+function BrandLockup({
+  homeHref,
+  logoClass,
+  idSuffix,
+}: {
+  homeHref: string;
+  logoClass: string;
+  /** Header and footer both draw the mark; its internal ids cannot collide. */
+  idSuffix: string;
+}) {
   return (
     <div className="inline-flex items-center gap-2">
       <a
@@ -72,7 +86,7 @@ function BrandLockup({ homeHref, logoClass }: { homeHref: string; logoClass: str
         className="m3-state-layer inline-flex items-center gap-2 rounded-pill px-2 py-1 text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={t('nav.home_aria')}
       >
-        <NoctisLogo className={cn(logoClass, 'text-primary')} />
+        <NoctisLogo idSuffix={idSuffix} className={cn(logoClass, 'text-primary')} />
         <span className="text-title-medium tracking-tight">Noctis</span>
       </a>
       <span aria-hidden="true" className="text-title-medium text-on-surface-variant/50">
@@ -148,7 +162,7 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
       </a>
 
       <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-outline-variant bg-surface-container-low/95 px-4 backdrop-blur-md sm:px-6">
-        <BrandLockup homeHref={homeHref} logoClass="h-6 w-6" />
+        <BrandLockup homeHref={homeHref} logoClass="h-6 w-6" idSuffix="header" />
         {/* Below sm the footer carries the same four links, so the header drops
             them rather than crowding the bar. */}
         <nav aria-label={t('nav.aria')} className="ms-4 hidden items-center gap-1 sm:flex">
@@ -172,28 +186,44 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
         </div>
       </header>
 
+      {/* A reading page stands in the landing's own column - same 1160, same
+          gutter - so its content starts where a band's does at every width.
+          Matching only the padding was not enough: the column used to be
+          capped at 768 below `lg`, which put a page of prose far further in
+          than the band above it.
+
+          The measure is kept by an inner block, and that block is centred in
+          the column. Left-aligned inside it, the whole of the column's slack
+          piles up on the end side - 141px of gutter on one edge against 168 on
+          the other at 1305 - which reads as broken padding rather than as a
+          measure. */}
       <main
         id="main"
         className={
-          bleed
-            ? 'w-full flex-1'
-            : 'mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-12 lg:max-w-5xl'
+          bleed ? 'w-full flex-1' : cn('mx-auto w-full max-w-[1160px] flex-1 py-10 sm:py-12', GUTTER)
         }
       >
-        {children}
+        {bleed ? children : <div className="mx-auto w-full max-w-5xl">{children}</div>}
       </main>
 
-      {/* The footer has to line up with whatever the page above it used, or its
-          rule and its columns stop short of the content they close. */}
+      {/* One column and one gutter for every page, the same ones `main` takes:
+          the footer's rule closes the content above it, so a footer on a
+          narrower column than the page ends short of what it is closing. The
+          measure is again the inner block's, centred, so a page of prose and
+          its footer sit on the same two edges. */}
       <footer
-        className={cn(
-          'mx-auto w-full py-8 text-label-medium text-on-surface-variant',
-          bleed ? 'max-w-[1160px] px-5 sm:px-8 lg:px-10' : 'max-w-3xl px-4 sm:px-6 lg:max-w-5xl',
-        )}
+        className={cn('mx-auto w-full max-w-[1160px] py-8 text-label-medium text-on-surface-variant', GUTTER)}
       >
-        <div className="border-t border-outline-variant pt-6 flex flex-wrap items-start gap-x-12 gap-y-6">
+        <div
+          className={cn(
+            'mx-auto flex w-full flex-wrap items-start gap-x-12 gap-y-6 border-t border-outline-variant pt-6',
+            // A bleeding page lays its own bands out edge to edge, so the rule
+            // closes the whole band rather than a reading measure inside it.
+            !bleed && 'max-w-5xl',
+          )}
+        >
           <div className="flex max-w-[280px] flex-col gap-3">
-            <BrandLockup homeHref={homeHref} logoClass="h-5 w-5" />
+            <BrandLockup homeHref={homeHref} logoClass="h-5 w-5" idSuffix="footer" />
             <p className="text-label-small text-on-surface-variant/70">{t('home.description')}</p>
           </div>
           <FooterColumn label={t('footer.product')}>
