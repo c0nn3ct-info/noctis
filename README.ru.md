@@ -7,8 +7,8 @@
   </picture>
 </p>
 
-<p align="center"><strong>Расширение VLESS для браузера Chrome</strong></p>
-<p align="center"><em>Маршрутизация трафика браузера через ваши прокси — без системного VPN.</em></p>
+<p align="center"><strong>Прокси-клиент для sing-box, xray-core и mihomo</strong></p>
+<p align="center"><em>Ваши серверы VLESS, Trojan, Shadowsocks и WireGuard — из браузера.</em></p>
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn"><img src="https://img.shields.io/chrome-web-store/v/nmhobajopepdpihahepaddpdifdcenpn?label=Chrome%20Web%20Store&color=4285F4" alt="Chrome Web Store"></a>
@@ -25,13 +25,13 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis — это прокси для браузера, а не системный VPN. Маршрутизируется только трафик Chrome; остальная ОС остаётся на вашем реальном подключении. Расширение бесплатно под проприетарной EULA; локальный компонент — open source (MIT).
+> Noctis маршрутизирует тот браузер, в котором установлен, а не всю машину — остальная система остаётся на своём соединении. Расширение бесплатно по проприетарной EULA; нативный хелпер открыт под MIT.
 
-Noctis — бесплатное расширение, которое направляет трафик Chrome через ваши прокси-серверы VLESS, VMess, Trojan, Shadowsocks, Hysteria2, Reality и других типов. Локальный компонент управляет выбранным движком: sing-box, xray-core или mihomo. Системный VPN и отдельное окно клиента не нужны — прокси действует только в браузере.
+Noctis — бесплатный прокси-клиент для VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard и других протоколов. Он хранит ваши серверы, подписки и правила маршрутизации и запускает тот из трёх движков, который нужен серверу. Сегодня поставляется как расширение для Chrome с локальным хелпером: расширение — панель управления, хелпер следит за движком.
 
 ## ✨ Возможности
 
-- **Подключаемый движок прокси** — Noctis поставляется с sing-box и умеет управлять xray-core или mihomo, автоматически выбирая нужный движок под каждый сервер — поэтому xhttp, потоки REALITY-vision, Snell и другое просто работают.
+- **Три движка, по одному на сервер** — sing-box, xray-core и mihomo поставляются вместе, и Noctis берёт тот, который нужен серверу: sing-box запускает все протоколы, которые читает, xray-core единственный умеет xhttp, а mihomo повторяет набор sing-box без ShadowTLS.
 - **Серверы из ссылок подключения, QR-кодов и подписок** — Вставьте `vless://`, `vmess://`, `trojan://`, `ss://`, `hysteria2://`, `tuic://`, `wireguard://` или отсканируйте QR-код. Подписки обновляются автоматически по расписанию.
 - **Маршрутизация по правилам** — Сопоставление по домену, GeoSite или GeoIP. Каждое правило направляет в прокси, напрямую или блокирует.
 - **Три режима маршрутизации** — Global — всё через прокси. Rules — только совпадения по правилам. Direct — обход прокси полностью.
@@ -46,7 +46,7 @@ Noctis — бесплатное расширение, которое напра�
 
 `VLESS` · `VLESS Reality` · `VMess` · `Trojan` · `Shadowsocks` · `Hysteria/2` · `TUIC` · `WireGuard` · `AnyTLS` · `ShadowTLS`
 
-Noctis поддерживает VLESS (включая VLESS Reality), VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS и ShadowTLS. Конфигурации V2Ray, Xray и панелей 3X-UI работают без преобразования вручную: вставьте ссылку подключения или адрес подписки, и расширение подготовит конфигурацию для нужного движка. Xray поддерживает xhttp/splithttp и варианты потоков XTLS, а Mihomo — Snell, SSR и другие протоколы.
+Noctis поддерживает VLESS (включая VLESS Reality), VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS и ShadowTLS. Конфигурации V2Ray, Xray и панелей 3X-UI работают без преобразования вручную: вставьте ссылку подключения или адрес подписки, и расширение подготовит конфигурацию для нужного движка. TLS, Reality и поток XTLS vision принимает любой движок; xhttp есть только у xray-core.
 
 ## 🧩 Как это устроено
 
@@ -71,7 +71,7 @@ Noctis поддерживает VLESS (включая VLESS Reality), VMess, Tro
                                             └──────────────────┘
 ```
 
-Noctis по умолчанию поставляется с sing-box и умеет управлять xray-core и mihomo. Небольшой локальный компонент следит за движком на вашей машине, а Noctis автоматически выбирает нужный под каждый сервер — поэтому протоколы, которые не тянет один движок, просто работают. xray открывает xhttp/splithttp и варианты потоков XTLS (REALITY-vision); mihomo добавляет Snell, SSR и Mieru. Расширение в браузере отправляет только решения о маршрутизации — никогда сырой трафик.
+Noctis поставляется с sing-box, xray-core и mihomo сразу. Небольшой нативный хелпер следит за движком на вашей машине, а Noctis берёт тот, который нужен серверу: sing-box запускает все протоколы, которые читает Noctis, xray-core единственный умеет xhttp, а mihomo повторяет набор sing-box без ShadowTLS. Расширение отправляет только решения о маршрутизации — никогда сам трафик.
 
 ## 🧭 Правила маршрутизации
 
@@ -159,7 +159,7 @@ VPN тоннелирует все приложения системы через
 Да. Noctis без изменений передаёт локальному компоненту параметры Reality (Server Name, Fingerprint, SNI, Dest, открытый ключ и short ID) и запускает сервер на совместимом движке. Xray полностью поддерживает поток XTLS Vision. Вставьте ссылку подключения `vless://...flow=xtls-rprx-vision&security=reality` — расширение импортирует все поля.
 
 **Какие протоколы прокси поддерживает Noctis?**
-VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS и ShadowTLS — плюс xhttp/splithttp, Snell, SSR и другое через xray и mihomo. Share-ссылки V2Ray и Xray работают как есть.
+VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard, AnyTLS, ShadowTLS, SOCKS и HTTP — поверх tcp, ws, grpc, httpupgrade, http или xhttp, с TLS, Reality или потоком XTLS vision. Ссылки V2Ray и Xray работают как есть.
 
 **Безопасно ли использовать прокси-расширение для Chrome?**
 Noctis ничего не отправляет разработчику: в нём нет аналитики, телеметрии и удалённой конфигурации. Конфигурации серверов хранятся в локальном хранилище браузера. Локальный компонент работает без прав администратора. Полный список разрешений и их назначение приведены в [политике конфиденциальности](./site/PRIVACY.md).

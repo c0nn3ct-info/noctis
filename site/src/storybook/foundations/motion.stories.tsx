@@ -164,8 +164,8 @@ function DurationsPage({ tokenKey }: { tokenKey: string }) {
 const EASINGS = [
   { token: '--ease-emph', use: 'The default: colour, state layers, elevation' },
   { token: '--ease-emph-decel', use: 'Arrivals — the pulse-ring keyframes' },
-  { token: '--ease-spring', use: 'Press feedback on the button family' },
-  // The site is the only surface that still carries this curve.
+  { token: '--ease-spring', use: 'The popup mock, as the extension uses it' },
+  // An alias of `--ease-spring` now; kept for the classes that name it.
   { token: '--ease-spring-standard', use: 'ServerMonogram and .shape-morph' },
 ] as const;
 
@@ -173,13 +173,10 @@ const EASING_TOKENS = EASINGS.map((easing) => easing.token);
 
 /**
  * The same travel at `--dur-x-long`, so the shape of each curve is visible.
- * Both springs overshoot and come back, by very different amounts:
- * `--ease-spring` is the generic backOut (control point 1.56), which passes its
- * target by about 10% before settling, while `--ease-spring-standard` (1.06)
- * barely reaches past it at all. Neither belongs on a `transition` shorthand
- * that also carries colour, where an overshoot interpolates past the target and
- * back. The extension keeps only the gentle curve, under the name
- * `--ease-spring`; the site still carries both.
+ * The spring barely reaches past its target (control point 1.06), the curve
+ * the extension ships as `--ease-spring`. The site used to carry the generic
+ * backOut (1.56) under that name, which passes its target by about 10%; it is
+ * gone, and `--ease-spring-standard` is now an alias of the one spring.
  */
 export const Easings: Story = {
   render: (_args, { globals }) => <EasingsPage tokenKey={keyOf(globals)} />,

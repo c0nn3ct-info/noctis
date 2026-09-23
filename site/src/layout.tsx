@@ -73,30 +73,36 @@ function BrandLockup({
   homeHref,
   logoClass,
   idSuffix,
+  orgClass,
 }: {
   homeHref: string;
   logoClass: string;
   /** Header and footer both draw the mark; its internal ids cannot collide. */
   idSuffix: string;
+  /** Extra classes for the "× c0nn3ct.info" half; the header drops it on the narrowest phones. */
+  orgClass?: string;
 }) {
   return (
     <div className="inline-flex items-center gap-2">
       <a
         href={homeHref}
-        className="m3-state-layer inline-flex items-center gap-2 rounded-pill px-2 py-1 text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="m3-state-layer inline-flex min-h-11 items-center gap-2 rounded-pill px-2 text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={t('nav.home_aria')}
       >
         <NoctisLogo idSuffix={idSuffix} className={cn(logoClass, 'text-primary')} />
         <span className="text-title-medium tracking-tight">Noctis</span>
       </a>
-      <span aria-hidden="true" className="text-title-medium text-on-surface-variant/50">
+      <span aria-hidden="true" className={cn('text-title-medium text-on-surface-variant/50', orgClass)}>
         ×
       </span>
       <a
         href={ORG_SITE}
         target="_blank"
         rel="noreferrer noopener"
-        className="rounded-sm px-1 py-1 text-label-large text-on-surface-variant underline-offset-4 hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className={cn(
+          'inline-flex min-h-11 items-center rounded-sm px-1 text-label-large text-on-surface-variant underline-offset-4 hover:text-on-surface hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+          orgClass,
+        )}
       >
         c0nn3ct.info
       </a>
@@ -110,7 +116,7 @@ function FooterColumn({ label, children }: { label: string; children: ReactNode 
     <nav aria-label={label}>
       {/* The nav element already carries the group name, so the visible label
           stays a label instead of adding a heading to every outline. */}
-      <div className="mb-2 text-label-small uppercase tracking-[0.12em] text-on-surface-variant/70">
+      <div className="mb-2 text-overline uppercase text-on-surface-variant">
         {label}
       </div>
       <ul className="space-y-1.5">{children}</ul>
@@ -162,17 +168,26 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
       </a>
 
       <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-outline-variant bg-surface-container-low/95 px-4 backdrop-blur-md sm:px-6">
-        <BrandLockup homeHref={homeHref} logoClass="h-6 w-6" idSuffix="header" />
-        {/* Below sm the footer carries the same four links, so the header drops
-            them rather than crowding the bar. */}
-        <nav aria-label={t('nav.aria')} className="ms-4 hidden items-center gap-1 sm:flex">
+        {/* Under 360px the lockup and the two 44px buttons need 9px more than
+            the bar has, so the org half goes; the footer still carries it. */}
+        <BrandLockup
+          homeHref={homeHref}
+          logoClass="h-6 w-6"
+          idSuffix="header"
+          orgClass="max-[359px]:hidden"
+        />
+        {/* Below md the footer carries the same four links, so the header drops
+            them rather than crowding the bar. At sm they fit in English and
+            not in Russian: "Установка · Приватность · Лицензия" took the bar
+            31px past a 640px window and the language menu with it. */}
+        <nav aria-label={t('nav.aria')} className="ms-4 hidden items-center gap-1 md:flex">
           {NAV_LINKS.filter((l) => l.key !== 'home').map((l) => (
             <a
               key={l.key}
               href={localePath(l.path)}
               aria-current={current === l.key ? 'page' : undefined}
               className={cn(
-                'm3-state-layer rounded-pill px-3 py-2 text-label-large focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'm3-state-layer inline-flex min-h-11 items-center rounded-pill px-3 text-label-large focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 current === l.key ? 'text-on-surface' : 'text-on-surface-variant',
               )}
             >
@@ -224,7 +239,7 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
         >
           <div className="flex max-w-[280px] flex-col gap-3">
             <BrandLockup homeHref={homeHref} logoClass="h-5 w-5" idSuffix="footer" />
-            <p className="text-label-small text-on-surface-variant/70">{t('home.description')}</p>
+            <p className="text-body-small text-on-surface-variant">{t('home.description')}</p>
           </div>
           <FooterColumn label={t('footer.product')}>
             {NAV_LINKS.filter((l) => l.section === 'product').map((l) => (
@@ -268,7 +283,7 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
             column layout below 900px. */}
         <nav
           aria-label={t('footer.languages')}
-          className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-outline-variant pt-4 text-label-small"
+          className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-outline-variant pt-4 text-label-medium"
         >
           {/* The icon carries the row; the group name lives on the nav's
               aria-label, so screen readers still announce it. */}
@@ -281,7 +296,7 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
                 </span>
               )}
               <a
-                className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex min-h-6 items-center underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 href={withLocale(currentPath, l.code)}
                 hrefLang={l.code}
                 lang={l.code}

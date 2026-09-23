@@ -50,10 +50,10 @@ export function FaqList({ variant = 'card', openFirst = false, className }: FaqL
         const q = t(`home.faq.${k}.q`);
         const a = t(`home.faq.${k}.a`);
         return (
-          <details key={k} open={openFirst && i === 0} className="group">
+          <details key={k} open={openFirst && i === 0} className="faq-details group">
             <summary
               className={cn(
-                'flex cursor-pointer list-none items-start gap-3 text-on-surface marker:hidden',
+                'flex cursor-pointer list-none items-start gap-3 text-on-surface marker:hidden [&::-webkit-details-marker]:hidden',
                 variant === 'card'
                   // The boxed rows are the card's own surface, so they take the
                   // full M3 hover/press/focus layer.
@@ -72,17 +72,17 @@ export function FaqList({ variant = 'card', openFirst = false, className }: FaqL
                   the column a reader scans; flush rows put it at the far end,
                   where the rule between rows already draws the line. */}
               {variant === 'card' && (
-                <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-on-surface-variant transition-transform duration-short ease-emph group-open:rotate-180" />
+                <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-on-surface-variant transition-transform duration-med ease-emph group-open:rotate-180" />
               )}
               <span className="flex-1">{q}</span>
               {variant === 'flush' && (
-                <ChevronDown className="mt-0.5 h-[18px] w-[18px] shrink-0 text-on-surface-variant transition-transform duration-short ease-emph group-open:rotate-180 group-open:text-primary" />
+                <ChevronDown className="mt-0.5 h-[18px] w-[18px] shrink-0 text-on-surface-variant transition-transform duration-med ease-emph group-open:rotate-180 group-open:text-primary" />
               )}
             </summary>
             <div
               className={cn(
                 'text-body-medium text-on-surface-variant',
-                variant === 'card' ? 'px-4 pb-4 ps-11' : 'px-4 pb-5 pe-12',
+                variant === 'card' ? 'px-4 pb-4 ps-11' : 'max-w-[65ch] px-4 pb-5 pe-12',
               )}
             >
               {a}

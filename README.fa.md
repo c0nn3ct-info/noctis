@@ -7,8 +7,8 @@
   </picture>
 </p>
 
-<p align="center"><strong>افزونه VLESS برای مرورگر Chrome</strong></p>
-<p align="center"><em>مسیریابی ترافیک مرورگر از طریق پراکسی‌های خودتان — بدون VPN سیستمی.</em></p>
+<p align="center"><strong>کلاینت پراکسی برای sing-box، xray-core و mihomo</strong></p>
+<p align="center"><em>سرورهای VLESS، Trojan، Shadowsocks و WireGuard خودتان — از مرورگر.</em></p>
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn"><img src="https://img.shields.io/chrome-web-store/v/nmhobajopepdpihahepaddpdifdcenpn?label=Chrome%20Web%20Store&color=4285F4" alt="Chrome Web Store"></a>
@@ -25,13 +25,13 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis یک پراکسی مرورگر است — نه یک VPN سیستمی. فقط ترافیک Chrome مسیریابی می‌شود؛ بقیه سیستم‌عامل شما روی اتصال واقعی‌تان باقی می‌ماند. افزونه تحت یک EULA اختصاصی رایگان است؛ مؤلفه محلی متن‌باز است (MIT).
+> Noctis همان مرورگری را مسیریابی می‌کند که در آن نصب شده است، نه کل دستگاه را — بقیهٔ سیستم‌عامل روی اتصال خودش می‌ماند. افزونه تحت یک EULA اختصاصی رایگان است؛ مؤلفهٔ بومی متن‌باز است (MIT).
 
-Noctis یک افزونه رایگان مرورگر است که ترافیک Chrome را از طریق سرورهای پراکسی VLESS، VMess، Trojan، Shadowsocks، Hysteria2، Reality و دیگر سرورها — با یک مؤلفه محلی که یک موتور پراکسی ماژولار را اجرا می‌کند: sing-box، xray-core یا mihomo — مسیریابی می‌کند. بدون VPN سیستمی، بدون پنجره کلاینت جداگانه — پراکسی داخل خود مرورگر باقی می‌ماند.
+Noctis یک کلاینت پراکسی رایگان برای VLESS، VMess، Trojan، Shadowsocks، Hysteria2، TUIC، WireGuard و پروتکل‌های دیگر است. سرورها، اشتراک‌ها و قواعد مسیریابی شما را نگه می‌دارد و همان موتوری را اجرا می‌کند که هر سرور لازم دارد. امروز به شکل افزونهٔ Chrome به همراه یک مؤلفهٔ محلی عرضه می‌شود: افزونه پنل کنترل است و مؤلفه موتور را سرپرستی می‌کند.
 
 ## ✨ امکانات
 
-- **موتور پراکسی ماژولار** — Noctis همراه sing-box عرضه می‌شود و می‌تواند xray-core یا mihomo را نیز اجرا کند و موتور موردنیاز هر سرور را به‌طور خودکار انتخاب می‌کند — بنابراین xhttp، جریان‌های REALITY-vision، Snell و موارد دیگر به‌سادگی کار می‌کنند.
+- **سه موتور، برای هر سرور یکی** — sing-box، xray-core و mihomo با هم عرضه می‌شوند و Noctis همانی را برمی‌دارد که سرور لازم دارد: sing-box همهٔ پروتکل‌هایی را که می‌خواند اجرا می‌کند، تنها xray-core می‌تواند xhttp بسازد و mihomo همان مجموعهٔ sing-box را بدون ShadowTLS دارد.
 - **سرورها از پیوند اتصال، کد QR یا اشتراک** — یک پیوند `vless://`، `vmess://`، `trojan://`، `ss://`، `hysteria2://`، `tuic://` یا `wireguard://` وارد کنید یا کد QR را اسکن کنید. اشتراک‌ها طبق برنامه به‌طور خودکار به‌روزرسانی می‌شوند.
 - **مسیریابی بر اساس قانون** — تطبیق بر اساس دامنه، GeoSite یا GeoIP. هر قانون به پراکسی، مستقیم یا مسدود مسیریابی می‌کند.
 - **سه حالت مسیریابی** — سراسری همه چیز را از طریق پراکسی می‌فرستد. قوانین فقط موارد منطبق را مسیریابی می‌کند. مستقیم به‌کلی پراکسی را دور می‌زند.
@@ -46,7 +46,7 @@ Noctis یک افزونه رایگان مرورگر است که ترافیک Chro
 
 `VLESS` · `VLESS Reality` · `VMess` · `Trojan` · `Shadowsocks` · `Hysteria/2` · `TUIC` · `WireGuard` · `AnyTLS` · `ShadowTLS`
 
-Noctis از VLESS (از جمله VLESS Reality)، VMess، Trojan، Shadowsocks، Hysteria2، TUIC، WireGuard، AnyTLS و ShadowTLS پشتیبانی می‌کند. پیکربندی‌های V2Ray، Xray و پنل‌های 3X-UI بدون تبدیل دستی کار می‌کنند: پیوند اتصال یا اشتراک را وارد کنید تا افزونه پیکربندی موتور مناسب را آماده کند. Xray از xhttp/splithttp و گونه‌های جریان XTLS و Mihomo از Snell، SSR و پروتکل‌های دیگر پشتیبانی می‌کند.
+Noctis از VLESS (از جمله VLESS Reality)، VMess، Trojan، Shadowsocks، Hysteria2، TUIC، WireGuard، AnyTLS و ShadowTLS پشتیبانی می‌کند. پیکربندی‌های V2Ray، Xray و پنل‌های 3X-UI بدون تبدیل دستی کار می‌کنند: پیوند اتصال یا اشتراک را بچسبانید تا افزونه آن را به پیکربندی موتور مناسب ترجمه کند. TLS، Reality و جریان XTLS vision را هر موتوری می‌پذیرد؛ xhttp تنها از آنِ xray-core است.
 
 ## 🧩 چگونه کار می‌کند
 
@@ -71,7 +71,7 @@ Noctis از VLESS (از جمله VLESS Reality)، VMess، Trojan، Shadowsocks،
                                             └──────────────────┘
 ```
 
-Noctis به‌طور پیش‌فرض همراه sing-box عرضه می‌شود و می‌تواند xray-core و mihomo را نیز اجرا کند. یک مؤلفه محلی کوچک موتور را روی دستگاه شما نظارت می‌کند و Noctis موتور مناسب هر سرور را به‌طور خودکار انتخاب می‌کند — بنابراین پروتکل‌هایی که یک موتور به‌تنهایی نمی‌تواند مدیریت کند به‌سادگی کار می‌کنند. xray قابلیت xhttp/splithttp و انواع جریان XTLS (REALITY-vision) را باز می‌کند؛ mihomo، Snell، SSR و Mieru را اضافه می‌کند. افزونه مرورگر فقط تصمیم‌های مسیریابی را می‌فرستد — هرگز ترافیک خام را.
+Noctis هر سه موتور sing-box، xray-core و mihomo را با هم عرضه می‌کند. یک مؤلفهٔ بومی کوچک موتور را روی دستگاه شما سرپرستی می‌کند و Noctis همانی را برمی‌دارد که هر سرور لازم دارد: sing-box همهٔ پروتکل‌هایی را که Noctis می‌خواند اجرا می‌کند، تنها xray-core می‌تواند xhttp بسازد و mihomo همان مجموعهٔ sing-box را بدون ShadowTLS دارد. افزونه فقط تصمیم‌های مسیریابی را می‌فرستد — هرگز ترافیک خام را.
 
 ## 🧭 قواعد مسیریابی
 
@@ -159,7 +159,7 @@ VLESS یک پروتکل پراکسی سبک از خانواده V2Ray/Xray اس�
 بله. Noctis پارامترهای Reality (Server Name، Fingerprint، SNI، Dest، کلید عمومی، short ID) را بدون تغییر به مؤلفه محلی می‌فرستد و سرور را روی موتوری که از آن پشتیبانی می‌کند اجرا می‌کند — xray جریان کامل XTLS-vision را فراهم می‌کند. یک share-link به شکل `vless://...flow=xtls-rprx-vision&security=reality` را بچسبانید و افزونه همه فیلدها را وارد می‌کند.
 
 **Noctis از کدام پروتکل‌های پراکسی پشتیبانی می‌کند؟**
-VLESS، VMess، Trojan، Shadowsocks، Hysteria2، TUIC، WireGuard، AnyTLS و ShadowTLS — به‌علاوه xhttp/splithttp، Snell، SSR و موارد دیگر از طریق xray و mihomo. share-link‌های V2Ray و Xray همان‌طور که هستند کار می‌کنند.
+VLESS، VMess، Trojan، Shadowsocks، Hysteria/2، TUIC، WireGuard، AnyTLS، ShadowTLS، SOCKS و HTTP — روی tcp، ws، grpc، httpupgrade، http یا xhttp، همراه TLS، Reality یا جریان XTLS vision. پیوندهای اشتراک‌گذاری V2Ray و Xray همان‌طور که هستند کار می‌کنند.
 
 **آیا استفاده از یک افزونه پراکسی Chrome امن است؟**
 امن‌تر از بیشترشان. Noctis هیچ چیزی به سازنده‌اش نمی‌فرستد — نه تحلیل، نه تله‌متری، نه پیکربندی از راه دور. کانفیگ‌های سرور در حافظه مرورگر باقی می‌مانند. مؤلفه محلی بدون دسترسی مدیر اجرا می‌شود. فهرست کامل مجوزها و دلیل هر کدام در [سیاست حریم خصوصی](./site/PRIVACY.md) است.

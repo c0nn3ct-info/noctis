@@ -38,6 +38,17 @@ afterEach(() => {
 });
 
 describe('InstallPage', () => {
+  it('shows the three parts where the installer first mentions them', () => {
+    render(<InstallPage />);
+
+    // The drawing opened a landing band for a while. A sandbox boundary is a
+    // poor thing to meet before you have decided you want the product, and
+    // exactly what a reader wants between "run this installer" and "open the
+    // popup".
+    expect(screen.getByRole('region', { name: t('home.diagram.aria') })).toBeInTheDocument();
+    expect(screen.getByText(t('install.parts.body'))).toBeInTheDocument();
+  });
+
   it('walks through the three install steps', () => {
     render(<InstallPage />);
 

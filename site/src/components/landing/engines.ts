@@ -56,19 +56,6 @@ export interface Group {
   rows: readonly Capability[];
 }
 
-/**
- * The section open when the page loads.
- *
- * Only ever one: the three sections are three answers to the same question and
- * the columns are the thing being compared, so two open at once pushes the
- * second one's rows past the header they are measured against.
- *
- * Transports, because it is the axis the band is least expected to have and the
- * only one where a column other than the default leads. Protocols is thirteen
- * rows of mostly agreement, and it is one click away.
- */
-export const OPEN_AT_REST: GroupKey = 'transports';
-
 export const GROUPS: readonly Group[] = [
   {
     key: 'protocols',
@@ -124,7 +111,17 @@ export const HERO_PROTOCOLS: readonly Capability[] = PROTOCOLS.filter((p) =>
   HERO_NAMES.includes(p.name),
 );
 
-/** How many rows in this group the engine runs — the number a closed section shows. */
-export function countFor(group: Group, engine: EngineKey): number {
-  return group.rows.filter((r) => r.runs.includes(engine)).length;
+/**
+ * Every capability the band counts, in one list: the thirteen protocols, the
+ * six transports and the three security layers.
+ *
+ * The band states a single figure per engine — 21 of 22, 16 of 22, 20 of 22 —
+ * and groups the whole list by which engines run each one, so the three axes
+ * stop being three separate questions.
+ */
+export const CAPABILITIES: readonly Capability[] = GROUPS.flatMap((g) => g.rows);
+
+/** How many of them this engine runs. */
+export function coverageFor(engine: EngineKey): number {
+  return CAPABILITIES.filter((c) => c.runs.includes(engine)).length;
 }

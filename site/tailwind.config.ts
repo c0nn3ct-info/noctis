@@ -16,6 +16,9 @@ export default {
     './license/index.html',
     './ru/**/index.html',
   ],
+  // Hover styles apply only where a pointer can hover, so a tap on a phone
+  // does not leave a tile stuck in its hover colour.
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       colors: {
@@ -139,6 +142,16 @@ export default {
         med: '250ms',
         long: '450ms',
         'x-long': '600ms',
+        // One slow turn, for the refresh glyph that has to read as a full spin.
+        'xx-long': '900ms',
+      },
+      fontFamily: {
+        // Written down rather than inherited from Tailwind, alongside the sans
+        // stack in globals.css: the platform's own mono first on each system.
+        mono: [
+          'ui-monospace', 'SFMono-Regular', 'SF Mono', 'Cascadia Mono', 'Menlo',
+          'Consolas', 'Ubuntu Mono', 'Noto Sans Mono', 'Liberation Mono', 'monospace',
+        ],
       },
       fontSize: {
         'display-small':   ['36px', { lineHeight: '44px', letterSpacing: '0px' }],
@@ -155,6 +168,14 @@ export default {
         // places; naming them keeps the scale honest about what it contains.
         'label-dense':     ['13px', { lineHeight: '18px', letterSpacing: '0.1px',  fontWeight: '500' }],
         'label-unit':      ['10px', { lineHeight: '14px', letterSpacing: '0.4px',  fontWeight: '500' }],
+        // The landing's small uppercase labels over lists, columns and figures.
+        // They were a hand-typed `text-[11px] uppercase tracking-[0.1em]` in
+        // seven places and 10px in one; 12px is the floor for text a visitor
+        // has to read, and the tracking is the half of the look that stays.
+        'overline':        ['12px', { lineHeight: '16px', letterSpacing: '0.1em',  fontWeight: '600' }],
+        // A dense title between body-medium and body-large: claim titles, CTA
+        // labels and the mono values in the landing's tables.
+        'title-dense':     ['15px', { lineHeight: '21px', letterSpacing: '0px' }],
         'label-medium':    ['12px', { lineHeight: '16px', letterSpacing: '0.5px',  fontWeight: '500' }],
         'label-small':     ['11px', { lineHeight: '16px', letterSpacing: '0.5px',  fontWeight: '500' }],
         'body-large':      ['16px', { lineHeight: '24px', letterSpacing: '0.5px' }],
@@ -190,12 +211,6 @@ export default {
           '85%': { opacity: '1' },
           '100%': { transform: 'translateX(0)', opacity: '0' },
         },
-        // A marquee lane. The track holds its items three times over, so one
-        // third of its width is exactly one loop and the seam never shows.
-        'lane-drift': {
-          from: { transform: 'translateX(0)' },
-          to: { transform: 'translateX(-33.333%)' },
-        },
       },
       animation: {
         'pulse-ring': 'pulse-ring var(--pulse-dur, 3s) var(--ease-emph-decel) infinite',
@@ -203,7 +218,6 @@ export default {
         'status-dot': 'status-dot 1.4s var(--ease-emph) infinite',
         'rail-march': 'rail-march 0.6s linear infinite',
         'rail-comet': 'rail-comet 4.2s linear infinite',
-        'lane-drift': 'lane-drift var(--lane-dur, 28s) linear infinite',
       },
     },
   },

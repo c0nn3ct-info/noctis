@@ -44,7 +44,8 @@ function enterEase(): string {
  */
 const LEAD = '0px';
 
-const DUR = 420;
+/** Under the 300ms an entrance can take before it reads as waiting. */
+const DUR = 280;
 const STEP = 45;
 /**
  * Five steps of lead is a fifth of a second before the last item starts. Past
@@ -129,6 +130,9 @@ export function useSectionEntrance(): void {
               duration: DUR,
               delay: Math.min(i * STEP, MAX_DELAY),
               easing,
+              // Held at the first keyframe through its delay; without it a
+              // staggered item shows, vanishes, then arrives.
+              fill: 'backwards',
             });
           });
         }

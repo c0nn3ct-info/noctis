@@ -166,7 +166,8 @@ describe('useSectionEntrance', () => {
     expect(played.map((p) => p.opts.delay)).toEqual([
       0, 45, 90, 135, 180, 225, 225, 225, 225, 225, 225, 225, 225,
     ]);
-    expect(played[0].opts.duration).toBe(420);
+    expect(played[0].opts.duration).toBe(280);
+    expect(played[0].opts.fill).toBe('backwards');
     expect(played[0].opts.easing).toBeTruthy();
   });
 

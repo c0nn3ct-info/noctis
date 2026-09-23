@@ -13,6 +13,14 @@
 export interface Field {
   /** The slice of the input this field was read out of, delimiters included. */
   raw: string;
+  /**
+   * The part of that slice which is punctuation rather than payload: `?fp=`,
+   * `@`, `:`, `#`. The listing sets it back a step so the value it introduces
+   * is what the eye lands on.
+   */
+  prefix: string;
+  /** What follows the value inside `raw`, which only the scheme has: `://`. */
+  suffix: string;
 
   /** The field's name, as the engines spell it. */
   label: string;
@@ -59,7 +67,14 @@ export function parseShareLink(link: string): Field[] {
 
   const fields: Field[] = [];
   const scheme = link.slice(0, sep);
-  fields.push({ raw: link.slice(0, sep + 3), label: 'protocol', value: scheme, decides: true });
+  fields.push({
+    raw: link.slice(0, sep + 3),
+    prefix: '',
+    suffix: '://',
+    label: 'protocol',
+    value: scheme,
+    decides: true,
+  });
 
   const rest = link.slice(sep + 3);
 
@@ -74,6 +89,8 @@ export function parseShareLink(link: string): Field[] {
   if (at !== -1) {
     fields.push({
       raw: authority.slice(0, at),
+      prefix: '',
+      suffix: '',
       label: 'uuid',
       value: authority.slice(0, at),
       decides: false,
@@ -89,6 +106,8 @@ export function parseShareLink(link: string): Field[] {
     const prefix = at === -1 ? '' : '@';
     fields.push({
       raw: prefix + hostport.slice(0, hostEnd),
+      prefix,
+      suffix: '',
       label: 'host',
       value: hostport.slice(0, hostEnd),
       decides: true,
@@ -96,6 +115,8 @@ export function parseShareLink(link: string): Field[] {
     if (colon !== -1) {
       fields.push({
         raw: hostport.slice(hostEnd),
+        prefix: ':',
+        suffix: '',
         label: 'port',
         value: hostport.slice(hostEnd + 1),
         decides: false,
@@ -117,6 +138,10 @@ export function parseShareLink(link: string): Field[] {
         const key = eq === -1 ? part : part.slice(0, eq);
         fields.push({
           raw,
+          // A parameter with no `=` is punctuation all the way down: there is
+          // no value under it to set apart.
+          prefix: eq === -1 ? raw : raw.slice(0, raw.length - part.length + eq + 1),
+          suffix: '',
           label: LABELS[key] ?? key,
           value: eq === -1 ? '' : decode(part.slice(eq + 1)),
           decides: DECIDES.has(key),
@@ -125,7 +150,14 @@ export function parseShareLink(link: string): Field[] {
   }
   if (hash !== -1) {
     const tag = tail.slice(hash + 1);
-    fields.push({ raw: tail.slice(hash), label: 'tag', value: decode(tag), decides: false });
+    fields.push({
+      raw: tail.slice(hash),
+      prefix: '#',
+      suffix: '',
+      label: 'tag',
+      value: decode(tag),
+      decides: false,
+    });
   }
 
   return fields;

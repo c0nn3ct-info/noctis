@@ -1,5 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { Languages } from 'lucide-react';
+import { Check, Languages } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 import { getLocale, stripLocale, t, withLocale, type Locale } from '../i18n';
@@ -23,26 +28,20 @@ interface LanguageSwitcherProps {
   className?: string;
 }
 
+/**
+ * The header's language menu, on Radix's menu rather than a hand-rolled list.
+ *
+ * The old one carried `role="menu"` without the behaviour the role promises:
+ * no arrow keys, focus never moved into the list, and Escape unmounted the item
+ * that held focus, dropping it onto <body>. Radix brings roving focus,
+ * typeahead, Escape returning focus to the trigger, and the open/close fade.
+ *
+ * Non-modal: a language menu is not worth locking the page's scroll or making
+ * the rest of it inert. The items stay real links, so each language is a
+ * crawlable URL and a middle click opens it in a new tab.
+ */
 export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const locale = getLocale();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('click', onDocClick);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('click', onDocClick);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
 
   const hrefFor = (target: Locale) =>
     typeof window === 'undefined'
@@ -58,46 +57,46 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   };
 
   return (
-    <div ref={ref} className={cn('relative', className)}>
-      <IconButton
-        type="button"
-        variant="standard"
-        size="s"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={t('nav.lang_switch_aria')}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        title={t('nav.lang_switch_aria')}
-      >
-        <Languages />
-      </IconButton>
-      {open && (
-        <ul
-          role="menu"
-          className="absolute end-0 top-full z-30 mt-1 min-w-[10rem] overflow-hidden rounded-md border border-outline-variant bg-surface-container shadow-e2"
-        >
+    <div className={cn('relative', className)}>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <IconButton
+            type="button"
+            variant="standard"
+            size="s"
+            className="h-11 w-11"
+            aria-label={t('nav.lang_switch_aria')}
+            title={t('nav.lang_switch_aria')}
+          >
+            <Languages />
+          </IconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="bg-surface-container">
           {LOCALE_OPTIONS.map((l) => {
             const active = l.code === locale;
             return (
-              <li key={l.code} role="none">
+              <DropdownMenuItem
+                key={l.code}
+                asChild
+                className={cn(
+                  'min-h-11 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                  active ? 'font-medium text-on-surface' : 'text-on-surface-variant',
+                )}
+              >
                 <a
-                  role="menuitem"
                   href={hrefFor(l.code)}
                   hrefLang={l.code}
                   onClick={() => onSelect(l.code)}
-                  className={cn(
-                    'm3-state-layer flex items-center gap-2 px-3 py-2 text-sm',
-                    active ? 'text-on-surface font-medium' : 'text-on-surface-variant',
-                  )}
                   aria-current={active ? 'true' : undefined}
                 >
                   <span>{l.label}</span>
+                  {active && <Check aria-hidden className="ms-auto text-primary" />}
                 </a>
-              </li>
+              </DropdownMenuItem>
             );
           })}
-        </ul>
-      )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

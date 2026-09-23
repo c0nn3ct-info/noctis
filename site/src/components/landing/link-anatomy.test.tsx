@@ -1,83 +1,248 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { LinkAnatomy } from './link-anatomy';
+import { LinkAnatomy, fieldAt } from './link-anatomy';
 import { SAMPLE_LINK, parseShareLink } from './share-link';
 import { t } from '@/i18n';
 
-const rows = (c: HTMLElement) => Array.from(c.querySelectorAll('[data-field]')) as HTMLElement[];
+const lines = (c: HTMLElement) => Array.from(c.querySelectorAll('[data-field]')) as HTMLElement[];
+const values = (c: HTMLElement) =>
+  lines(c).map((line) => line.querySelector('[data-value]') as HTMLElement);
+const slices = (c: HTMLElement) => Array.from(c.querySelectorAll('[data-slice]')) as HTMLElement[];
+const states = (els: HTMLElement[]) => els.map((el) => el.getAttribute('data-state'));
 const field = () => screen.getByRole('textbox', { name: t('home.anatomy.input_aria') });
+const rail = (c: HTMLElement) => c.querySelector('[data-rail]') as HTMLElement;
+/** The engine chip that is filled, if one is. */
+const chosen = (c: HTMLElement) => c.querySelector('[data-state="chosen"]');
+/** What state a given engine's chip is in: chosen, able or out. */
+const lamp = (c: HTMLElement, key: string) =>
+  c.querySelector(`[data-engine="${key}"]`)?.getAttribute('data-state');
+
+const parsed = parseShareLink(SAMPLE_LINK);
+
+describe('fieldAt', () => {
+  it('reads a character of the link back to the field it belongs to', () => {
+    // `vless://` is the first eight characters, and the uuid follows it.
+    expect(fieldAt(parsed, 0)).toBe(0);
+    expect(fieldAt(parsed, 7)).toBe(0);
+    expect(fieldAt(parsed, 8)).toBe(1);
+    expect(fieldAt(parsed, SAMPLE_LINK.length - 1)).toBe(parsed.length - 1);
+  });
+
+  it('has no field before the link or after it', () => {
+    expect(fieldAt(parsed, -1)).toBeNull();
+    expect(fieldAt(parsed, SAMPLE_LINK.length)).toBeNull();
+    expect(fieldAt([], 0)).toBeNull();
+  });
+});
 
 describe('LinkAnatomy', () => {
-  it('opens on the sample link, already read out', () => {
+  it('gives every field an entry: its name, its value, what it is for', () => {
     const { container } = render(<LinkAnatomy />);
 
     expect(field()).toHaveValue(SAMPLE_LINK);
-    expect(rows(container)).toHaveLength(parseShareLink(SAMPLE_LINK).length);
-    expect(screen.getByText('cdn.example.com')).toBeInTheDocument();
+    expect(lines(container)).toHaveLength(parsed.length);
+    expect(lines(container).map((l) => l.firstElementChild?.textContent)).toEqual(
+      parsed.map((f) => f.label),
+    );
+    // The value alone. `?security=` is punctuation, and it stays in the link
+    // above rather than being quoted a second time down here.
+    expect(values(container).map((v) => v.textContent)).toEqual(parsed.map((f) => f.value));
+    expect(lines(container)[4]).not.toHaveTextContent('?security=');
   });
 
-  it('reads out whatever you paste instead', async () => {
+  it('sets the name of a field that decides at full weight', () => {
+    const { container } = render(<LinkAnatomy />);
+
+    const full = lines(container).map((l) =>
+      l.firstElementChild?.className.includes('text-on-surface-variant'),
+    );
+    expect(full).toEqual(parsed.map((f) => !f.decides));
+  });
+
+  it('says what each field is for, and reads the value where the value decides', () => {
+    const { container } = render(<LinkAnatomy />);
+
+    expect(lines(container)[0]).toHaveTextContent(t('home.anatomy.note.protocol'));
+    // 443 is the port that says something about the link rather than the server.
+    expect(lines(container)[3]).toHaveTextContent(t('home.anatomy.note.port_https'));
+    expect(lines(container)[4]).toHaveTextContent(t('home.anatomy.note.reality'));
+    expect(lines(container)[6]).toHaveTextContent(
+      t('home.anatomy.note.fingerprint').replace('{v}', 'chrome'),
+    );
+    expect(lines(container)[7]).toHaveTextContent(t('home.anatomy.note.tcp'));
+  });
+
+  it('follows the value when the link changes, not a canned note', async () => {
     const user = userEvent.setup();
     const { container } = render(<LinkAnatomy />);
 
     await user.clear(field());
+    await user.paste('vless://u@h.example:8443?security=tls&type=ws');
+
+    expect(lines(container)[3]).toHaveTextContent(t('home.anatomy.note.port'));
+    expect(lines(container)[4]).toHaveTextContent(t('home.anatomy.note.tls'));
+    expect(lines(container)[5]).toHaveTextContent(t('home.anatomy.note.ws'));
+  });
+
+  it('marks nothing until the pointer asks for a mark', () => {
+    const { container } = render(<LinkAnatomy />);
+
+    expect(states(slices(container)).every((s) => s === 'plain')).toBe(true);
+    expect(container.querySelector('[data-state="active"]')).toBeNull();
+  });
+
+  it('lights the row, its value and its slice of the link together', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<LinkAnatomy />);
+
+    // `sni`: the sixth line of the sample link.
+    await user.hover(lines(container)[5]);
+
+    expect(lines(container)[5]).toHaveAttribute('data-state', 'active');
+    expect(slices(container)[5]).toHaveAttribute('data-state', 'active');
+    expect(values(container)[5]).toHaveClass('bg-primary');
+    expect(states(slices(container)).filter((s) => s === 'active')).toHaveLength(1);
+
+    await user.unhover(lines(container)[5]);
+
+    expect(container.querySelector('[data-state="active"]')).toBeNull();
+  });
+
+  it('spells the link back out of its own slices', () => {
+    const { container } = render(<LinkAnatomy />);
+
+    // Exhaustive by construction: every character lands in exactly one field.
+    expect(slices(container).map((s) => s.textContent).join('')).toBe(SAMPLE_LINK);
+  });
+
+  it('names what decided the engine, off the link rather than out of a list', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<LinkAnatomy />);
+
+    expect(rail(container)).toHaveTextContent('protocol · host · security · transport');
+
+    // A link with no security parameter has three, and the rail says three.
+    await user.clear(field());
     await user.paste('trojan://pw@relay.example.org:8443?type=ws');
 
-    expect(screen.getByText('relay.example.org')).toBeInTheDocument();
-    expect(screen.getByText('trojan')).toBeInTheDocument();
-    expect(screen.queryByText('cdn.example.com')).not.toBeInTheDocument();
-    expect(rows(container)).toHaveLength(5);
+    expect(rail(container)).toHaveTextContent('protocol · host · transport');
   });
 
-  it('is a name, a leader and a value — no third column to run empty', () => {
+  it('lights every field the engine was decided by when the rail is pointed at', async () => {
+    const user = userEvent.setup();
     const { container } = render(<LinkAnatomy />);
 
-    // Five of nine values used to be suppressed as duplicates of a raw-slice
-    // chip, leaving the column four entries and five holes. The slice lives in
-    // the field above; the ledger carries what it resolved to.
-    for (const row of rows(container)) {
-      expect(row.children).toHaveLength(3);
-      expect(row.querySelector('dt')).not.toBeNull();
-      expect(row.querySelector('[data-leader]')).not.toBeNull();
-      expect(row.querySelector('dd')?.textContent).toBeTruthy();
-    }
-  });
+    await user.hover(rail(container));
 
-  it('names every field the parser read, in its order', () => {
-    const { container } = render(<LinkAnatomy />);
-    const parsed = parseShareLink(SAMPLE_LINK);
-
-    expect(rows(container).map((r) => r.querySelector('dt')?.textContent)).toEqual(
-      parsed.map((f) => f.label),
+    expect(states(slices(container))).toEqual(
+      parsed.map((f) => (f.decides ? 'active' : 'plain')),
     );
-    expect(rows(container).map((r) => r.querySelector('dd')?.textContent)).toEqual(
-      parsed.map((f) => f.value),
-    );
+    expect(states(lines(container))).toEqual(parsed.map((f) => (f.decides ? 'active' : 'plain')));
+    // The ground stays with the pointer: four filled cells would read as a
+    // selection rather than as an answer.
+    expect(lines(container).filter((l) => l.className.includes('bg-surface-container-low'))).toHaveLength(0);
   });
 
-  it('tints the fields that decide how the tunnel is built', () => {
+  it('says in words what each engine does with this link', () => {
     const { container } = render(<LinkAnatomy />);
 
-    expect(rows(container).map((r) => r.querySelector('dd')?.className.includes('text-tertiary-on-container'))).toEqual([
-      true, false, true, false, true, false, false, true, false,
+    const row = (key: string) => container.querySelector(`[data-engine="${key}"]`);
+    expect(row('singbox')).toHaveTextContent(t('home.anatomy.chip_starts'));
+    expect(row('xray')).toHaveTextContent(t('home.anatomy.chip_able'));
+  });
+
+  it('ends on the engine the link asks for, and what decided it', () => {
+    const { container } = render(<LinkAnatomy />);
+
+    expect(chosen(container)).toHaveTextContent('sing-box');
+    // Every engine runs a VLESS link over tcp, so none of the three is struck.
+    expect(['singbox', 'xray', 'mihomo'].map((k) => lamp(container, k))).toEqual([
+      'chosen',
+      'able',
+      'able',
     ]);
+    expect(rail(container)).toHaveTextContent(t('home.anatomy.engine_any'));
   });
 
-  it('counts what it read, rather than claiming it was pasted', () => {
-    render(<LinkAnatomy />);
+  it('follows the paste to a different engine', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<LinkAnatomy />);
 
-    expect(screen.getByText(t('home.anatomy.fields').replace('{n}', '9'))).toBeInTheDocument();
+    await user.clear(field());
+    await user.paste('vless://u@h.example:443?type=xhttp');
+
+    expect(chosen(container)).toHaveTextContent('xray-core');
+    expect(['singbox', 'xray', 'mihomo'].map((k) => lamp(container, k))).toEqual([
+      'out',
+      'chosen',
+      'out',
+    ]);
+    expect(rail(container)).toHaveTextContent(
+      t('home.anatomy.engine_only').replace('{engine}', 'xray-core').replace('{what}', 'xhttp'),
+    );
   });
 
-  it('asks for a link when what it has is not one', async () => {
+  it('strikes the engine a protocol rules out, and keeps the one it leaves', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<LinkAnatomy />);
+
+    await user.clear(field());
+    await user.paste('hysteria2://u@h.example:443');
+
+    expect(chosen(container)).toHaveTextContent('sing-box');
+    expect(['singbox', 'xray', 'mihomo'].map((k) => lamp(container, k))).toEqual([
+      'chosen',
+      'out',
+      'able',
+    ]);
+    expect(rail(container)).toHaveTextContent(
+      t('home.anatomy.engine_without').replace('{what}', 'Hysteria2').replace('{engine}', 'xray-core'),
+    );
+  });
+
+  it('refuses a combination no engine builds, in the terms that refused it', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<LinkAnatomy />);
+
+    await user.clear(field());
+    await user.paste('hysteria2://u@h.example:443?type=xhttp');
+
+    expect(chosen(container)).toBeNull();
+    expect(['singbox', 'xray', 'mihomo'].map((k) => lamp(container, k))).toEqual([
+      'out',
+      'out',
+      'out',
+    ]);
+    // No dash standing in for an engine: every row says, in words, that it
+    // cannot run this link, and the sentence under them says why.
+    expect(container.querySelectorAll(`[data-engine]`)).toHaveLength(3);
+    expect(rail(container)).toHaveTextContent(t('home.anatomy.chip_out'));
+    expect(rail(container)).toHaveTextContent(
+      t('home.anatomy.engine_none').replace('{other}', 'Hysteria2').replace('{what}', 'xhttp'),
+    );
+  });
+
+  it('says a scheme is not one it reads, rather than picking an engine anyway', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<LinkAnatomy />);
+
+    await user.clear(field());
+    await user.paste('quic://h.example:443');
+
+    expect(rail(container)).toHaveTextContent(t('home.anatomy.engine_unknown'));
+  });
+
+  it('asks for a link when what it has is not one, and says nothing about engines', async () => {
     const user = userEvent.setup();
     const { container } = render(<LinkAnatomy />);
 
     await user.clear(field());
     await user.paste('not a link');
 
-    expect(rows(container)).toHaveLength(0);
+    expect(lines(container)).toHaveLength(0);
+    expect(slices(container)).toHaveLength(0);
+    expect(rail(container)).toBeNull();
     expect(screen.getByText(t('home.anatomy.empty'))).toBeInTheDocument();
   });
 
@@ -95,36 +260,40 @@ describe('LinkAnatomy', () => {
     expect(screen.queryByRole('button', { name: t('home.anatomy.reset') })).toBeNull();
   });
 
-  it('narrates no pipeline it is not performing', () => {
-    const { container } = render(<LinkAnatomy />);
+  it('reports on the link rather than on itself', () => {
+    render(<LinkAnatomy />);
 
-    // The foot used to carry paste / split into fields / engine picked. It
-    // described what the reader was looking at, and nothing on this page picks
-    // an engine.
-    expect(container.querySelectorAll('[data-step]')).toHaveLength(0);
-    expect(screen.queryByText(/engine picked/i)).toBeNull();
+    // The header used to end in "9 fields read", which is a fact about the
+    // panel rather than about the link in it.
+    expect(screen.queryByText(/fields read/i)).toBeNull();
   });
 
-  it('claims the caret and the highlight in its own field', () => {
+  it('hands the colours to a copy of the string, and keeps the control a field', () => {
+    const { container } = render(<LinkAnatomy />);
+
+    // An input paints one colour, so the slices are a copy lying under the
+    // caret: the input's own text is transparent and it scrolls the copy with
+    // it. Both have to carry the same metrics or the two fall out of register.
+    const mirror = container.querySelector('[data-mirror]') as HTMLElement;
+    expect(mirror).toHaveClass('font-mono', 'text-[15px]', 'leading-[1.6]', 'py-3', 'whitespace-pre');
+    expect(field()).toHaveClass('font-mono', 'text-[15px]', 'leading-[1.6]', 'py-3', 'text-transparent');
+    expect(mirror).toHaveAttribute('aria-hidden');
+  });
+
+  it('claims the caret and the highlight in its own card', () => {
     const { container } = render(<LinkAnatomy />);
 
     // Both ship as the browser's unless a palette takes them, which is the
     // cheapest tell that a surface was assembled rather than built.
-    expect(container.firstElementChild).toHaveClass(
-      'caret-tertiary',
-      'selection:bg-tertiary-container',
-      'selection:text-tertiary-on-container',
+    const card = container.querySelector('[class*="caret-primary"]') as HTMLElement;
+    expect(card).toHaveClass(
+      'caret-primary',
+      'selection:bg-primary-container',
+      'selection:text-primary-on-container',
     );
-  });
-
-  it('shows the field’s focus as an indicator, not as a shade', () => {
-    const { container } = render(<LinkAnatomy />);
-
-    // The tint alone was the whole indicator, and one step of the container
-    // ladder is about 6% of lightness — visible, but nowhere near the 3:1 an
-    // indicator owes its surroundings (WCAG 2.4.11).
-    const row = container.querySelector('[class*="focus-within"]') as HTMLElement;
-    expect(row).toHaveClass('focus-within:ring-2', 'focus-within:ring-inset', 'focus-within:ring-ring');
+    // And the focus indicator is the card's, so the ring follows its radius
+    // instead of drawing square corners the radius then clips.
+    expect(card).toHaveClass('focus-within:ring-2', 'focus-within:ring-inset', 'focus-within:ring-ring');
   });
 
   it('gives the field a hit area a finger can land on', () => {
@@ -136,9 +305,9 @@ describe('LinkAnatomy', () => {
   it('animates nothing of its own: the band’s entrance carries it', () => {
     const { container } = render(<LinkAnatomy />);
 
-    for (const row of rows(container)) {
-      expect(row.style.transform).toBe('');
-      expect(row.style.getPropertyValue('--from')).toBe('');
+    for (const line of lines(container)) {
+      expect(line.style.transform).toBe('');
+      expect(line.style.getPropertyValue('--from')).toBe('');
     }
     expect(container.querySelector('[class*="link-cut"]')).toBeNull();
   });

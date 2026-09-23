@@ -50,6 +50,8 @@ for (const { name, boot, page } of ENTRIES) {
       setLocale.mockClear();
       document.documentElement.lang = lang;
       await boot();
+      // The entry mounts once its locale's dictionary has loaded.
+      await vi.waitFor(() => expect(mountPage).toHaveBeenCalled());
     }
 
     it('adopts the prerendered document locale and mounts its page', async () => {

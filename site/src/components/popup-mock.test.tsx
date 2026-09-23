@@ -118,15 +118,22 @@ describe('PopupMock', () => {
       'false',
     );
     expect(within(routing).getByRole('button', { name: '✨ Sirius' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'View all routing profiles' })).toBeInTheDocument();
+    // Drawn, not offered: it opens a surface the mock does not have.
+    const viewAll = screen.getAllByText('View all')[0].closest('button');
+    expect(viewAll).toHaveAttribute('tabindex', '-1');
+    expect(viewAll).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('renders the footer actions', () => {
     render(<PopupMock />);
-    expect(screen.getByRole('button', { name: 'View all servers' })).toBeInTheDocument();
     // One button, not a split one: `AddMenu` opens a menu from a single
     // filled trigger, and the caret this mock used to draw was never there.
-    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+    // Like both View all buttons and Panel, it goes nowhere in the mock, so it
+    // is out of the tab order and the tree; the power button is the live one.
+    const add = screen.getByText('Add').closest('button');
+    expect(add).toHaveAttribute('tabindex', '-1');
+    expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /View all/ })).toBeNull();
     expect(screen.getByRole('button', { name: 'Disconnect' })).toBeInTheDocument();
   });
 

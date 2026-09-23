@@ -7,8 +7,8 @@
   </picture>
 </p>
 
-<p align="center"><strong>Chrome 的 VLESS 浏览器扩展</strong></p>
-<p align="center"><em>让浏览器流量走你自己的代理——无需系统级 VPN。</em></p>
+<p align="center"><strong>支持 sing-box、xray-core、mihomo 的代理客户端</strong></p>
+<p align="center"><em>把你自己的 VLESS、Trojan、Shadowsocks、WireGuard 服务器用起来——从浏览器里。</em></p>
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn"><img src="https://img.shields.io/chrome-web-store/v/nmhobajopepdpihahepaddpdifdcenpn?label=Chrome%20Web%20Store&color=4285F4" alt="Chrome Web Store"></a>
@@ -25,13 +25,13 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis 是浏览器代理，而非系统级 VPN。只有 Chrome 的流量会被路由；操作系统的其余部分仍走你的真实连接。扩展在专有 EULA 下免费提供；本机组件开源（MIT）。
+> Noctis 只路由它所在的浏览器，而不是整台机器——操作系统的其余部分仍走自己的连接。扩展在专有 EULA 下免费提供；本机组件开源（MIT）。
 
-Noctis 是一款免费的浏览器扩展，它通过一个本机组件驱动可插拔的代理引擎——sing-box、xray-core 或 mihomo——把 Chrome 的流量路由到 VLESS、VMess、Trojan、Shadowsocks、Hysteria2、Reality 等代理服务器。无需系统级 VPN，也没有单独的客户端窗口——代理始终在浏览器内部进行。
+Noctis 是一款免费的代理客户端，支持 VLESS、VMess、Trojan、Shadowsocks、Hysteria2、TUIC、WireGuard 等协议。它保存你的服务器、订阅和路由规则，并为每台服务器启动所需的引擎。目前以 Chrome 扩展加本机组件的形式发布：扩展是控制面板，组件照看引擎。
 
 ## ✨ 功能
 
-- **可插拔的代理引擎** — Noctis 自带 sing-box，也能驱动 xray-core 或 mihomo，并为每台服务器自动挑选所需的引擎——因此 xhttp、REALITY-vision 流、Snell 等都能直接使用。
+- **三个引擎，按服务器选用** — sing-box、xray-core 和 mihomo 一起提供，Noctis 为每台服务器挑选所需的那个：sing-box 能运行它读取的全部协议，xray-core 是唯一能构建 xhttp 的引擎，mihomo 与 sing-box 相同但少了 ShadowTLS。
 - **从分享链接、二维码或订阅 URL 添加服务器** — 粘贴 `vless://`、`vmess://`、`trojan://`、`ss://`、`hysteria2://`、`tuic://`、`wireguard://`——或扫描二维码。订阅 URL 会按计划自动刷新。
 - **按规则路由** — 按域名、GeoSite 或 GeoIP 匹配。每条规则可路由到代理、直连或拦截。
 - **三种路由模式** — 全局模式让所有流量都走代理。规则模式只路由匹配项。直连模式完全绕过代理。
@@ -46,7 +46,7 @@ Noctis 是一款免费的浏览器扩展，它通过一个本机组件驱动可�
 
 `VLESS` · `VLESS Reality` · `VMess` · `Trojan` · `Shadowsocks` · `Hysteria/2` · `TUIC` · `WireGuard` · `AnyTLS` · `ShadowTLS`
 
-Noctis 支持 VLESS（包括 VLESS Reality）、VMess、Trojan、Shadowsocks、Hysteria2、TUIC、WireGuard、AnyTLS 和 ShadowTLS。来自 V2Ray、Xray 和 3X-UI 面板的配置可直接使用——粘贴分享链接或订阅 URL，扩展会自动把它转换成相应引擎的配置。xray 解锁 xhttp/splithttp 和 XTLS 流变体；mihomo 增加 Snell、SSR 等。
+Noctis 支持 VLESS（包括 VLESS Reality）、VMess、Trojan、Shadowsocks、Hysteria2、TUIC、WireGuard、AnyTLS 和 ShadowTLS。来自 V2Ray、Xray 和 3X-UI 面板的配置可直接使用——粘贴分享链接或订阅 URL，扩展会自动把它转换成相应引擎的配置。TLS、Reality 和 XTLS vision 流每个引擎都接受；xhttp 只有 xray-core 能构建。
 
 ## 🧩 工作原理
 
@@ -71,7 +71,7 @@ Noctis 支持 VLESS（包括 VLESS Reality）、VMess、Trojan、Shadowsocks、H
                                             └──────────────────┘
 ```
 
-Noctis 默认自带 sing-box，也能驱动 xray-core 和 mihomo。一个小型本机组件在你的机器上管理引擎，Noctis 会为每台服务器自动挑选合适的引擎——因此单一引擎无法处理的协议也能直接使用。xray 解锁 xhttp/splithttp 和 XTLS 流变体（REALITY-vision）；mihomo 增加 Snell、SSR 和 Mieru。浏览器扩展只发送路由决策——绝不传输原始流量。
+Noctis 同时提供 sing-box、xray-core 和 mihomo。一个小的本机组件在你的机器上照看引擎，Noctis 为每台服务器挑选所需的那个：sing-box 能运行 Noctis 读取的全部协议，xray-core 是唯一能构建 xhttp 的引擎，mihomo 与 sing-box 相同但少了 ShadowTLS。扩展只发送路由决策，从不发送原始流量。
 
 ## 🧭 路由规则
 
@@ -159,7 +159,7 @@ VPN 把系统上的每个应用都通过一条连接隧道化，通常还需要�
 支持。Noctis 会把 Reality 参数（Server Name、Fingerprint、SNI、Dest、public key、short ID）原样传给本机组件，并在支持它的引擎上运行该服务器——xray 提供完整的 XTLS-vision 流。粘贴一条 `vless://...flow=xtls-rprx-vision&security=reality` 分享链接，扩展会导入其中每个字段。
 
 **Noctis 支持哪些代理协议？**
-VLESS、VMess、Trojan、Shadowsocks、Hysteria2、TUIC、WireGuard、AnyTLS 和 ShadowTLS——此外还通过 xray 和 mihomo 支持 xhttp/splithttp、Snell、SSR 等。V2Ray 和 Xray 的分享链接可直接使用。
+VLESS、VMess、Trojan、Shadowsocks、Hysteria/2、TUIC、WireGuard、AnyTLS、ShadowTLS、SOCKS 和 HTTP —— 可走 tcp、ws、grpc、httpupgrade、http 或 xhttp，并配合 TLS、Reality 或 XTLS vision 流。V2Ray 和 Xray 的分享链接可直接使用。
 
 **Chrome 代理扩展用起来安全吗？**
 比大多数更安全。Noctis 不向开发者发送任何东西——没有分析、没有遥测、没有远程配置。服务器配置保存在浏览器存储中。本机组件无需管理员权限即可运行。完整的权限清单和说明在[隐私政策](./site/PRIVACY.md)中。

@@ -1,7 +1,6 @@
 import { Github } from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
-
-const REPO_URL = 'https://github.com/c0nn3ct-info/noctis';
+import { GITHUB_URL } from '@/constants';
 
 export function GithubLink() {
   return (
@@ -9,10 +8,11 @@ export function GithubLink() {
       asChild
       variant="standard"
       size="s"
+      className="h-11 w-11"
       aria-label="GitHub"
       title="GitHub"
     >
-      <a href={REPO_URL} target="_blank" rel="noreferrer noopener">
+      <a href={GITHUB_URL} target="_blank" rel="noreferrer noopener">
         <Github />
       </a>
     </IconButton>

@@ -12,6 +12,7 @@ import {
   Github,
   HardDrive,
   Info,
+  Network,
   PlayCircle,
   RefreshCw,
   Terminal,
@@ -22,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Section } from '@/components/m3/section';
+import { ArchitectureDiagram } from '@/components/architecture-diagram';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -279,6 +281,21 @@ export function InstallPage() {
 
             <p>{t('install.step2.body2')}</p>
             <p>{t('install.step2.body3')}</p>
+          </div>
+        </Section>
+
+        {/* The three parts, where the question is actually asked. This drawing
+            opened a band on the landing page for a while, and a diagram of a
+            sandbox boundary is a poor thing to meet before you have decided you
+            want the product — but it is exactly what a reader wants between
+            "run this installer" and "open the popup", which is where the words
+            helper, engine and native messaging first cost them something. */}
+        <Section header={t('install.parts.title')} icon={Network} headingLevel={2}>
+          <div className="space-y-3 px-2 pb-3 pt-2">
+            <p className="max-w-[68ch] text-body-large text-on-surface-variant">
+              {t('install.parts.body')}
+            </p>
+            <ArchitectureDiagram />
           </div>
         </Section>
 

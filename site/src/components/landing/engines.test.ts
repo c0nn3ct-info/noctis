@@ -3,9 +3,9 @@ import {
   ENGINES,
   GROUPS,
   HERO_PROTOCOLS,
-  OPEN_AT_REST,
   PROTOCOLS,
-  countFor,
+  CAPABILITIES,
+  coverageFor,
   type EngineKey,
 } from './engines';
 
@@ -89,14 +89,19 @@ describe('the other two axes', () => {
   });
 });
 
-describe('countFor', () => {
-  it('counts what a closed section states, per engine', () => {
-    const counts = (key: string) =>
-      ENGINES.map((e) => countFor(GROUPS.find((g) => g.key === key)!, e.key as EngineKey));
+describe('coverageFor', () => {
+  it('counts the whole list per engine, which is the figure the band states', () => {
+    expect(CAPABILITIES).toHaveLength(22);
+    expect(ENGINES.map((e) => coverageFor(e.key as EngineKey))).toEqual([21, 16, 20]);
+  });
 
-    expect(counts('protocols')).toEqual([13, 7, 12]);
-    expect(counts('transports')).toEqual([5, 6, 5]);
-    expect(counts('security')).toEqual([3, 3, 3]);
+  it('leaves exactly one capability to each of the two that stand alone', () => {
+    const only = (key: EngineKey) =>
+      CAPABILITIES.filter((c) => c.runs.length === 1 && c.runs[0] === key).map((c) => c.name);
+
+    expect(only('singbox')).toEqual(['ShadowTLS']);
+    expect(only('xray')).toEqual(['xhttp']);
+    expect(only('mihomo')).toEqual([]);
   });
 });
 
@@ -114,12 +119,7 @@ describe('HERO_PROTOCOLS', () => {
 });
 
 describe('GROUPS', () => {
-  it('opens on the transports and leaves the other two to their counts', () => {
+  it('carries the three axes the cards count, in the order they are counted', () => {
     expect(GROUPS.map((g) => g.key)).toEqual(['protocols', 'transports', 'security']);
-    // The axis the band is least expected to have, and the only one where a
-    // column other than the default leads. Protocols is thirteen rows of
-    // mostly agreement, one click away.
-    expect(OPEN_AT_REST).toBe('transports');
-    expect(GROUPS.map((g) => g.key)).toContain(OPEN_AT_REST);
   });
 });

@@ -195,12 +195,16 @@ export function bootHeroScene(host: HTMLElement, canvas: HTMLCanvasElement): Her
   let slow = 0;
 
   const draw = () => {
-    if (!running) return;
+    // Off screen the loop parks instead of ticking empty frames; the observer
+    // below starts it again when the figure comes back.
+    if (!running || !visible) {
+      frame = 0;
+      return;
+    }
     frame = requestAnimationFrame(draw);
     const now = performance.now();
     const delta = Math.min((now - last) / 1000, 0.05);
     last = now;
-    if (!visible) return;
 
     clock += delta;
     spin.rotation.y += delta * SPIN;
@@ -248,7 +252,10 @@ export function bootHeroScene(host: HTMLElement, canvas: HTMLCanvasElement): Her
   const seen = new IntersectionObserver(
     ([entry]) => {
       visible = entry.isIntersecting;
-      if (visible) last = performance.now();
+      if (visible && running && !frame) {
+        last = performance.now();
+        frame = requestAnimationFrame(draw);
+      }
     },
     { rootMargin: '120px' },
   );

@@ -178,8 +178,12 @@ export function PopupMock({ className, paused }: PopupMockProps) {
   const active = SERVERS[activeIndex];
 
   return (
+    // The mock is a copy of the English popup on every locale's page, so it
+    // says which language it is in: a Russian page's screen reader would
+    // otherwise read "Connect" and "Recent servers" with Russian phonetics.
     <div
       dir="ltr"
+      lang="en"
       className={cn(
         // h-[600px] w-[380px] is POPUP_FRAME in popup-app.tsx, verbatim. The rounding,
         // the hairline and the shadow are not the popup's: they are how this page
@@ -214,7 +218,8 @@ export function PopupMock({ className, paused }: PopupMockProps) {
                 {connected ? (
                   <>
                     <span className="block truncate">
-                      {active.name} · via <b className="text-on-surface">{active.security}</b>
+                      {`${active.name} · via `}
+                      <b className="text-on-surface">{active.security}</b>
                     </span>
                     <span className="block truncate font-mono text-on-surface">{active.ip}</span>
                   </>
@@ -265,7 +270,7 @@ export function PopupMock({ className, paused }: PopupMockProps) {
       <section className="flex shrink-0 flex-col px-4">
         <div className="flex items-center justify-between gap-2 pb-2">
           <span className="text-label-small uppercase text-on-surface-variant">Routing</span>
-          <Button type="button" variant="text" size="xs" aria-label="View all routing profiles">
+          <Button type="button" variant="text" size="xs" tabIndex={-1} aria-hidden>
             View all
             <ArrowRight />
           </Button>
@@ -307,7 +312,7 @@ export function PopupMock({ className, paused }: PopupMockProps) {
       <section className="flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-2 pt-3">
         <div className="flex items-center justify-between gap-2 px-2 pb-2">
           <span className="text-label-small uppercase text-on-surface-variant">Recent servers</span>
-          <Button type="button" variant="text" size="xs" aria-label="View all servers">
+          <Button type="button" variant="text" size="xs" tabIndex={-1} aria-hidden>
             View all
             <ArrowRight />
           </Button>
@@ -329,11 +334,14 @@ export function PopupMock({ className, paused }: PopupMockProps) {
         {/* `AddMenu` renders one filled button that opens a menu — not a split
             button with a caret of its own. The menu it opens is a surface this
             mock does not have, so the click has nowhere to go. */}
-        <Button variant="filled" size="s" type="button" className="min-w-0">
+        {/* These four open surfaces the mock does not have, so they are drawn
+            but not offered: out of the tab order and the accessibility tree,
+            where a control that does nothing is a trap rather than a copy. */}
+        <Button variant="filled" size="s" type="button" className="min-w-0" tabIndex={-1} aria-hidden>
           <Plus aria-hidden />
           <span className="truncate">Add</span>
         </Button>
-        <Button variant="filled-tonal" size="s" type="button" className="flex-1">
+        <Button variant="filled-tonal" size="s" type="button" className="flex-1" tabIndex={-1} aria-hidden>
           Panel
           <ExternalLink />
         </Button>

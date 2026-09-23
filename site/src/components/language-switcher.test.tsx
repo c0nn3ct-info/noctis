@@ -58,7 +58,7 @@ afterEach(() => {
 });
 
 async function open() {
-  const user = userEvent.setup();
+  const user = userEvent.setup({ pointerEventsCheck: 0 });
   const trigger = screen.getByRole('button', { name: t('nav.lang_switch_aria') });
   await user.click(trigger);
   return { user, trigger };
@@ -106,41 +106,38 @@ describe('LanguageSwitcher', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  it('closes on an outside click but stays open for inside clicks', async () => {
+  it('closes on an outside click', async () => {
     render(<LanguageSwitcher />);
     const { user } = await open();
-
-    await user.click(screen.getByRole('menuitem', { name: 'English' }));
     expect(screen.getByRole('menu')).toBeInTheDocument();
 
     await user.click(document.body);
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  it('closes on Escape and ignores other keys', async () => {
+  it('moves focus into the menu and through it with the arrow keys', async () => {
     render(<LanguageSwitcher />);
-    const { user } = await open();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    const trigger = screen.getByRole('button', { name: t('nav.lang_switch_aria') });
+    trigger.focus();
+    await user.keyboard('{Enter}');
+
+    const items = screen.getAllByRole('menuitem');
+    expect(items[0]).toHaveFocus();
+    await user.keyboard('{ArrowDown}');
+    expect(items[1]).toHaveFocus();
+  });
+
+  it('closes on Escape and hands focus back to the trigger', async () => {
+    render(<LanguageSwitcher />);
+    const { user, trigger } = await open();
 
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('menu')).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('menu')).toBeNull();
-  });
-
-  it('removes its document listeners when it closes and when it unmounts', async () => {
-    const remove = vi.spyOn(document, 'removeEventListener');
-    const view = render(<LanguageSwitcher />);
-    const { user, trigger } = await open();
-
-    await user.click(trigger);
-    expect(remove).toHaveBeenCalledWith('click', expect.any(Function));
-    expect(remove).toHaveBeenCalledWith('keydown', expect.any(Function));
-
-    remove.mockClear();
-    await user.click(trigger);
-    view.unmount();
-    expect(remove).toHaveBeenCalledWith('click', expect.any(Function));
+    expect(trigger).toHaveFocus();
   });
 
   it('remembers the picked locale in localStorage', async () => {

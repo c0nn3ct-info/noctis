@@ -2,7 +2,7 @@ import { useLayoutEffect } from 'react';
 import type { Decorator, Preview } from '@storybook/react-vite';
 import '../src/styles/globals.css';
 import { LOCALE_OPTIONS } from '../src/components/language-switcher';
-import { isRtl, setLocale, type Locale } from '../src/i18n';
+import { isRtl, loadLocale, setLocale, type Locale } from '../src/i18n';
 import {
   applyAccent,
   applyTheme,
@@ -77,6 +77,9 @@ function toolbarItems(titles: Record<string, string>): { value: string; title: s
 const preview: Preview = {
   // withTheme is last, so it wraps withLocale: a locale switch remounts the
   // story without discarding the theme decorator's effect state.
+  // The site loads one dictionary per page; the toolbar can ask for any of six,
+  // so each story waits for the one it is about to render in.
+  loaders: [({ globals }) => loadLocale(globals.locale as Locale)],
   decorators: [withLocale, withTheme],
   globalTypes: {
     theme: {

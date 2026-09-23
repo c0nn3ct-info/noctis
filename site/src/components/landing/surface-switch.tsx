@@ -69,7 +69,7 @@ export function SurfaceSwitch({ value, onChange, className }: Props) {
             {soon && (
               /* Part of the label rather than beside it: "Terminal" alone would
                  announce as a surface you could pick. */
-              <span className="rounded-pill bg-surface-container-high px-1.5 py-0.5 text-label-small uppercase tracking-[0.1em]">
+              <span className="rounded-pill bg-surface-container-high px-1.5 py-0.5 text-label-medium uppercase tracking-[0.1em]">
                 {t('home.popup.surface_soon')}
               </span>
             )}

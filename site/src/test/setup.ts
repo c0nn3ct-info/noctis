@@ -1,4 +1,8 @@
 import '@testing-library/jest-dom/vitest';
+import { LOCALES, loadLocale } from '@/i18n';
+
+// Pages load their one locale on demand; tests switch between all six.
+await Promise.all(LOCALES.map(loadLocale));
 
 // jsdom lacks a few browser APIs the site's components touch.
 if (!window.matchMedia) {

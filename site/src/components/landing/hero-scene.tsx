@@ -36,9 +36,17 @@ export function HeroScene({ 'aria-label': label, className }: Props) {
       .then((m) => {
         // Unmounted while the chunk was loading: never boot into a dead node.
         if (!alive) return;
+        // A context the GPU refuses throws from the renderer. At load that
+        // lands in the catch below; on a theme switch it would escape the
+        // observer, so the reboot keeps the copy and drops only the figure.
         const boot = () => {
           handle?.dispose();
-          handle = m.bootHeroScene(host.current!, canvas.current!);
+          handle = undefined;
+          try {
+            handle = m.bootHeroScene(host.current!, canvas.current!);
+          } catch {
+            observer?.disconnect();
+          }
         };
         boot();
         // The stage is read at boot. A live theme flip — the OS switching

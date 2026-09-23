@@ -4,6 +4,7 @@ import { CONTACT_MAILTO, GITHUB_URL } from '@/constants';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { InstallButton } from './cta-pair';
+import { SECTION_TITLE } from './shell';
 
 /** `mailto:help@c0nn3ct.info` → `help@c0nn3ct.info`, for the visible label. */
 export function mailtoAddress(mailto: string): string {
@@ -34,7 +35,7 @@ export function FaqBand({ className }: { className?: string }) {
   return (
     <div className={cn('grid gap-10 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-20', className)}>
       <div data-enter="soft">
-        <h2 className="text-balance text-[clamp(28px,3.6vw,40px)] font-extrabold leading-[1.05] tracking-[-0.03em]">
+        <h2 className={SECTION_TITLE}>
           {t('home.faq.h2')}
         </h2>
         <p className="mt-4 text-pretty text-body-large leading-[1.7] text-on-surface-variant">
@@ -42,7 +43,7 @@ export function FaqBand({ className }: { className?: string }) {
         </p>
 
         <div className="mt-7 flex flex-col gap-3 border-t border-outline-variant pt-6">
-          <span className="text-label-small uppercase tracking-[0.14em] text-on-surface-variant">
+          <span className="text-overline uppercase text-on-surface-variant">
             {t('home.faq.no_answer')}
           </span>
           {/* Labelled by where they go rather than "GitHub" and "Email": the
@@ -70,8 +71,8 @@ export function FaqBand({ className }: { className?: string }) {
           </a>
         </div>
 
-        {/* One button, across the column. The store is already reachable from
-            the header, the footer and the hero, so a second button here turned
+        {/* One button, across the column. The store is already a button in the
+            hero and on the install page, so a second button here turned
             the column's last row into a choice instead of a next step. */}
         <InstallButton block className="mt-8" />
       </div>

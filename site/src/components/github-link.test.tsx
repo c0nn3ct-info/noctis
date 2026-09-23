@@ -10,7 +10,7 @@ describe('GithubLink', () => {
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     expect(link).toHaveAttribute('title', 'GitHub');
-    expect(link).toHaveClass('bg-transparent', 'h-10');
+    expect(link).toHaveClass('bg-transparent', 'h-11');
     expect(link.querySelector('svg')).not.toBeNull();
   });
 });

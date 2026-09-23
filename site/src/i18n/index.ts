@@ -1,9 +1,4 @@
 import en from './en.json';
-import ru from './ru.json';
-import es from './es.json';
-import zhCN from './zh-CN.json';
-import fa from './fa.json';
-import ar from './ar.json';
 
 export const LOCALES = ['en', 'ru', 'es', 'zh-CN', 'fa', 'ar'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -18,14 +13,27 @@ export function isLocale(x: string): x is Locale {
   return (LOCALES as readonly string[]).includes(x);
 }
 
-const DICTIONARIES: Record<Locale, Record<string, string>> = {
-  en,
-  ru,
-  es,
-  'zh-CN': zhCN,
-  fa,
-  ar,
+type Dictionary = Record<string, string>;
+
+/* English ships with every page and the rest arrive on demand. A page is only
+ * ever read in one language, and the five it is not read in were 150KB of the
+ * chunk every page's first paint waited on. English stays static because it is
+ * what `t` reads from until the page's own locale has arrived. */
+const DICTIONARIES: Partial<Record<Locale, Dictionary>> = { en: en as Dictionary };
+
+const LOADERS: Record<Exclude<Locale, 'en'>, () => Promise<{ default: Dictionary }>> = {
+  ru: () => import('./ru.json'),
+  es: () => import('./es.json'),
+  'zh-CN': () => import('./zh-CN.json'),
+  fa: () => import('./fa.json'),
+  ar: () => import('./ar.json'),
 };
+
+/** Fetches a locale's dictionary. Call it before `setLocale` puts it in force. */
+export async function loadLocale(locale: Locale): Promise<void> {
+  if (DICTIONARIES[locale]) return;
+  DICTIONARIES[locale] = (await LOADERS[locale as Exclude<Locale, 'en'>]()).default;
+}
 
 const NON_EN_LOCALES = LOCALES.filter((l): l is Exclude<Locale, 'en'> => l !== 'en');
 
@@ -40,8 +48,8 @@ export function getLocale(): Locale {
 }
 
 export function t(key: string): string {
-  const dict = DICTIONARIES[currentLocale];
-  const value = dict[key];
+  // A locale that has not been loaded reads as English rather than as keys.
+  const value = (DICTIONARIES[currentLocale] ?? DICTIONARIES.en!)[key];
   if (value === undefined) {
     if (import.meta.env.DEV) console.warn(`[i18n] missing key: ${key} (${currentLocale})`);
     return key;

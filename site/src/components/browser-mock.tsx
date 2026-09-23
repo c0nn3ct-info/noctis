@@ -11,7 +11,7 @@ interface Props {
 export function BrowserMock({ children, className }: Props) {
   return (
     <div dir="ltr" className={cn('relative isolate', className)}>
-      <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low shadow-e4">
+      <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low">
         <div className="flex items-center gap-3 border-b border-outline-variant bg-surface-container px-3 py-2">
           <div className="flex items-center gap-1.5" aria-hidden>
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
@@ -21,7 +21,7 @@ export function BrowserMock({ children, className }: Props) {
           <div className="ml-1 flex items-center gap-1 text-on-surface-variant">
             <RotateCw className="h-3.5 w-3.5" aria-hidden />
           </div>
-          <div className="flex h-7 flex-1 items-center gap-2 rounded-pill bg-surface-container-highest px-3 text-label-small text-on-surface-variant">
+          <div className="flex h-7 flex-1 items-center gap-2 rounded-pill bg-surface-container-highest px-3 text-label-medium text-on-surface-variant">
             <Lock className="h-3 w-3" aria-hidden />
             <span className="truncate font-mono">your-favorite-site.com</span>
           </div>
@@ -38,14 +38,6 @@ export function BrowserMock({ children, className }: Props) {
         </div>
 
         <div className="relative h-[620px] overflow-hidden bg-surface-container-lowest">
-          <div
-            className="absolute inset-0 opacity-60"
-            aria-hidden
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 20% 0%, color-mix(in srgb, hsl(var(--primary)) 18%, transparent), transparent 55%), radial-gradient(circle at 90% 70%, color-mix(in srgb, hsl(var(--tertiary)) 14%, transparent), transparent 60%)',
-            }}
-          />
           <div className="absolute left-8 top-12 max-w-[55%] space-y-3" aria-hidden>
             <div className="h-3 w-32 rounded bg-outline-variant" />
             <div className="space-y-2">

@@ -7,8 +7,8 @@
   </picture>
 </p>
 
-<p align="center"><strong>VLESS Browser Extension for Chrome</strong></p>
-<p align="center"><em>Route browser traffic through your own proxies — without a system VPN.</em></p>
+<p align="center"><strong>Proxy client for sing-box, xray-core and mihomo</strong></p>
+<p align="center"><em>Your own VLESS, Trojan, Shadowsocks and WireGuard servers, routed from the browser.</em></p>
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn"><img src="https://img.shields.io/chrome-web-store/v/nmhobajopepdpihahepaddpdifdcenpn?label=Chrome%20Web%20Store&color=4285F4" alt="Chrome Web Store"></a>
@@ -25,13 +25,13 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis is a browser proxy — not a system VPN. Only Chrome traffic is routed; the rest of your OS stays on your real connection. The extension is free under a proprietary EULA; the native helper is open source (MIT).
+> Noctis routes the browser it is installed in, not the whole machine — the rest of your OS keeps its own connection. The extension is free under a proprietary EULA; the native helper is open source (MIT).
 
-Noctis is a free browser extension that routes Chrome through VLESS, VMess, Trojan, Shadowsocks, Hysteria2, Reality and other proxy servers via a local helper that drives a pluggable proxy engine — sing-box, xray-core, or mihomo. No system VPN, no separate client window — proxying stays inside the browser.
+Noctis is a free proxy client for VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard and more. It holds your servers, your subscriptions and your routing rules, and starts whichever of the three engines a server needs. Today it ships as a Chrome extension with a local helper: the extension is the control panel, the helper supervises the engine.
 
 ## ✨ Features
 
-- **Pluggable proxy engine** — Noctis ships sing-box and can also drive xray-core or mihomo, auto-picking the engine each server needs — so xhttp, REALITY-vision flows, Snell and more all just work.
+- **Three engines, one per server** — sing-box, xray-core and mihomo ship together and Noctis picks the one each server needs: sing-box runs every protocol it reads, xray-core is the only engine that builds xhttp, and mihomo runs sing-box's set without ShadowTLS.
 - **Servers from share links, QR, or subscription URLs** — Paste `vless://`, `vmess://`, `trojan://`, `ss://`, `hysteria2://`, `tuic://`, `wireguard://` — or scan a QR code. Subscription URLs auto-refresh on a schedule.
 - **Per-rule routing** — Match by domain, GeoSite, or GeoIP. Each rule routes to proxy, direct, or block.
 - **Three routing modes** — Global sends everything through the proxy. Rules only routes matches. Direct bypasses entirely.
@@ -46,7 +46,7 @@ Noctis is a free browser extension that routes Chrome through VLESS, VMess, Troj
 
 `VLESS` · `VLESS Reality` · `VMess` · `Trojan` · `Shadowsocks` · `Hysteria/2` · `TUIC` · `WireGuard` · `AnyTLS` · `ShadowTLS`
 
-Noctis supports VLESS (including VLESS Reality), VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS and ShadowTLS. Configs from V2Ray, Xray and 3X-UI panels work as-is — paste a share link or subscription URL and the extension translates it into the right engine's config automatically. xray unlocks xhttp/splithttp and XTLS flow variants; mihomo adds Snell, SSR and more.
+Noctis supports VLESS (including VLESS Reality), VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS and ShadowTLS. Configs from V2Ray, Xray and 3X-UI panels work as-is — paste a share link or subscription URL and the extension translates it into the right engine's config automatically. Every engine accepts TLS, Reality and the XTLS vision flow; xhttp is xray-core's alone.
 
 ## 🧩 How it works
 
@@ -71,7 +71,7 @@ Browsers can't run a proxy engine on their own. Three pieces split the work acro
                                             └──────────────────┘
 ```
 
-Noctis ships sing-box by default and can also drive xray-core and mihomo. A small native helper supervises the engine on your machine, and Noctis picks the right one for each server automatically — so protocols a single engine can't handle just work. xray unlocks xhttp/splithttp and the XTLS flow variants (REALITY-vision); mihomo adds Snell, SSR and Mieru. The browser extension only ever sends routing decisions — never raw traffic.
+Noctis ships sing-box, xray-core and mihomo together. A small native helper supervises the engine on your machine, and Noctis picks the one each server needs: sing-box runs every protocol Noctis reads, xray-core is the only engine that builds xhttp, and mihomo runs sing-box's set without ShadowTLS. The browser extension only ever sends routing decisions — never raw traffic.
 
 ## 🧭 Routing rules
 
@@ -161,7 +161,7 @@ A VPN tunnels every app on your system through one connection and usually needs 
 Yes. Noctis passes Reality parameters (Server Name, Fingerprint, SNI, Dest, public key, short ID) through to the helper unchanged and runs the server on an engine that supports it — xray drives the full XTLS-vision flow. Paste a `vless://...flow=xtls-rprx-vision&security=reality` share link and the extension imports every field.
 
 **Which proxy protocols does Noctis support?**
-VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS and ShadowTLS — plus xhttp/splithttp, Snell, SSR and more through xray and mihomo. V2Ray and Xray share links work as-is.
+VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard, AnyTLS, ShadowTLS, SOCKS and HTTP — over tcp, ws, grpc, httpupgrade, http or xhttp, with TLS, Reality or the XTLS vision flow. V2Ray and Xray share links work as-is.
 
 **Is a Chrome proxy extension safe to use?**
 Safer than most. Noctis sends nothing to its developer — no analytics, no telemetry, no remote config. Server configs stay in browser storage. The native helper runs without admin rights. The full permission list and rationale is in the [privacy policy](./site/PRIVACY.md).

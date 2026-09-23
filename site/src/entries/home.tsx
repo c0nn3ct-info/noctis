@@ -1,7 +1,12 @@
-import { isLocale, setLocale } from '../i18n';
+import { isLocale, loadLocale, setLocale } from '../i18n';
 import { mountPage } from '../main';
 import { HomePage } from '../pages/home';
 
 const lang = document.documentElement.lang;
-setLocale(isLocale(lang) ? lang : 'en');
-mountPage(<HomePage />);
+const locale = isLocale(lang) ? lang : 'en';
+// The prerendered HTML is already on screen in this language; hydration waits
+// for the dictionary so the first client render matches it.
+void loadLocale(locale).then(() => {
+  setLocale(locale);
+  mountPage(<HomePage />);
+});

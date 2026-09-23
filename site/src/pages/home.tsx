@@ -1,21 +1,13 @@
-import { Check, Route, ScanSearch, ShieldCheck, Shuffle, type LucideIcon } from 'lucide-react';
-import { ArchitectureDiagram } from '@/components/architecture-diagram';
-import { CapabilityLanes } from '@/components/landing/capability-lanes';
 import { CtaPair } from '@/components/landing/cta-pair';
-import { EngineMatrix } from '@/components/landing/engine-matrix';
+import { EngineReach } from '@/components/landing/engine-reach';
 import { FaqBand } from '@/components/landing/faq-band';
 import { HeroScene } from '@/components/landing/hero-scene';
 import { LinkAnatomy } from '@/components/landing/link-anatomy';
 import { PopupBand } from '@/components/landing/popup-band';
+import { RoutingBand } from '@/components/landing/routing-band';
+import { SubscriptionBand } from '@/components/landing/subscription-band';
 import { HERO_PROTOCOLS, PROTOCOLS } from '@/components/landing/engines';
-import {
-  ClaimList,
-  LandingSection,
-  PointList,
-  SectionHeading,
-  type Claim,
-  type Point,
-} from '@/components/landing/shell';
+import { LandingSection, SectionHeading } from '@/components/landing/shell';
 import { t } from '@/i18n';
 import { useSectionEntrance } from '@/lib/use-enter';
 import { Layout } from '@/layout';
@@ -35,31 +27,11 @@ import { Layout } from '@/layout';
  * and the structured ones cannot drift apart.
  */
 
-/** What the matrix cannot say: who picks the engine, and when you find out. */
-const ENGINE_CLAIMS: readonly { icon: LucideIcon; key: string }[] = [
-  { icon: Shuffle, key: 'c1' },
-  { icon: ScanSearch, key: 'c2' },
-];
-
-/** What the anatomy band's panel proves, beside the panel that proves it. */
-const ANATOMY_POINTS: readonly Point[] = [
-  { icon: Check, text: 'home.anatomy.p1' },
-  { icon: Route, tone: 'tertiary', text: 'home.anatomy.p2' },
-  { icon: ShieldCheck, tone: 'primary', text: 'home.anatomy.p3' },
-];
-
 export function HomePage() {
   // Bands arrive as they come up. Where the browser has scroll-driven
   // timelines this is pure CSS and the hook does nothing; see
   // `src/lib/use-enter.ts` for which path runs where.
   useSectionEntrance();
-  const points = ANATOMY_POINTS.map((p) => ({ ...p, text: t(p.text) }));
-  const claims: Claim[] = ENGINE_CLAIMS.map(({ icon, key }) => ({
-    icon,
-    title: t(`home.protocols.${key}.title`),
-    body: t(`home.protocols.${key}.body`),
-  }));
-
   return (
     <Layout current="home" bleed>
       {/* The hero is the one section that is not a LandingSection: it is
@@ -158,7 +130,7 @@ export function HomePage() {
             part of the figure the buttons are not standing on, which is why
             it is smaller than the globe. Capped in vh as well as px so a
             short window does not end up with a hero two screens tall. */}
-        <div className="relative mx-auto flex min-h-[620px] w-full max-w-[1160px] flex-col justify-center px-5 pb-[min(32vh,240px)] pt-14 sm:min-h-[720px] sm:px-8 sm:pb-[min(30vh,270px)] sm:pt-20 md:pb-20 lg:px-10 lg:py-24">
+        <div className="relative mx-auto flex min-h-[620px] w-full max-w-[1160px] flex-col justify-center px-5 pb-[min(32vh,240px)] pt-14 sm:min-h-[720px] sm:px-8 sm:pb-[min(30vh,270px)] sm:pt-20 md:pb-20 lg:px-10 lg:py-24 [@media(max-height:500px)]:min-h-0 [@media(max-height:500px)]:pt-10">
           {/* aria2t's shape, and for its reason: only the reading blocks are
               capped, and the buttons and the chips are their siblings at the
               band's own width.
@@ -180,9 +152,9 @@ export function HomePage() {
                 font size, so a measure that stops growing while the font
                 keeps going is exactly how two lines become three. */}
             <div className="max-w-[600px] md:max-w-[420px] lg:max-w-[min(600px,42vw)]">
-              <h1 className="m-0 text-[clamp(38px,6vw,72px)] leading-[0.93] tracking-[-0.04em] md:text-[min(45px,6vw)] lg:text-[min(72px,5vw)]">
+              <h1 className="m-0 text-[clamp(36px,6vw,72px)] leading-[0.93] tracking-[-0.04em] md:text-[min(45px,6vw)] lg:text-[min(72px,5vw)]">
                 <span className="block font-extrabold">{t('home.hero.h1_a')}</span>
-                <span className="block font-[250] text-on-surface-variant">
+                <span className="block font-light text-on-surface-variant">
                   {t('home.hero.h1_b')}
                 </span>
               </h1>
@@ -208,7 +180,7 @@ export function HomePage() {
                   straight on the figure. It gets a ground too — aria2t
                   measured the same label at 1.4:1 over its scene and reached
                   the same conclusion. */}
-              <span className="w-fit rounded-sm bg-background/95 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-on-surface-variant backdrop-blur-sm">
+              <span className="w-fit rounded-sm bg-background/95 px-1.5 py-0.5 text-overline uppercase text-on-surface-variant backdrop-blur-sm">
                 {t('home.hero.works_with')}
               </span>
               <ul
@@ -217,7 +189,7 @@ export function HomePage() {
               >
                 {HERO_PROTOCOLS.map((tile) => (
                   <li key={tile.name}>
-                    <span className="inline-flex h-9 items-center rounded-pill border border-outline-variant bg-surface-container-low/80 px-3.5 font-mono text-xs text-on-surface backdrop-blur-sm transition-colors duration-med ease-emph hover:border-outline hover:bg-surface-container-high/85 sm:h-10 sm:px-4">
+                    <span className="inline-flex h-9 items-center rounded-pill border border-outline-variant bg-surface-container-low/80 px-3.5 font-mono text-xs text-on-surface backdrop-blur-sm sm:h-10 sm:px-4">
                       {tile.name}
                     </span>
                   </li>
@@ -228,7 +200,7 @@ export function HomePage() {
                 <li>
                   <a
                     href="#protocols"
-                    className="inline-flex h-9 items-center rounded-pill bg-surface-container-high/90 px-3.5 font-mono text-xs text-on-surface backdrop-blur-sm transition-colors duration-med ease-emph hover:bg-surface-container-highest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:px-4"
+                    className="relative before:absolute before:inset-x-0 before:-inset-y-1 sm:before:-inset-y-0.5 before:content-[''] inline-flex h-9 items-center rounded-pill bg-surface-container-high/90 px-3.5 font-mono text-xs text-on-surface backdrop-blur-sm transition-colors duration-med ease-emph hover:bg-surface-container-highest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:px-4"
                   >
                     {t('home.hero.more').replace('{n}', String(PROTOCOLS.length - HERO_PROTOCOLS.length))}
                   </a>
@@ -243,99 +215,89 @@ export function HomePage() {
           this band shows. */}
       <PopupBand />
 
-      {/* One band, one object. The grid and the engine rows were two blocks
-          saying the same thing in different languages — the grid's own group
-          labels were engine names — and the transports were a paragraph because
-          there was nowhere structural to put them. The matrix is where all
-          three meet. */}
+      {/* What the product does with the traffic, before any band says which
+          protocols it can do it over: a profile deciding seven requests, and a
+          mode that overrules it. It follows the popup because the popup is
+          where these three words — proxy, direct, blocked — are read. */}
+      <LandingSection id="routing">
+        <div data-enter="soft" className="mb-10">
+          <SectionHeading
+            title={t('home.routing.h2')}
+            body={t('home.routing.lede')}
+            className="max-w-[760px]"
+          />
+        </div>
+        <div data-enter="soft">
+          <RoutingBand />
+        </div>
+      </LandingSection>
+
+      {/* One band, one claim: all three engines ship, and Noctis starts the
+          one a server needs.
+        *
+          It was a table of twenty-two rows by three columns, under a heading
+          that promised an answer about a link. The band above answers that
+          about the link you paste, so what is left here is the fact the tiles
+          state and the names the hero counts. Full width and no column of
+          claims beside it: the tiles are the claim. */}
       <LandingSection id="protocols">
-        {/* Two columns, the same shape the anatomy band takes. Run across the
-            band's full 1080 the table travels most of a screen from a name to
-            its third mark; capped at 860 under a heading it left a quarter of
-            the band empty on the right, and the heading sat over 400px of
-            blank name column. Beside it, the heading fills what the table does
-            not need and the marks come in under their own columns. */}
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,660px)] lg:gap-14">
-          {/* The column stretches and the heading sticks inside it, 80px under
-              the site header. Thirteen rows leave the left column a thousand
-              pixels of nothing to sit above otherwise, and the heading is the
-              question the table answers — they belong on screen together. The
-              entrance goes on the inner element: a transform on the sticky one
-              would make it its own containing block and pin it in place. */}
-          <div>
-            <div className="lg:sticky lg:top-[80px]">
-              <div data-enter="soft">
-                <SectionHeading title={t('home.protocols.h2')} body={t('home.protocols.lede')} />
-              </div>
-              {/* Two claims the table cannot make. It answers what runs where;
-                  these answer who chooses and when you find out — both read off
-                  `selectCore` and `serverUnsupportedReasons`. No rule above
-                  them: the size step from the lede is the break, and a line
-                  drawn across half the band reads as a division the band does
-                  not have. */}
-              <ClaimList claims={claims} className="mt-9" />
-            </div>
-          </div>
-          {/* `overflow-x: auto` makes this a scroll container, and a scroll
-              container is what a sticky table head sticks to — pinned inside
-              it, the head measured 23px from the viewport top instead of the
-              64 it asks for, half of it behind the site header. The table fits
-              from 360px up, so the scroller is only there for the narrowest
-              phones and goes away at `sm`. */}
-          {/* `overflow-x: auto` makes this a scroll container, and a scroll
-              container is what a sticky table head sticks to — pinned inside
-              it, the head measured 23px from the viewport top instead of the
-              64 it asks for, half of it behind the site header. The table fits
-              from 360px up, so the scroller is only there for the narrowest
-              phones and goes away at `sm`. */}
-          <div
-            data-enter="soft"
-            className="scrollbar-quiet min-w-0 self-start overflow-x-auto sm:overflow-x-visible"
-          >
-            <EngineMatrix className="w-auto max-w-[660px] sm:w-full" />
-          </div>
+        {/* 40px under the heading, which is the step the band's own parts take
+            between them. */}
+        <div data-enter="soft" className="mb-10">
+          <SectionHeading
+            title={t('home.protocols.h2')}
+            body={t('home.protocols.lede')}
+            className="max-w-[760px]"
+          />
+        </div>
+        <div data-enter="soft">
+          <EngineReach />
         </div>
       </LandingSection>
 
       <LandingSection id="anatomy">
-        {/* Two columns again, now that the panel is narrow. It held a full copy
-            of the link before and needed every pixel of the band; a table of
-            nine short rows needs about 460, and left on its own it sat in the
-            left half of a 1080px panel with the right half empty. */}
-        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-14">
-          <div>
-            <div data-enter="soft">
-              <SectionHeading title={t('home.anatomy.h2')} body={t('home.anatomy.lede')} />
-            </div>
-            <PointList points={points} className="mt-8" />
-          </div>
-          <div data-enter="soft" className="min-w-0">
-            <LinkAnatomy />
-          </div>
+        {/* The heading goes to the band rather than to a column beside the
+            panel, and the panel takes the band's full width.
+          *
+            Beside it is the two-column shape the rest of the page uses, and it
+            was the wrong one here: the copy is a heading and one sentence, so
+            the left column ran out after three lines and stood empty for the
+            height of the panel, while the panel stacked a link, nine values and
+            a verdict into a 560px column. One side bare and the other crowded
+            was never a density problem inside the panel — it was the column.
+          *
+            Its measure is wider than the shell's 600: the lede is the band's
+            only sentence and the card under it runs the band's full width, so a
+            600px column of copy over a 1080px card reads as a caption that lost
+            its figure. The answer — which engine this link runs on — is inside
+            the card now, on the rail beside the fields that decided it. */}
+        <div data-enter="soft" className="mb-10">
+          <SectionHeading
+            title={t('home.anatomy.h2')}
+            body={t('home.anatomy.lede')}
+            className="max-w-[760px]"
+          />
         </div>
-      </LandingSection>
-
-      <LandingSection id="capabilities">
-        {/* No body: the only thing the lede said was which lane each group sits
-            on, which describes the page rather than the product. */}
-        <div data-enter="soft" className="mb-8">
-          <SectionHeading title={t('home.caps.h2')} />
-        </div>
-        {/* No stagger and no `data-enter` on the lanes: they are already the one
-            thing on the page that moves on its own, and an arrival on top of a
-            marquee reads as a stutter. */}
-        <CapabilityLanes />
-      </LandingSection>
-
-      <LandingSection id="why-three-parts">
-        <div data-enter="soft" className="mb-8">
-          <SectionHeading title={t('home.arch.h2')} body={t('home.arch.lede')} />
-        </div>
-        {/* Wrapped rather than marked: the diagram is the live page's component
-            too, and the entrance rules are global, so an attribute inside it
-            would animate a page that never asked for one. */}
         <div data-enter="soft">
-          <ArchitectureDiagram />
+          <LinkAnatomy />
+        </div>
+      </LandingSection>
+
+      {/* Where the architecture diagram used to stand. That drawing answers
+          "why is there a helper", which is a question a visitor has after
+          deciding to install rather than before, so it moved to the install
+          page; this answers the one a visitor holding a provider's link has
+          right now. */}
+      <LandingSection id="subscriptions">
+        <div data-enter="soft" className="mb-10">
+          <SectionHeading
+            title={t('home.subs.h2')}
+            body={t('home.subs.lede')}
+            className="max-w-[760px]"
+          />
+        </div>
+        <div data-enter="soft">
+          <SubscriptionBand />
         </div>
       </LandingSection>
 

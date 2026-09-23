@@ -51,6 +51,15 @@ export function LandingSection({ id, className, contained = true, children }: La
   );
 }
 
+/**
+ * A band heading's type, shared by `SectionHeading` and the FAQ band, which
+ * lays its heading out by hand. Line height 1.1 rather than 1.05: at weight 800
+ * a heading that wraps to three lines in Spanish or Persian had its ascenders
+ * touching the line above.
+ */
+export const SECTION_TITLE =
+  'text-balance text-[clamp(28px,3.6vw,40px)] font-extrabold leading-[1.1] tracking-[-0.03em]';
+
 interface SectionHeadingProps {
   title: string;
   body?: string;
@@ -79,11 +88,11 @@ export function SectionHeading({ title, body, level = 2, className }: SectionHea
       {/* Sized off the viewport rather than at breakpoints, and balanced: these
           headings are a few words in English and can be half again as long in
           Spanish or Persian, so the wrap has to be the browser's call. */}
-      <Heading className="text-balance text-[clamp(28px,3.6vw,40px)] font-extrabold leading-[1.05] tracking-[-0.03em]">
+      <Heading className={SECTION_TITLE}>
         {title}
       </Heading>
       {body && (
-        <p className="mt-4 text-pretty text-body-large leading-[1.7] text-on-surface-variant">
+        <p className="mt-4 max-w-[65ch] text-pretty text-body-large leading-[1.7] text-on-surface-variant">
           {body}
         </p>
       )}
@@ -159,7 +168,7 @@ export function ClaimList({ claims, className }: { claims: readonly Claim[]; cla
         <li key={title} className="flex gap-3.5">
           <Icon className="mt-0.5 h-4 w-4 shrink-0 text-on-surface-variant" aria-hidden />
           <div className="min-w-0">
-            <div className="text-[15px] font-semibold leading-[1.4]">{title}</div>
+            <div className="text-title-dense font-semibold">{title}</div>
             <p className="mt-1 text-body-medium text-on-surface-variant">{body}</p>
           </div>
         </li>

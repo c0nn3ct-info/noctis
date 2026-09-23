@@ -13,8 +13,11 @@
 
     --ease-emph: cubic-bezier(0.2, 0, 0, 1);
     --ease-emph-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
-    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --ease-spring-standard: cubic-bezier(0.27, 1.06, 0.18, 1.0);
+    /* The extension's own spring, which barely passes its target. The site used
+     * to carry the generic backOut (1.56) under this name, so the popup mock
+     * overshot by 10% where the popup it copies does not. */
+    --ease-spring: cubic-bezier(0.27, 1.06, 0.18, 1);
+    --ease-spring-standard: var(--ease-spring);
     --dur-x-short: 80ms;
     --dur-short: 120ms;
     --dur-med: 250ms;
@@ -614,6 +617,48 @@
     );
   }
 
+  /* An FAQ answer opens on the chevron's own curve and duration, rather than
+   * snapping while the chevron turns. `::details-content` and
+   * `interpolate-size` are recent; where either is missing the selector or the
+   * keyword is dropped and the panel snaps as it always did. */
+  .faq-details {
+    interpolate-size: allow-keywords;
+  }
+  .faq-details::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size var(--dur-med) var(--ease-emph),
+      content-visibility var(--dur-med) allow-discrete;
+  }
+  .faq-details[open]::details-content {
+    block-size: auto;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faq-details::details-content {
+      transition: none;
+    }
+  }
+
+  /* A routing lane drawn down the table as an outline: its sides on every
+   * row, its cap on the first and its foot on the last. One rule with the
+   * stroke alpha as a variable, where it used to be six hand-typed
+   * inset-shadow strings; `lane-edge-faint` is the lane the request skipped. */
+  .lane-edge {
+    --lane-a: 0.45;
+    --lane-s: hsl(var(--dir) / var(--lane-a));
+    box-shadow: inset 1px 0 0 var(--lane-s), inset -1px 0 0 var(--lane-s);
+  }
+  .lane-edge-faint {
+    --lane-a: 0.12;
+  }
+  .lane-edge.lane-cap {
+    box-shadow: inset 1px 0 0 var(--lane-s), inset -1px 0 0 var(--lane-s), inset 0 1px 0 var(--lane-s);
+  }
+  .lane-edge.lane-foot {
+    box-shadow: inset 1px 0 0 var(--lane-s), inset -1px 0 0 var(--lane-s), inset 0 -1px 0 var(--lane-s);
+  }
+
   /* Animate border-radius for M3 Expressive shape morph. */
   .shape-morph {
     transition: border-radius var(--dur-med) var(--ease-spring-standard);
@@ -692,10 +737,10 @@
 /* One-sided: the resting state is the finished one, so an element whose
  * animation never runs is already where it belongs.
  *
- * Nothing slides and nothing scales. The page is a manifest, and a manifest
- * arrives by being printed: the element is clipped and the clip opens, down the
- * page for a block and along the reading line for a sequence. Clip and opacity
- * only — no transform, so a row cannot arrive from somewhere it never was. */
+ * `reveal` and `line` neither slide nor scale: the element is clipped and the
+ * clip opens, down the page for a block and along the reading line for a
+ * sequence. `soft`, which the landing uses, is the one that moves, and only by
+ * a 12px rise under a hair of scale (see the note on it above). */
 @keyframes enter-reveal {
   from {
     opacity: 0;
@@ -763,12 +808,6 @@
   }
   .shape-morph {
     transition: none !important;
-  }
-  /* The capability lanes are the one place on the page where readable content
-   * is in motion, so stopping them is not optional — a stopped lane is simply
-   * a row that overflows and can be scrolled. */
-  .animate-lane-drift {
-    animation: none !important;
   }
   html {
     scroll-behavior: auto !important;

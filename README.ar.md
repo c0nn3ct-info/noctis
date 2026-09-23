@@ -7,8 +7,8 @@
   </picture>
 </p>
 
-<p align="center"><strong>إضافة VLESS لمتصفّح Chrome</strong></p>
-<p align="center"><em>وجّه ترافيك المتصفّح عبر وكلائك الخاصين — دون VPN على مستوى النظام.</em></p>
+<p align="center"><strong>عميل وكيل لـ sing-box وxray-core وmihomo</strong></p>
+<p align="center"><em>خوادمك الخاصة VLESS وTrojan وShadowsocks وWireGuard — من المتصفّح.</em></p>
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn"><img src="https://img.shields.io/chrome-web-store/v/nmhobajopepdpihahepaddpdifdcenpn?label=Chrome%20Web%20Store&color=4285F4" alt="Chrome Web Store"></a>
@@ -25,13 +25,13 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis وكيل للمتصفّح — وليس VPN على مستوى النظام. يُوجَّه ترافيك Chrome وحده؛ أمّا بقية نظام التشغيل فتبقى على اتصالك الحقيقي. الإضافة مجانية بترخيص EULA مملوك؛ والمكوّن المحلي مفتوح المصدر (MIT).
+> يوجّه Noctis المتصفّح المثبَّت فيه، لا الجهاز كله — أمّا بقية نظام التشغيل فتبقى على اتصالها. الإضافة مجانية بترخيص EULA مملوك؛ والمكوّن المحلي مفتوح المصدر (MIT).
 
-Noctis إضافة متصفّح مجانية توجّه ترافيك Chrome عبر خوادم VLESS وVMess وTrojan وShadowsocks وHysteria2 وReality وغيرها من خلال مكوّن محلي يشغّل محرّك وكيل قابلًا للتبديل — sing-box أو xray-core أو mihomo. لا VPN على مستوى النظام، ولا نافذة عميل منفصلة — يبقى التوكيل داخل المتصفّح.
+Noctis عميل وكيل مجاني لـ VLESS وVMess وTrojan وShadowsocks وHysteria2 وTUIC وWireGuard وغيرها. يحفظ خوادمك واشتراكاتك وقواعد توجيهك، ويشغّل المحرّك الذي يحتاجه كل خادم. يصدر اليوم كإضافة لـ Chrome مع مكوّن محلي: الإضافة هي لوحة التحكّم، والمكوّن يشرف على المحرّك.
 
 ## ✨ المزايا
 
-- **محرّك وكيل قابل للتبديل** — يأتي Noctis مع sing-box ويمكنه أيضًا تشغيل xray-core أو mihomo، ويختار تلقائيًا المحرّك الذي يحتاجه كل خادم — فيعمل xhttp وتدفّقات REALITY-vision وSnell وغيرها ببساطة.
+- **ثلاثة محرّكات، واحد لكل خادم** — تأتي sing-box وxray-core وmihomo معًا ويختار Noctis ما يحتاجه كل خادم: يشغّل sing-box كل بروتوكول يقرؤه، وxray-core وحده يبني xhttp، وmihomo يكرّر مجموعة sing-box دون ShadowTLS.
 - **خوادم من روابط المشاركة أو رمز QR أو روابط الاشتراك** — الصق `vless://` أو `vmess://` أو `trojan://` أو `ss://` أو `hysteria2://` أو `tuic://` أو `wireguard://` — أو امسح رمز QR. تتحدّث روابط الاشتراك تلقائيًا وفق جدول زمني.
 - **توجيه لكل قاعدة** — طابِق حسب النطاق أو GeoSite أو GeoIP. توجّه كل قاعدة إلى الوكيل أو مباشر أو حظر.
 - **ثلاثة أوضاع توجيه** — الوضع الشامل يرسل كل شيء عبر الوكيل. وضع القواعد يوجّه المطابقات فقط. الوضع المباشر يتجاوز الوكيل بالكامل.
@@ -46,7 +46,7 @@ Noctis إضافة متصفّح مجانية توجّه ترافيك Chrome عب�
 
 `VLESS` · `VLESS Reality` · `VMess` · `Trojan` · `Shadowsocks` · `Hysteria/2` · `TUIC` · `WireGuard` · `AnyTLS` · `ShadowTLS`
 
-يدعم Noctis: VLESS (بما في ذلك VLESS Reality) وVMess وTrojan وShadowsocks وHysteria2 وTUIC وWireGuard وAnyTLS وShadowTLS. تعمل إعدادات V2Ray وXray ولوحات 3X-UI كما هي — الصق رابط مشاركة أو رابط اشتراك وتترجمه الإضافة تلقائيًا إلى إعدادات المحرّك المناسب. يفتح xray قدرات xhttp/splithttp وأنواع تدفّق XTLS؛ ويضيف mihomo Snell وSSR وغيرها.
+يدعم Noctis: VLESS (بما في ذلك VLESS Reality) وVMess وTrojan وShadowsocks وHysteria2 وTUIC وWireGuard وAnyTLS وShadowTLS. تعمل إعدادات V2Ray وXray ولوحات 3X-UI كما هي — الصق رابط مشاركة أو رابط اشتراك وتترجمه الإضافة تلقائيًا إلى إعدادات المحرّك المناسب. يقبل كل محرّك TLS وReality وتدفّق XTLS vision؛ أمّا xhttp فهو لـ xray-core وحده.
 
 ## 🧩 كيف يعمل
 
@@ -71,7 +71,7 @@ Noctis إضافة متصفّح مجانية توجّه ترافيك Chrome عب�
                                             └──────────────────┘
 ```
 
-يأتي Noctis افتراضيًا مع sing-box ويمكنه أيضًا تشغيل xray-core وmihomo. يشرف مكوّن محلي صغير على المحرّك على جهازك، ويختار Noctis المحرّك المناسب لكل خادم تلقائيًا — فتعمل البروتوكولات التي لا يستطيع محرّك واحد التعامل معها ببساطة. يفتح xray قدرات xhttp/splithttp وأنواع تدفّق XTLS (REALITY-vision)؛ ويضيف mihomo Snell وSSR وMieru. لا ترسل إضافة المتصفّح سوى قرارات التوجيه — ولا ترسل أبدًا ترافيكًا خامًا.
+يأتي Noctis بـ sing-box وxray-core وmihomo معًا. يشرف مكوّن محلي صغير على المحرّك في جهازك، ويختار Noctis ما يحتاجه كل خادم: يشغّل sing-box كل بروتوكول يقرؤه، وxray-core وحده يبني xhttp، وmihomo يكرّر مجموعة sing-box دون ShadowTLS. ولا ترسل الإضافة سوى قرارات التوجيه — لا الترافيك نفسه.
 
 ## 🧭 قواعد التوجيه
 
@@ -159,7 +159,7 @@ VLESS بروتوكول وكيل خفيف من عائلة V2Ray/Xray. لا يحم
 نعم. ينقل Noctis معاملات Reality (Server Name وFingerprint وSNI وDest والمفتاح العام وShort ID) إلى المكوّن المحلي دون تغيير ويشغّل الخادم على محرّك يدعمها — يوفّر xray تدفّق XTLS-vision الكامل. الصق رابط مشاركة `vless://...flow=xtls-rprx-vision&security=reality` وتستورد الإضافة كل حقل.
 
 **ما بروتوكولات الوكيل التي يدعمها Noctis؟**
-VLESS وVMess وTrojan وShadowsocks وHysteria2 وTUIC وWireGuard وAnyTLS وShadowTLS — إضافةً إلى xhttp/splithttp وSnell وSSR وغيرها عبر xray وmihomo. وتعمل روابط مشاركة V2Ray وXray كما هي.
+VLESS وVMess وTrojan وShadowsocks وHysteria/2 وTUIC وWireGuard وAnyTLS وShadowTLS وSOCKS وHTTP — عبر tcp أو ws أو grpc أو httpupgrade أو http أو xhttp، مع TLS أو Reality أو تدفّق XTLS vision. وتعمل روابط مشاركة V2Ray وXray كما هي.
 
 **هل استخدام إضافة وكيل لـ Chrome آمن؟**
 أكثر أمانًا من معظمها. لا يرسل Noctis أي شيء إلى مطوّره — لا تحليلات ولا قياس عن بُعد ولا إعدادات بعيدة. تبقى إعدادات الخوادم في تخزين المتصفّح. يعمل المكوّن المحلي دون صلاحيات مسؤول. تجد قائمة الصلاحيات الكاملة ومبرّراتها في [سياسة الخصوصية](./site/PRIVACY.md).

@@ -7,8 +7,8 @@
   </picture>
 </p>
 
-<p align="center"><strong>Extensión VLESS para el navegador Chrome</strong></p>
-<p align="center"><em>Enruta el tráfico del navegador a través de tus propios proxies — sin una VPN de sistema.</em></p>
+<p align="center"><strong>Cliente proxy para sing-box, xray-core y mihomo</strong></p>
+<p align="center"><em>Tus propios servidores VLESS, Trojan, Shadowsocks y WireGuard, desde el navegador.</em></p>
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/noctis/nmhobajopepdpihahepaddpdifdcenpn"><img src="https://img.shields.io/chrome-web-store/v/nmhobajopepdpihahepaddpdifdcenpn?label=Chrome%20Web%20Store&color=4285F4" alt="Chrome Web Store"></a>
@@ -25,13 +25,13 @@
 </p>
 
 > [!IMPORTANT]
-> Noctis es un proxy para el navegador, no una VPN de sistema. Solo se enruta el tráfico de Chrome; el resto de tu sistema operativo se queda en tu conexión real. La extensión es gratuita bajo una EULA propietaria; el componente local es de código abierto (MIT).
+> Noctis enruta el navegador en el que está instalado, no toda la máquina: el resto de tu sistema operativo se queda en su propia conexión. La extensión es gratuita bajo una EULA propietaria; el componente nativo es de código abierto (MIT).
 
-Noctis es una extensión de navegador gratuita que enruta Chrome a través de VLESS, VMess, Trojan, Shadowsocks, Hysteria2, Reality y otros servidores proxy mediante un componente local que controla un motor de proxy modular: sing-box, xray-core o mihomo. Sin VPN de sistema, sin ventana de cliente aparte: el proxy se queda dentro del navegador.
+Noctis es un cliente proxy gratuito para VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard y más. Guarda tus servidores, tus suscripciones y tus reglas de enrutamiento, y arranca el motor que necesita cada servidor. Hoy se distribuye como extensión de Chrome con un componente local: la extensión es el panel de control y el componente supervisa el motor.
 
 ## ✨ Funciones
 
-- **Motor de proxy modular** — Noctis incluye sing-box y también puede controlar xray-core o mihomo, eligiendo automáticamente el motor que necesita cada servidor — así xhttp, los flujos REALITY-vision, Snell y más simplemente funcionan.
+- **Tres motores, uno por servidor** — sing-box, xray-core y mihomo vienen juntos y Noctis elige el que necesita cada servidor: sing-box ejecuta todos los protocolos que lee, xray-core es el único que construye xhttp y mihomo repite el conjunto de sing-box sin ShadowTLS.
 - **Servidores desde enlaces de compartir, QR o URL de suscripción** — Pega `vless://`, `vmess://`, `trojan://`, `ss://`, `hysteria2://`, `tuic://`, `wireguard://` — o escanea un código QR. Las URL de suscripción se actualizan automáticamente según un horario.
 - **Enrutamiento por reglas** — Coincidencia por dominio, GeoSite o GeoIP. Cada regla enruta a proxy, directo o bloqueo.
 - **Tres modos de enrutamiento** — Global envía todo a través del proxy. Rules solo enruta las coincidencias. Direct lo omite por completo.
@@ -46,7 +46,7 @@ Noctis es una extensión de navegador gratuita que enruta Chrome a través de VL
 
 `VLESS` · `VLESS Reality` · `VMess` · `Trojan` · `Shadowsocks` · `Hysteria/2` · `TUIC` · `WireGuard` · `AnyTLS` · `ShadowTLS`
 
-Noctis admite VLESS (incluido VLESS Reality), VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS y ShadowTLS. Las configuraciones de los paneles V2Ray, Xray y 3X-UI funcionan tal cual — pega un enlace de compartir o una URL de suscripción y la extensión la traduce automáticamente a la configuración del motor adecuado. xray habilita xhttp/splithttp y variantes de flujo XTLS; mihomo añade Snell, SSR y más.
+Noctis admite VLESS (incluido VLESS Reality), VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS y ShadowTLS. Las configuraciones de los paneles V2Ray, Xray y 3X-UI funcionan tal cual — pega un enlace de compartir o una URL de suscripción y la extensión la traduce automáticamente a la configuración del motor correspondiente. Cualquier motor acepta TLS, Reality y el flujo XTLS vision; xhttp es exclusivo de xray-core.
 
 ## 🧩 Cómo funciona
 
@@ -71,7 +71,7 @@ Los navegadores no pueden ejecutar por sí solos un motor de proxy. Tres piezas 
                                             └──────────────────┘
 ```
 
-Noctis incluye sing-box de forma predeterminada y también puede controlar xray-core y mihomo. Un pequeño componente local supervisa el motor en tu equipo, y Noctis elige el adecuado para cada servidor automáticamente — así los protocolos que un solo motor no puede manejar simplemente funcionan. xray habilita xhttp/splithttp y las variantes de flujo XTLS (REALITY-vision); mihomo añade Snell, SSR y Mieru. La extensión del navegador solo envía decisiones de enrutamiento, nunca tráfico en bruto.
+Noctis incluye sing-box, xray-core y mihomo a la vez. Un pequeño componente nativo supervisa el motor en tu equipo y Noctis elige el que necesita cada servidor: sing-box ejecuta todos los protocolos que Noctis lee, xray-core es el único que construye xhttp y mihomo repite el conjunto de sing-box sin ShadowTLS. La extensión solo envía decisiones de enrutamiento, nunca tráfico en bruto.
 
 ## 🧭 Reglas de enrutamiento
 
@@ -159,7 +159,7 @@ Una VPN tuneliza todas las aplicaciones de tu sistema a través de una única co
 Sí. Noctis pasa los parámetros de Reality (Server Name, Fingerprint, SNI, Dest, clave pública, short ID) al componente local sin modificarlos y ejecuta el servidor en un motor que los admite — xray ofrece el flujo XTLS-vision completo. Pega un enlace de compartir `vless://...flow=xtls-rprx-vision&security=reality` y la extensión importa todos los campos.
 
 **¿Qué protocolos de proxy admite Noctis?**
-VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, WireGuard, AnyTLS y ShadowTLS — además de xhttp/splithttp, Snell, SSR y más mediante xray y mihomo. Los enlaces de compartir de V2Ray y Xray funcionan tal cual.
+VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard, AnyTLS, ShadowTLS, SOCKS y HTTP — sobre tcp, ws, grpc, httpupgrade, http o xhttp, con TLS, Reality o el flujo XTLS vision. Los enlaces de V2Ray y Xray funcionan tal cual.
 
 **¿Es seguro usar una extensión proxy de Chrome?**
 Más segura que la mayoría. Noctis no envía nada a su desarrollador — ni analíticas, ni telemetría, ni configuración remota. Las configuraciones de servidor se quedan en el almacenamiento del navegador. El componente local se ejecuta sin permisos de administrador. La lista completa de permisos y su justificación están en la [política de privacidad](./site/PRIVACY.md).

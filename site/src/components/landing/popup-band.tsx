@@ -6,7 +6,7 @@
 // The switch is aria2t's too, with the terminal client marked as coming: the
 // TUI is real and in progress in `host/cmd/noctis`, but it has not shipped, so
 // the band shows it rather than offering it.
-import { Activity, MousePointerClick, Puzzle } from 'lucide-react';
+import { Activity, Gauge, MousePointerClick, Puzzle } from 'lucide-react';
 import { BrowserMock } from '@/components/browser-mock';
 import { PopupMock } from '@/components/popup-mock';
 import { t } from '@/i18n';
@@ -61,6 +61,11 @@ const CLAIMS: readonly Claim[] = [
   { icon: MousePointerClick, title: 'home.popup.c1.title', body: 'home.popup.c1.body' },
   { icon: Puzzle, title: 'home.popup.c2.title', body: 'home.popup.c2.body' },
   { icon: Activity, title: 'home.popup.c3.title', body: 'home.popup.c3.body' },
+  /* Latency came here when the capability lanes went. It is the one thing they
+   * said that nothing else on the page or in the FAQ says, and the mock beside
+   * these claims is already drawing the pip it describes — so it is a caption
+   * for something visible rather than a card standing in for it. */
+  { icon: Gauge, title: 'home.popup.c4.title', body: 'home.popup.c4.body' },
 ].map((c) => ({ ...c }));
 
 export function PopupBand() {

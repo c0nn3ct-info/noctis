@@ -59,16 +59,6 @@ describe('HomePage', () => {
     expect(hero.getByText('VLESS')).toHaveClass('h-9', 'sm:h-10');
   });
 
-  it('holds the matrix to one width, so the marks never drift from their names', () => {
-    const { container } = render(<HomePage />);
-
-    // Below `lg` the band is one column and the table used to take all of it:
-    // at 834 the name column ran 355px before the first mark. The cap is the
-    // same 660 the desktop grid gives it, so the table reads the same way at
-    // every width.
-    expect(container.querySelector('#protocols table')).toHaveClass('max-w-[660px]');
-  });
-
   it('names no protocol in the hero the grid below does not list', () => {
     render(<HomePage />);
 
@@ -90,53 +80,29 @@ describe('HomePage', () => {
     const bands = Array.from(container.querySelectorAll('main section[data-enter-section]'));
     expect(bands.map((b) => b.querySelector('h2')?.textContent)).toEqual([
       t('home.popup.h2'),
+      t('home.routing.h2'),
       t('home.protocols.h2'),
       t('home.anatomy.h2'),
-      t('home.caps.h2'),
-      t('home.arch.h2'),
+      t('home.subs.h2'),
       t('home.faq.h2'),
     ]);
   });
 
-  it('backs the table with the two things it cannot say itself', () => {
-    render(<HomePage />);
-
-    // The table answers what runs where. Who picks, and when a format that no
-    // engine can build gets named, are `selectCore` and
-    // `serverUnsupportedReasons` — neither is a cell.
-    expect(screen.getByText(t('home.protocols.c1.title'))).toBeInTheDocument();
-    expect(screen.getByText(t('home.protocols.c2.body'))).toBeInTheDocument();
-  });
-
-  it('answers both axes in one table rather than in five stacked blocks', () => {
+  it('answers the engine band with three tiles rather than a grid of marks', () => {
     const { container } = render(<HomePage />);
 
-    // The band was a tile grid labelled by engine coverage, a rule, a
-    // paragraph about transports, a second label, and three engine rows in a
-    // different visual language. All of it is rows under three columns now.
+    // It was twenty-two rows by three columns: sixty-six marks, nine of which
+    // said only that the three engines agree about TLS.
     const protocols = container.querySelector('#protocols') as HTMLElement;
-    expect(protocols.querySelectorAll('table')).toHaveLength(1);
-    expect(within(protocols).getByRole('button', { name: t('home.matrix.group.transports') })).toBeInTheDocument();
-    expect(container.querySelector('#engine')).toBeNull();
+    expect(protocols.querySelector('table')).toBeNull();
+    expect(protocols.querySelectorAll('button[data-engine]')).toHaveLength(3);
+    expect(protocols.querySelectorAll('[data-chosen]')).toHaveLength(1);
+    // The same twenty-two capabilities are there, grouped by who runs them.
+    expect(protocols.querySelectorAll('[data-reach]')).toHaveLength(4);
+    expect(protocols.querySelectorAll('[data-capability]')).toHaveLength(PROTOCOLS.length + 9);
+    // And the claims beside it are gone with it: the tiles are the claim.
     expect(protocols.querySelector('[data-tile]')).toBeNull();
-    expect(protocols.querySelector('[data-engine]')).toBeNull();
-  });
-
-  it('themes the scrollbar it puts on the page', () => {
-    const { container } = render(<HomePage />);
-
-    // Left alone it is the platform's, which on Windows is a 16px grey trough
-    // against a dark page.
-    expect(container.querySelector('#protocols .overflow-x-auto')).toHaveClass('scrollbar-quiet');
-  });
-
-  it('lets the table scroll sideways without the page doing it', () => {
-    const { container } = render(<HomePage />);
-
-    // Three columns and a name need about 600px. The band clips rather than
-    // pushing the document wider, which is the one exception the page makes.
-    const scroller = container.querySelector('#protocols .overflow-x-auto');
-    expect(scroller?.querySelector('table')).not.toBeNull();
+    expect(container.querySelector('#engine')).toBeNull();
   });
 
   it('opens no band with a kicker over its heading', () => {
@@ -145,7 +111,7 @@ describe('HomePage', () => {
     // A heading carries its own weight, and a label above one repeats the
     // section name into the outline for nothing. aria2t's shell took the
     // pattern out; this page followed.
-    for (const key of ['protocols', 'anatomy', 'caps', 'arch', 'engines']) {
+    for (const key of ['protocols', 'routing', 'anatomy', 'engines']) {
       expect(screen.queryByText(t(`home.${key}.eyebrow`))).toBeNull();
     }
     expect(container.querySelectorAll('[data-kicker]')).toHaveLength(0);
@@ -176,13 +142,18 @@ describe('HomePage', () => {
     expect(last.getByText(t('home.faq.no_answer'))).toBeInTheDocument();
   });
 
-  it('backs the anatomy panel with the three facts it demonstrates', () => {
+  it('lets the anatomy panel make the band’s case on its own', () => {
     render(<HomePage />);
 
-    expect(screen.getByText(t('home.anatomy.p1'))).toBeInTheDocument();
-    expect(screen.getByText(t('home.anatomy.p3'))).toBeInTheDocument();
     // The panel itself is the proof: a field, not a picture of one.
     expect(screen.getByRole('textbox', { name: t('home.anatomy.input_aria') })).toBeInTheDocument();
+    // And it ends on the engine the pasted link asks for, which is what the
+    // band is for.
+    expect(screen.getByText(t('home.anatomy.engine_any'))).toBeInTheDocument();
+    // The three points beside it are gone: they wrote down what the panel
+    // draws — which fields decide, and which engine ends up running the link —
+    // and a band that captions its own figure is read twice.
+    expect(screen.queryByText(/decide how the tunnel works/i)).toBeNull();
   });
 
   it('puts the figure behind the copy and fades it out under the words', () => {
@@ -258,10 +229,12 @@ describe('HomePage', () => {
     expect(container.querySelector('.animate-aurora-drift')).toBeNull();
   });
 
-  it('reuses the live page’s architecture diagram rather than redrawing it', () => {
+  it('leaves the sandbox boundary to the install page', () => {
     render(<HomePage />);
 
-    expect(screen.getByRole('region', { name: t('home.diagram.aria') })).toBeInTheDocument();
+    // The diagram answers "why is there a helper", which is a question a
+    // visitor has after deciding to install rather than before.
+    expect(screen.queryByRole('region', { name: t('home.diagram.aria') })).toBeNull();
   });
 
   it('sits in the site chrome, at the page’s own width', () => {
