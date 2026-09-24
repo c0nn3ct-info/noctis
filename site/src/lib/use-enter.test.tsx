@@ -191,9 +191,34 @@ describe('useSectionEntrance', () => {
     // edge across the element, which is what read as a block snapping in.
     expect(played).toHaveLength(3);
     for (const p of played) {
-      expect(p.frames[0]).toEqual({ opacity: 0, transform: 'translateY(12px) scale(0.985)' });
+      expect(p.frames[0]).toEqual({ opacity: 0, transform: 'translateY(32px) scale(0.96)' });
       expect(p.frames[1]).toEqual({ opacity: 1, transform: 'none' });
       expect(p.frames[0].clipPath).toBeUndefined();
+    }
+  });
+
+  it('fades the parts of a framed block in by opacity alone', () => {
+    function FramedPage() {
+      useSectionEntrance();
+      return (
+        <div data-enter-section data-testid="framed-band">
+          <div data-enter="soft">
+            <ul data-enter-stagger="fade">
+              <li>one</li>
+              <li>two</li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+    const { getByTestId } = render(<FramedPage />);
+    observers[0].fire([getByTestId('framed-band')]);
+
+    // The frame rises; its rows only fade, so the two movements do not add.
+    expect(played).toHaveLength(3);
+    expect(played[0].frames[0].transform).toBe('translateY(32px) scale(0.96)');
+    for (const p of played.slice(1)) {
+      expect(p.frames).toEqual([{ opacity: 0 }, { opacity: 1 }]);
     }
   });
 

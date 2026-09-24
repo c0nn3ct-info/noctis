@@ -54,7 +54,7 @@ export function RoutingBand({ className }: { className?: string }) {
 
   return (
     <div className={cn('grid items-start gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-9', className)}>
-      <div className="flex flex-col gap-2">
+      <div data-enter-stagger="soft" className="flex flex-col gap-2">
         {MODES.map((m) => {
           const on = m === mode;
           return (
@@ -109,7 +109,13 @@ export function RoutingBand({ className }: { className?: string }) {
       {/* Below `lg` the table keeps its width and scrolls: four columns and a
           230px request need about 700px, and reflowed into a phone the lanes
           stop being lanes. */}
-      <div className="scrollbar-quiet -mx-5 overflow-x-auto px-5 lg:mx-0 lg:overflow-visible lg:px-0">
+      {/* One piece: the rule column's cells carry an opacity of their own for
+          the modes that read no rule, and a row-by-row fade over them would
+          show the column for as long as it ran. */}
+      <div
+        data-enter="soft"
+        className="scrollbar-quiet -mx-5 overflow-x-auto px-5 lg:mx-0 lg:overflow-visible lg:px-0"
+      >
         <div
           className="grid min-w-[680px] transition-[grid-template-columns] duration-long ease-emph lg:min-w-0"
           style={{ gridTemplateColumns: `230px ${byRule ? '170px' : '0px'} repeat(3, minmax(0, 1fr))` }}

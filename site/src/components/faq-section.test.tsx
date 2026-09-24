@@ -161,3 +161,13 @@ describe('FaqList motion', () => {
     expect(details).toHaveAttribute('data-expanded');
   });
 });
+
+describe('FaqList arrival', () => {
+  it('hands each question its own arrival only when asked', () => {
+    const plain = render(<FaqList />);
+    expect(plain.container.firstElementChild).not.toHaveAttribute('data-enter-stagger');
+    plain.unmount();
+    const { container } = render(<FaqList stagger="soft" />);
+    expect(container.firstElementChild).toHaveAttribute('data-enter-stagger', 'soft');
+  });
+});

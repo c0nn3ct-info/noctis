@@ -232,9 +232,9 @@ export function HomePage() {
             className="max-w-[760px]"
           />
         </div>
-        <div data-enter="soft">
-          <RoutingBand />
-        </div>
+        {/* Its parts arrive on their own: the three mode tiles one after
+            another, then the table. */}
+        <RoutingBand />
       </LandingSection>
 
       {/* One band, one claim: all three engines ship, and Noctis starts the
@@ -255,9 +255,9 @@ export function HomePage() {
             className="max-w-[760px]"
           />
         </div>
-        <div data-enter="soft">
-          <EngineReach />
-        </div>
+        {/* The tiles and each group row arrive on their own, so the band
+            fills down the page instead of landing as one block. */}
+        <EngineReach />
       </LandingSection>
 
       <LandingSection id="anatomy">

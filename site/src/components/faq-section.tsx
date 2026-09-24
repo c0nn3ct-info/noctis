@@ -21,6 +21,12 @@ export const FAQ_KEYS = [
 
 interface FaqListProps {
   /**
+   * Hands each question its own arrival, for a page that animates its bands.
+   * An opt-in, because this list is shared and the entrance rules are global:
+   * a page that passes nothing gets a list that simply is there.
+   */
+  stagger?: 'soft';
+  /**
    * `card` is the boxed list the home page has always shown; `flush` draws the
    * same entries as bare rows separated by rules, for a page that frames them
    * itself (the reworked landing's two-column band).
@@ -97,9 +103,10 @@ export function syncExpanded(e: React.SyntheticEvent<HTMLDetailsElement>): void 
   if (!d.hasAttribute('data-closing')) d.toggleAttribute('data-expanded', d.open);
 }
 
-export function FaqList({ variant = 'card', openFirst = false, className }: FaqListProps) {
+export function FaqList({ variant = 'card', openFirst = false, className, stagger }: FaqListProps) {
   return (
     <div
+      data-enter-stagger={stagger}
       className={cn(
         'divide-y divide-outline-variant',
         variant === 'card' &&

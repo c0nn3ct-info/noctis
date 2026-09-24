@@ -151,11 +151,12 @@ export function SubscriptionBand({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'grid overflow-hidden rounded-lg border border-surface-container-high lg:grid-cols-[320px_minmax(0,1fr)]',
+        // `clip`, not `hidden`, so the rows' view timelines see the page.
+        'grid overflow-clip rounded-lg border border-surface-container-high lg:grid-cols-[320px_minmax(0,1fr)]',
         className,
       )}
     >
-      <div className="grid grid-cols-[28px_minmax(0,1fr)] gap-6 bg-surface-container-low p-7">
+      <div data-enter="fade" className="grid grid-cols-[28px_minmax(0,1fr)] gap-6 bg-surface-container-low p-7">
         {/* The plan as a column: what has been spent fills it from the bottom,
             down first because down is what a plan is spent on. 
           *
@@ -287,7 +288,13 @@ export function SubscriptionBand({ className }: { className?: string }) {
       <div className="flex flex-col bg-surface-container-lowest">
         {/* The rows are placed rather than stacked, so sorting moves them to
             their new positions instead of redrawing the list in a new order. */}
-        <div className="relative" style={{ height: `${SERVERS.length * ROW}px` }}>
+        {/* Opacity alone: the rows already hold a transform of their own, the
+            position their sort puts them at. */}
+        <div
+          data-enter-stagger="fade"
+          className="relative"
+          style={{ height: `${SERVERS.length * ROW}px` }}
+        >
           {SERVERS.map((server, i) => {
             const position = order.indexOf(i);
             const ms = Math.round(reading.pings[i]);
@@ -355,7 +362,7 @@ export function SubscriptionBand({ className }: { className?: string }) {
           })}
         </div>
 
-        <p className="mt-auto border-t border-surface-container px-7 py-5 text-body-medium text-on-surface-variant [text-wrap:pretty]">
+        <p data-enter="fade" className="mt-auto border-t border-surface-container px-7 py-5 text-body-medium text-on-surface-variant [text-wrap:pretty]">
           {t('home.subs.reported')}
         </p>
       </div>

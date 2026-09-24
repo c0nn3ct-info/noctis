@@ -74,7 +74,9 @@ export function LinkAnatomy({ className }: { className?: string }) {
       className={cn(
         // `rounded-md` is 16px, the radius this site gives a container of data —
         // the FAQ's frame, the diagram's scroller, the language menu.
-        'overflow-hidden rounded-md border border-surface-container-high bg-surface-container-lowest',
+        // `clip`, not `hidden`: a hidden overflow is a scroll container, and the
+        // entries' view timelines would bind to this card instead of the page.
+        'overflow-clip rounded-md border border-surface-container-high bg-surface-container-lowest',
         // The caret and the highlight in the field ship as Chrome's unless a
         // palette claims them, which is the cheapest tell that a surface was
         // assembled rather than built.
@@ -260,6 +262,8 @@ function Entries({
 }) {
   return (
     <div
+      // The entries come up one by one inside the card that brought them.
+      data-enter-stagger="fade"
       className={cn(
         'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
         '[&>*]:border-surface-container',
@@ -341,6 +345,7 @@ function Rail({
   return (
     <div
       data-rail
+      data-enter="fade"
       data-state={hover === 'engine' ? 'active' : 'plain'}
       onMouseEnter={() => onHover('engine')}
       onMouseLeave={() => onHover(null)}

@@ -34,7 +34,9 @@ export function repoLabel(url: string): string {
 export function FaqBand({ className }: { className?: string }) {
   return (
     <div className={cn('grid gap-10 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-20', className)}>
-      <div data-enter="soft">
+      {/* The heading, its sentence, the two contacts and the button arrive
+          one after another rather than as one column. */}
+      <div data-enter-stagger="soft">
         <h2 className={SECTION_TITLE}>
           {t('home.faq.h2')}
         </h2>
@@ -77,12 +79,10 @@ export function FaqBand({ className }: { className?: string }) {
         <InstallButton block className="mt-8" />
       </div>
 
-      {/* Wrapped, and as one object rather than a stagger: `FaqList` is the
-          live home page's list too, and the entrance rules are global, so an
-          attribute inside it would animate a page that never asked. */}
-      <div data-enter="soft">
-        <FaqList variant="flush" openFirst />
-      </div>
+      {/* Each question arrives by its own position. `FaqList` is shared, so
+          the stagger is its opt-in prop rather than an attribute reached into
+          it from here. */}
+      <FaqList variant="flush" openFirst stagger="soft" />
     </div>
   );
 }

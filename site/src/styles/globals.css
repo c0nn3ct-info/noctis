@@ -13,6 +13,8 @@
 
     --ease-emph: cubic-bezier(0.2, 0, 0, 1);
     --ease-emph-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
+    /* Material's emphasized accelerate: the curve for something leaving. */
+    --ease-emph-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
     /* The extension's own spring, which barely passes its target. The site used
      * to carry the generic backOut (1.56) under this name, so the popup mock
      * overshot by 10% where the popup it copies does not. */
@@ -724,11 +726,72 @@
     /* `soft` is the aria2t site's own gesture, and the reworked landing page
      * uses it throughout. The clip reveal above opens a hard edge across the
      * element, which on a band of thirteen tiles or three full-width rows reads
-     * as the block snapping in rather than arriving. A 12px rise under a
-     * hair of scale says the same thing without an edge to catch the eye. */
+     * as the block snapping in rather than arriving. A rise under a little
+     * scale says the same thing without an edge to catch the eye.
+     *
+     * It leaves as well as arrives. Going up past the top of the window a
+     * block lifts and fades, which is what makes the page read as passing
+     * the reader rather than as a strip that only ever fills in. The exit
+     * runs over the last 22% of the block's pass through the window, on an
+     * accelerating curve, so most of the fade lands at the edge: a heading
+     * visibly goes before the sticky header covers it, and a tall panel is
+     * at full strength while its lower half is being read. It fills forwards
+     * only: before its range it has no effect, and the arrival owns the
+     * element. */
     [data-enter='soft'],
     [data-enter-stagger='soft'] > * {
-      animation-name: enter-soft;
+      animation:
+        enter-soft var(--ease-emph-decel) backwards,
+        exit-soft var(--ease-emph-accel) forwards;
+      animation-timeline: view(), view();
+      animation-range:
+        cover 0% cover 30%,
+        cover 78% cover 100%;
+    }
+    /* A row of parts side by side shares one position, so it would arrive as
+     * one block. Each of the first few steps a little later along the pass,
+     * which reads as the row filling left to right; down a column the same
+     * offsets are a few pixels of lag, too small to see. */
+    [data-enter-stagger='soft'] > :nth-child(2) {
+      animation-range: cover 3% cover 33%, cover 78% cover 100%;
+    }
+    [data-enter-stagger='soft'] > :nth-child(3) {
+      animation-range: cover 6% cover 36%, cover 78% cover 100%;
+    }
+    /* From the fourth on the offset stays put: past it every part is lower
+     * down the page than the one before, and a larger step for each would
+     * only slow a long column. A fifth on the base range would overtake the
+     * fourth. */
+    [data-enter-stagger='soft'] > :nth-child(n + 4) {
+      animation-range: cover 9% cover 39%, cover 78% cover 100%;
+    }
+    /* The arrival fills backwards only. Held past its range, a finished
+     * arrival would keep writing `transform: none` and `opacity: 1` over the
+     * element's own styles for as long as it is on screen, and the install
+     * button's press scale and a collapsed column's opacity-0 would lose. */
+
+    /* `fade` is for the parts inside a framed block: the card arrives by
+     * `soft` and its rows come up after it, by opacity alone, so the two
+     * movements do not add and nothing slides out past the card's edge. A
+     * little later in the pass than the frame, and each row by its own
+     * position, which is what makes them follow each other down the card. */
+    [data-enter='fade'],
+    [data-enter-stagger='fade'] > * {
+      animation: enter-fade var(--ease-emph-decel) backwards;
+      animation-timeline: view();
+      animation-range: cover 4% cover 32%;
+    }
+    /* The same steps for faded parts. Here they matter more: the server rows
+     * are placed by a transform, which a view timeline does not see, so all
+     * three share one position and only the steps set them apart. */
+    [data-enter-stagger='fade'] > :nth-child(2) {
+      animation-range: cover 8% cover 36%;
+    }
+    [data-enter-stagger='fade'] > :nth-child(3) {
+      animation-range: cover 12% cover 40%;
+    }
+    [data-enter-stagger='fade'] > :nth-child(n + 4) {
+      animation-range: cover 16% cover 44%;
     }
     [dir='rtl'] [data-enter='wipe'],
     [dir='rtl'] [data-enter-stagger='wipe'] > * {
@@ -743,7 +806,8 @@
  * `reveal` and `line` neither slide nor scale: the element is clipped and the
  * clip opens, down the page for a block and along the reading line for a
  * sequence. `soft`, which the landing uses, is the one that moves, and only by
- * a 12px rise under a hair of scale (see the note on it above). */
+ * a 32px rise under a little scale, and leaves by a lift (see the note on it
+ * above). */
 @keyframes enter-reveal {
   from {
     opacity: 0;
@@ -753,7 +817,18 @@
 @keyframes enter-soft {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.985);
+    transform: translateY(32px) scale(0.96);
+  }
+}
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes exit-soft {
+  to {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.97);
   }
 }
 @keyframes enter-line {

@@ -88,7 +88,10 @@ export function EngineReach({ className }: { className?: string }) {
         *
           The row is a size container so the sentences below can be set at
           the width the chosen tile will have, in `cqw`, before it has it. */}
-      <div className="flex flex-col gap-3 lg:min-h-[210px] lg:flex-row lg:[container-type:inline-size]">
+      <div
+        data-enter-stagger="soft"
+        className="flex flex-col gap-3 lg:min-h-[210px] lg:flex-row lg:[container-type:inline-size]"
+      >
         {ENGINES.map((e) => {
           const chosen = e.key === engine;
           return (
@@ -197,7 +200,7 @@ export function EngineReach({ className }: { className?: string }) {
         })}
       </div>
 
-      <div className="flex flex-col">
+      <div data-enter-stagger="soft" className="flex flex-col">
         {groups.map((group, i) => {
           const runs = group.engines.includes(engine);
           return (

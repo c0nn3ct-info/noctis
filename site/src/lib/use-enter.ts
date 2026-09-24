@@ -64,11 +64,14 @@ function keyframes(gesture: string, rtl: boolean): Keyframe[] {
   // under a hair of scale, with no edge for the eye to catch.
   if (gesture === 'soft') {
     return [
-      { opacity: 0, transform: 'translateY(12px) scale(0.985)' },
+      { opacity: 0, transform: 'translateY(32px) scale(0.96)' },
       { opacity: 1, transform: 'none' },
     ];
   }
   // A sequence arrives along the line it is read on.
+  if (gesture === 'fade') {
+    return [{ opacity: 0 }, { opacity: 1 }];
+  }
   if (gesture === 'wipe') {
     return [
       { opacity: 0, clipPath: rtl ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' },
