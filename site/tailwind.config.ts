@@ -176,6 +176,19 @@ export default {
         // A dense title between body-medium and body-large: claim titles, CTA
         // labels and the mono values in the landing's tables.
         'title-dense':     ['15px', { lineHeight: '21px', letterSpacing: '0px' }],
+        // The landing's own steps, named by the job they do. Every one of them
+        // was a hand-typed `text-[Npx]`, eleven sizes in thirty-four places;
+        // 18 and 19 were one step spelled twice, and so were 22 and 24. No
+        // tracking or weight, and the 1.5 line height those spans inherited,
+        // so the move to names changes no rendering beyond those two merges.
+        'meta':            ['13px', { lineHeight: '1.5' }],
+        'caption':         ['14px', { lineHeight: '1.5' }],
+        'value':           ['16px', { lineHeight: '1.5' }],
+        'title-card':      ['19px', { lineHeight: '1.5' }],
+        'lead':            ['20px', { lineHeight: '1.5' }],
+        'title-plan':      ['24px', { lineHeight: '1.5' }],
+        'figure':          ['44px', { lineHeight: '1.5' }],
+        'figure-large':    ['72px', { lineHeight: '1.5' }],
         'label-medium':    ['12px', { lineHeight: '16px', letterSpacing: '0.5px',  fontWeight: '500' }],
         'label-small':     ['11px', { lineHeight: '16px', letterSpacing: '0.5px',  fontWeight: '500' }],
         'body-large':      ['16px', { lineHeight: '24px', letterSpacing: '0.5px' }],

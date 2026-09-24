@@ -275,8 +275,8 @@ describe('LinkAnatomy', () => {
     // caret: the input's own text is transparent and it scrolls the copy with
     // it. Both have to carry the same metrics or the two fall out of register.
     const mirror = container.querySelector('[data-mirror]') as HTMLElement;
-    expect(mirror).toHaveClass('font-mono', 'text-[15px]', 'leading-[1.6]', 'py-3', 'whitespace-pre');
-    expect(field()).toHaveClass('font-mono', 'text-[15px]', 'leading-[1.6]', 'py-3', 'text-transparent');
+    expect(mirror).toHaveClass('font-mono', 'text-title-dense', 'leading-[1.6]', 'py-3', 'whitespace-pre');
+    expect(field()).toHaveClass('font-mono', 'text-title-dense', 'leading-[1.6]', 'py-3', 'text-transparent');
     expect(mirror).toHaveAttribute('aria-hidden');
   });
 

@@ -60,9 +60,11 @@ describe('EngineReach', () => {
 
     expect(chosen(container)).toHaveClass('lg:grow-[2.2]');
     expect(chosen(container)).toHaveTextContent(t('home.engines.about.singbox'));
-    // The other two keep their figure and wait: a line at three widths is
-    // three different paragraphs.
-    expect(tiles(container)[1]).not.toHaveTextContent(t('home.engines.about.xray'));
+    // The other two keep their figure and wait. Their sentences are laid out
+    // too, so the row's height does not change with the choice, but they are
+    // out of the button's name.
+    expect(tiles(container)[1]).toHaveAccessibleName(expect.not.stringContaining(t('home.engines.about.xray')));
+    expect(chosen(container)).toHaveAccessibleName(expect.stringContaining(t('home.engines.about.singbox')));
   });
 
   it('groups the capabilities by who runs them, under a heading that names them', () => {

@@ -63,7 +63,8 @@ function reachTitle(engines: readonly EngineKey[]): string {
  * One tile is chosen and it grows. Three tiles of equal size ask the visitor to
  * choose an engine, which is the wrong question: one is already running and the
  * others are there for the servers it cannot drive. The chosen tile carries the
- * accent, the room for a sentence and the figure at full size; the other two
+ * accent as a tonal container (the filled primary is the install button's
+ * alone), the room for a sentence and the figure at full size; the other two
  * keep their figure and wait. sing-box opens chosen because sing-box is what
  * starts.
  *
@@ -83,8 +84,11 @@ export function EngineReach({ className }: { className?: string }) {
           can take the room the other two give it. At 768 the row gave the
           chosen tile 324px, and the tile's fixed height clipped the figure
           and the sentence beside it. A floor, not a height, even here: the
-          Russian sentence runs 7px past 210 at 1024. */}
-      <div className="flex flex-col gap-3 lg:min-h-[210px] lg:flex-row">
+          Russian sentence runs 7px past 210 at 1024.
+        *
+          The row is a size container so the sentences below can be set at
+          the width the chosen tile will have, in `cqw`, before it has it. */}
+      <div className="flex flex-col gap-3 lg:min-h-[210px] lg:flex-row lg:[container-type:inline-size]">
         {ENGINES.map((e) => {
           const chosen = e.key === engine;
           return (
@@ -100,8 +104,10 @@ export function EngineReach({ className }: { className?: string }) {
                 // The growth is the one authored movement here: 450ms on the
                 // emphasized curve, the page's long step, and the tiles are
                 // three so the layout cost of animating a flex ratio is three
-                // boxes rather than a list.
-                'transition-[flex-grow,background-color,color] duration-long ease-emph motion-reduce:transition-none',
+                // boxes rather than a list. The colour is feedback, not
+                // movement, so it answers the hover and the press on the short
+                // step instead of trailing the growth for 450ms.
+                '[transition:flex-grow_var(--dur-long)_var(--ease-emph),background-color_var(--dur-short)_var(--ease-emph),color_var(--dur-short)_var(--ease-emph)] motion-reduce:transition-none',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 // `basis-0` with the grow factor, so the three widths are the
                 // ratio and nothing else: left on `auto`, the chosen tile is
@@ -110,55 +116,81 @@ export function EngineReach({ className }: { className?: string }) {
                 // neighbours instead of a little over twice.
                 'lg:basis-0',
                 chosen
-                  ? 'bg-primary text-primary-foreground lg:grow-[2.2]'
+                  ? 'bg-primary-container text-primary-on-container lg:grow-[2.2]'
                   : 'bg-surface-container-low text-on-surface hover:bg-surface-container lg:grow',
               )}
             >
-              <span className="flex flex-wrap items-center gap-2.5">
-                <span dir="ltr" className="whitespace-nowrap font-mono text-[19px] font-medium">
-                  {e.name}
-                </span>
-                {e.isDefault && (
-                  <span
-                    className={cn(
-                      'inline-flex items-center rounded-pill px-2.5 py-0.5 text-overline font-bold uppercase',
-                      chosen
-                        ? 'bg-primary-foreground text-primary'
-                        : 'bg-primary text-primary-foreground',
-                    )}
-                  >
-                    {t('home.engines.default')}
-                  </span>
-                )}
+              {/* The name and its badge, and under them a copy nobody sees,
+                  laid out at the width an unchosen tile has. In Russian,
+                  Spanish and Persian the badge does not fit beside the name
+                  once sing-box narrows, and the header wrapping mid-growth
+                  took the whole row 38px taller while the tiles moved. The
+                  copy makes the cell as tall as the header will ever be, and
+                  only where it does wrap, so the English row pays nothing. */}
+              <span className="grid">
+                <TileHead engine={e} className="col-start-1 row-start-1" />
+                <TileHead
+                  engine={e}
+                  aria-hidden
+                  className="invisible col-start-1 row-start-1 hidden w-[calc((100cqw-192px)/4.2)] lg:flex"
+                />
               </span>
 
               {/* The figure and its sentence sit on one line, the figure at its
-                  own width and the sentence in what is left. Wrapping instead
-                  put the sentence under the number and cost the tile the
-                  proportion it was given the room for. It only wraps stacked,
-                  where there is no room beside anything. */}
-              <span className="flex flex-wrap items-end gap-x-7 gap-y-3 sm:flex-nowrap">
-                <span dir="ltr" className="flex shrink-0 items-baseline gap-1.5">
-                  <span className="text-[72px] font-light leading-[0.85] tracking-[-0.03em] tabular-nums">
+                  own width and the sentence in what is left. Below `sm` the
+                  sentence wraps under the figure. */}
+              <span className="flex flex-wrap items-end gap-x-7 sm:flex-nowrap">
+                {/* A fixed width in the row, so the sentence beside it can be
+                    measured from the row alone. The widest figure is 114px in
+                    the system face. */}
+                <span dir="ltr" className="flex shrink-0 items-baseline gap-1.5 lg:w-[120px]">
+                  <span className="text-figure-large font-light leading-[0.85] tracking-[-0.03em] tabular-nums">
                     {coverageFor(e.key)}
                   </span>
                   <span
                     className={cn(
-                      'font-mono text-[15px]',
-                      chosen ? 'text-primary-foreground' : 'text-on-surface-variant',
+                      'font-mono text-title-dense transition-colors duration-short ease-emph',
+                      chosen ? 'text-primary-on-container' : 'text-on-surface-variant',
                     )}
                   >
                     {`/${CAPABILITIES.length}`}
                   </span>
                 </span>
-                {/* Only the chosen tile carries its sentence: on the other two
-                    there is no room for it, and a line that appears at three
-                    widths is three different paragraphs. */}
-                {chosen && (
-                  <span className="min-w-0 flex-1 text-[20px] leading-[1.35] text-primary-foreground [text-wrap:pretty]">
-                    {t(`home.engines.about.${e.key}`)}
+                {/* Every tile carries its sentence, and only the chosen one
+                    shows it. Mounted on the click instead, the sentence
+                    arrived in a tile a quarter of the row wide, stood 378px
+                    tall, threw the band down the page and then re-wrapped on
+                    every frame of the growth as it came back.
+                  *
+                    In the row it is set once, at the chosen tile's final
+                    width: (row − 2 gaps − 3 × 56px padding) × 2.2 / 4.2, less
+                    the figure and the gap beside it. So it never re-wraps,
+                    the three tiles are as tall whichever is chosen, and the
+                    growing tile uncovers lines that are already in place
+                    while the other two clip theirs. Stacked there is no
+                    growth to wait for, so the sentence opens its own height. */}
+                <span
+                  aria-hidden={!chosen}
+                  className={cn(
+                    'grid min-w-0 basis-full sm:flex-1 sm:basis-auto',
+                    'lg:w-[calc((100cqw-192px)*2.2/4.2-148px)] lg:flex-none',
+                    // The height on one clock for both, so that stacked, one
+                    // sentence closing while another opens keeps the column's
+                    // length instead of dipping 86px between them. The fade
+                    // is split: in after the tile has room for the words, out
+                    // at once, before the tile narrows over them.
+                    chosen
+                      ? 'grid-rows-[1fr] opacity-100 [transition:grid-template-rows_var(--dur-long)_var(--ease-emph),opacity_var(--dur-med)_var(--ease-emph)_100ms]'
+                      : 'grid-rows-[0fr] opacity-0 [transition:grid-template-rows_var(--dur-long)_var(--ease-emph),opacity_var(--dur-short)_var(--ease-emph)] lg:grid-rows-[1fr]',
+                    'motion-reduce:transition-none',
+                  )}
+                >
+                  <span className="min-h-0 overflow-hidden">
+                    <span className="block pt-3 text-lead leading-[1.35] [text-wrap:pretty] sm:pt-0">
+                      {t(`home.engines.about.${e.key}`)}
+                    </span>
                   </span>
-                )}
+                </span>
               </span>
             </button>
           );
@@ -183,13 +215,13 @@ export function EngineReach({ className }: { className?: string }) {
                 <span
                   dir="ltr"
                   className={cn(
-                    'font-mono text-[15px] font-medium transition-colors duration-med ease-emph',
+                    'font-mono text-title-dense font-medium transition-colors duration-med ease-emph',
                     runs ? 'text-on-surface' : 'text-on-surface-variant',
                   )}
                 >
                   {reachTitle(group.engines)}
                 </span>
-                <span dir="ltr" className="font-mono text-[13px] text-on-surface-variant">
+                <span dir="ltr" className="font-mono text-meta text-on-surface-variant">
                   {group.rows.length}
                 </span>
               </span>
@@ -204,6 +236,35 @@ export function EngineReach({ className }: { className?: string }) {
         })}
       </div>
     </div>
+  );
+}
+
+/** A tile's name, and the default badge on the engine that starts. */
+function TileHead({
+  engine,
+  className,
+  'aria-hidden': hidden,
+}: {
+  engine: (typeof ENGINES)[number];
+  className?: string;
+  'aria-hidden'?: boolean;
+}) {
+  return (
+    <span aria-hidden={hidden} className={cn('flex flex-wrap items-center gap-2.5', className)}>
+      <span dir="ltr" className="whitespace-nowrap font-mono text-title-card font-medium">
+        {engine.name}
+      </span>
+      {engine.isDefault && (
+        <span
+          className={cn(
+            'inline-flex items-center rounded-pill px-2.5 py-0.5 text-overline font-bold uppercase',
+            'bg-primary text-primary-foreground',
+          )}
+        >
+          {t('home.engines.default')}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -225,7 +286,7 @@ function Chip({ row, engine }: { row: Capability; engine: EngineKey }) {
       data-capability={row.name}
       data-state={only ? 'only' : runs ? 'runs' : 'out'}
       className={cn(
-        'inline-flex items-baseline gap-2 rounded-pill border px-4 py-2 text-[16px]',
+        'inline-flex items-baseline gap-2 rounded-pill border px-4 py-2 text-value',
         'transition-colors duration-med ease-emph',
         only && 'border-transparent bg-primary-container text-primary-on-container',
         runs && !only && 'border-surface-container-high bg-surface-container-low text-on-surface',
@@ -237,7 +298,7 @@ function Chip({ row, engine }: { row: Capability; engine: EngineKey }) {
         <span
           dir="ltr"
           className={cn(
-            'font-mono text-[13px]',
+            'font-mono text-meta',
             only ? 'text-primary-on-container' : 'text-on-surface-variant',
           )}
         >

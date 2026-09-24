@@ -54,7 +54,7 @@ export function SurfaceSwitch({ value, onChange, className }: Props) {
             onClick={soon ? undefined : () => onChange?.(s)}
             className={cn(
               // 44px tall: anything under it is below every touch-target floor.
-              'inline-flex min-h-[44px] items-center gap-1.5 rounded-pill px-4 text-label-medium transition-colors duration-med ease-emph',
+              'inline-flex min-h-[44px] items-center gap-1.5 rounded-pill px-4 text-label-medium transition-colors duration-short ease-emph',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               active && 'bg-secondary-container text-secondary-on-container',
               !active && !soon && 'text-on-surface-variant hover:bg-surface-container-high',

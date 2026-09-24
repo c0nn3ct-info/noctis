@@ -68,9 +68,14 @@ export function HomePage() {
             outlined, blurred — so they read over a planet, and the band does
             not have to buy the figure's whole height in padding to give it a
             size worth looking at. */}
+        {/* From `xl` the box is 74% wide and hung 6% off the edge. At 80% and
+            −4% the land reached the end of the headline's second line at 1440,
+            1728 and 1920 — the last letters of "engine" ran into the first
+            column of tiles, 29px in at 1728 — and every width now keeps at
+            least 60px of grey disc between the words and the land. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-[2%] end-[-14%] h-[74%] w-[128%] sm:bottom-[1%] sm:end-[-10%] sm:h-[76%] sm:w-[112%] md:inset-y-[-12%] md:end-[-3%] md:h-auto md:w-[62%] lg:inset-y-[-14%] lg:end-[-4%] lg:w-[72%] xl:w-[80%]"
+          className="pointer-events-none absolute bottom-[2%] end-[-14%] h-[74%] w-[128%] sm:bottom-[1%] sm:end-[-10%] sm:h-[76%] sm:w-[112%] md:inset-y-[-12%] md:end-[-3%] md:h-auto md:w-[62%] lg:inset-y-[-14%] lg:end-[-4%] lg:w-[72%] xl:end-[-6%] xl:w-[74%]"
         >
           <HeroScene aria-label={t('home.hero.scene_alt')} />
         </div>
@@ -200,7 +205,7 @@ export function HomePage() {
                 <li>
                   <a
                     href="#protocols"
-                    className="relative before:absolute before:inset-x-0 before:-inset-y-1 sm:before:-inset-y-0.5 before:content-[''] inline-flex h-9 items-center rounded-pill bg-surface-container-high/90 px-3.5 font-mono text-xs text-on-surface backdrop-blur-sm transition-colors duration-med ease-emph hover:bg-surface-container-highest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:px-4"
+                    className="relative before:absolute before:inset-x-0 before:-inset-y-1 sm:before:-inset-y-0.5 before:content-[''] inline-flex h-9 items-center rounded-pill bg-surface-container-high/90 px-3.5 font-mono text-xs text-on-surface backdrop-blur-sm transition-colors duration-short ease-emph hover:bg-surface-container-highest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:px-4"
                   >
                     {t('home.hero.more').replace('{n}', String(PROTOCOLS.length - HERO_PROTOCOLS.length))}
                   </a>

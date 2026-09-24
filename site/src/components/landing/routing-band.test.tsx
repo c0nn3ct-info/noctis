@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RoutingBand } from './routing-band';
 import { REQUESTS, routeFor } from './routing-scene';
@@ -77,9 +77,9 @@ describe('RoutingBand', () => {
     // no lookup to report the result of. And the column leaves the
     // accessibility tree with its width, or a screen reader hears the answer
     // the page is busy hiding.
-    expect(ruleCells(container)[0]).toHaveTextContent('—');
+    // The words stay while the column fades, but out of the tree with it.
     expect(ruleCells(container)[0]).toHaveAttribute('aria-hidden', 'true');
-    expect(screen.queryByText(t('home.routing.no_rule'))).toBeNull();
+    expect(ruleCells(container).at(-1)).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('collapses the rule column in the modes that never read a rule', async () => {
@@ -147,10 +147,14 @@ describe('RoutingBand', () => {
     // The others carry the short line instead: three paragraphs stacked is a
     // column of reading where the bars already say it.
     expect(within(tile(container, 'global')).getByText(t('home.routing.short_global'))).toBeInTheDocument();
-    expect(screen.queryByText(t('home.routing.about_global'))).toBeNull();
+    // Both lines are laid out so the tile can trade them without a jump; the
+    // one not in force is closed and out of the tree.
+    const hidden = (text: string) => within(tile(container, 'global')).getByText(text).closest('[aria-hidden]');
+    expect(hidden(t('home.routing.about_global'))).toHaveAttribute('aria-hidden', 'true');
 
     await user.click(tile(container, 'global'));
 
-    expect(within(tile(container, 'global')).getByText(t('home.routing.about_global'))).toBeInTheDocument();
+    expect(hidden(t('home.routing.about_global'))).toHaveAttribute('aria-hidden', 'false');
+    expect(hidden(t('home.routing.short_global'))).toHaveAttribute('aria-hidden', 'true');
   });
 });

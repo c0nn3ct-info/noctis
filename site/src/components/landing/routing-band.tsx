@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { motionAllowed } from '@/lib/mock-motion';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { REQUESTS, routeFor, type Direction, type Mode } from './routing-scene';
@@ -64,36 +65,35 @@ export function RoutingBand({ className }: { className?: string }) {
               aria-pressed={on}
               onClick={() => setMode(m)}
               className={cn(
-                'flex flex-col gap-3 rounded-md px-6 py-5 text-start transition-colors duration-med ease-emph',
+                'flex flex-col gap-3 rounded-md px-6 py-5 text-start transition-colors duration-short ease-emph',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                 on ? 'bg-surface-container-high' : 'bg-surface-container-low hover:bg-surface-container',
               )}
             >
               <span className="flex w-full items-center justify-between gap-4">
-                <span className="text-[18px] font-semibold text-on-surface">
+                <span className="text-title-card font-semibold text-on-surface">
                   {t(`home.routing.mode_${m}`)}
                 </span>
                 {/* The seven requests this mode would produce, sorted into
                     lanes. One colour means one answer for everything. */}
-                <span aria-hidden className="flex h-2 w-[84px] shrink-0 gap-[2px]">
+                {/* One square per request, in its lane's colour. */}
+                <span aria-hidden className="flex shrink-0 gap-[2px]">
                   {LANES.flatMap((lane) =>
                     Array.from({ length: countFor(lane, m) }, (_, i) => (
                       <span
                         key={`${lane}-${i}`}
                         data-lane={lane}
-                        className={cn(DIRECTION_CLASS[lane], 'flex-1 rounded-[2px] bg-dir')}
+                        className={cn(DIRECTION_CLASS[lane], 'size-2.5 rounded-[2px] bg-dir')}
                       />
                     )),
                   )}
                 </span>
               </span>
-              {on ? (
-                <span className="text-[15px] leading-[1.5] text-on-surface-variant [text-wrap:pretty]">
-                  {t(`home.routing.about_${m}`)}
-                </span>
-              ) : (
-                <span className="text-body-medium text-on-surface-variant">{t(`home.routing.short_${m}`)}</span>
-              )}
+              <ModeLine
+                on={on}
+                about={t(`home.routing.about_${m}`)}
+                short={t(`home.routing.short_${m}`)}
+              />
             </button>
           );
         })}
@@ -153,7 +153,10 @@ export function RoutingBand({ className }: { className?: string }) {
               <Row
                 key={route.host}
                 host={route.host}
-                rule={route.rule}
+                // The column only shows under by rules, and it keeps showing
+                // what matched there while it fades and closes under the
+                // other two, rather than turning to "no rule" on the click.
+                rule={routeFor(route.host, 'rules').rule}
                 direction={route.direction}
                 byRule={byRule}
                 first={row === 0}
@@ -165,6 +168,59 @@ export function RoutingBand({ className }: { className?: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * A mode tile's line: what the mode does while it is pressed, a few words
+ * while it is not.
+ *
+ * Swapped on the click, three tiles changed height in one frame and on a phone
+ * threw the table under them 45px. Both lines are kept instead. The one in
+ * force is in the flow and fades in once the tile has begun to make room; the
+ * other lies over it and fades out at once. The cell's height is tweened from
+ * the one it had to the one it has now, so it passes straight from one to the
+ * other. Two lines each opening and closing to their own heights passed the
+ * target instead and came back, because the taller of a shrinking line and a
+ * growing one dips before it rises.
+ */
+function ModeLine({ on, about, short }: { on: boolean; about: string; short: string }) {
+  const cell = useRef<HTMLSpanElement>(null);
+  const height = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    const el = cell.current;
+    if (!el) return;
+    const to = el.getBoundingClientRect().height;
+    const from = height.current;
+    height.current = to;
+    if (from === null || Math.abs(from - to) < 1 || !motionAllowed() || !el.animate) return;
+    el.animate([{ height: `${from}px` }, { height: `${to}px` }], {
+      duration: 450,
+      easing: 'cubic-bezier(0.2, 0, 0, 1)',
+    });
+  }, [on]);
+
+  const line = (shown: boolean, className: string, text: string) => (
+    <span
+      aria-hidden={!shown}
+      className={cn(
+        className,
+        'block text-on-surface-variant',
+        shown
+          ? 'opacity-100 [transition:opacity_var(--dur-med)_var(--ease-emph)_100ms]'
+          : 'pointer-events-none absolute inset-x-0 top-0 opacity-0 [transition:opacity_var(--dur-short)_var(--ease-emph)]',
+      )}
+    >
+      {text}
+    </span>
+  );
+
+  return (
+    <span ref={cell} className="relative block overflow-hidden">
+      {line(on, 'text-title-dense leading-[1.5] [text-wrap:pretty]', about)}
+      {line(!on, 'text-body-medium', short)}
+    </span>
   );
 }
 
@@ -190,7 +246,7 @@ function Row({
       <span
         data-request={host}
         data-direction={direction}
-        className="flex h-[50px] items-center whitespace-nowrap border-t border-surface-container font-mono text-[15px] text-on-surface"
+        className="flex h-[50px] items-center whitespace-nowrap border-t border-surface-container font-mono text-title-dense text-on-surface"
       >
         <span dir="ltr">{host}</span>
         {/* The lane a request sits in is drawn, not written, so a screen
@@ -209,16 +265,16 @@ function Row({
         data-rule
         aria-hidden={!byRule}
         className={cn(
-          'flex h-[50px] items-center gap-1.5 overflow-hidden whitespace-nowrap border-t border-surface-container font-mono text-[13px]',
+          'flex h-[50px] items-center gap-1.5 overflow-hidden whitespace-nowrap border-t border-surface-container font-mono text-meta',
           'transition-opacity duration-med ease-emph',
           byRule ? 'opacity-100' : 'opacity-0',
           'text-on-surface-variant',
         )}
       >
-        <span dir="ltr">
-          {!byRule ? '—' : rule ? rule.value : t('home.routing.no_rule')}
-        </span>
-        {byRule && rule && rule.kind !== 'domain' && (
+        {/* The cell keeps its words while the column fades and closes: a rule
+            turned to a dash on the click, before the fade had begun. */}
+        <span dir="ltr">{rule ? rule.value : t('home.routing.no_rule')}</span>
+        {rule && rule.kind !== 'domain' && (
           <span className="text-body-small text-on-surface-variant">{rule.kind}</span>
         )}
       </span>

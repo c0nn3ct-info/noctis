@@ -181,18 +181,34 @@ export function SubscriptionBand({ className }: { className?: string }) {
         <div className="flex flex-col gap-6">
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col gap-1">
-              <span className="flex items-center gap-2.5 text-[24px] font-semibold tracking-[-0.02em] text-on-surface">
-                <span aria-hidden className="text-[22px] leading-none">
+              <span className="flex items-center gap-2.5 text-title-plan font-semibold tracking-[-0.02em] text-on-surface">
+                <span aria-hidden className="text-title-plan leading-none">
                   ✨
                 </span>
                 Sirius
               </span>
-              <span data-meta className="text-[13px] text-on-surface-variant">
-                {busy
-                  ? t('home.subs.fetching')
-                  : minutes === 0
-                    ? t('home.subs.updated_now')
-                    : t('home.subs.updated').replace('{n}', String(minutes))}
+              {/* All three states laid out in one cell and one shown, so the
+                  cell is as wide and as tall as the longest. Swapping the
+                  string instead rewrapped it in Russian and moved everything
+                  under it 19px, twice per refresh. */}
+              <span className="grid text-meta text-on-surface-variant">
+                {[
+                  t('home.subs.fetching'),
+                  t('home.subs.updated_now'),
+                  t('home.subs.updated').replace('{n}', String(minutes ?? 0)),
+                ].map((text, i) => {
+                  const shown = i === (busy ? 0 : minutes === 0 ? 1 : 2);
+                  return (
+                    <span
+                      key={i}
+                      data-meta={shown || undefined}
+                      aria-hidden={!shown}
+                      className={cn('col-start-1 row-start-1', !shown && 'invisible')}
+                    >
+                      {text}
+                    </span>
+                  );
+                })}
               </span>
             </div>
 
@@ -205,7 +221,7 @@ export function SubscriptionBand({ className }: { className?: string }) {
                 title={t('home.subs.sort')}
                 onClick={() => setSorted((s) => !s)}
                 className={cn(
-                  'grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors duration-med ease-emph',
+                  'grid h-11 w-11 shrink-0 place-items-center rounded-full transition-colors duration-short ease-emph',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   sorted
                     ? 'bg-primary-container text-primary-on-container'
@@ -222,7 +238,7 @@ export function SubscriptionBand({ className }: { className?: string }) {
                 onClick={refresh}
                 className={cn(
                   'grid h-11 w-11 shrink-0 place-items-center rounded-full text-on-surface-variant',
-                  'transition-colors duration-med ease-emph hover:bg-surface-container-high',
+                  'transition-colors duration-short ease-emph hover:bg-surface-container-high',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 )}
               >
@@ -240,16 +256,16 @@ export function SubscriptionBand({ className }: { className?: string }) {
             <span
               dir="ltr"
               data-used
-              className="text-[44px] font-light leading-[0.9] tracking-[-0.03em] tabular-nums text-on-surface"
+              className="text-figure font-light leading-[0.9] tracking-[-0.03em] tabular-nums text-on-surface"
             >
               {`${used.toFixed(1)} `}
-              <span className="text-[16px] tracking-normal text-on-surface-variant">
+              <span className="text-value tracking-normal text-on-surface-variant">
                 {t('home.subs.used_unit')}
               </span>
             </span>
             <span
               dir="ltr"
-              className="flex flex-col gap-1 text-[13px] tabular-nums text-on-surface-variant"
+              className="flex flex-col gap-1 text-meta tabular-nums text-on-surface-variant"
             >
               <Legend swatch="bg-primary" label={t('home.subs.down')} value={reading.down} />
               <Legend swatch="bg-primary/60" label={t('home.subs.up')} value={reading.up} />
@@ -291,8 +307,13 @@ export function SubscriptionBand({ className }: { className?: string }) {
                   // The latency bar takes 200px beside a desktop row, but on a phone
                   // that left the host line three letters and an ellipsis.
                   'absolute inset-x-0 top-0 grid h-[92px] grid-cols-[minmax(0,1fr)_104px] items-center gap-4 px-5 text-start sm:grid-cols-[minmax(0,1fr)_200px] sm:gap-6 sm:px-7',
-                  'transition-[transform,background-color,box-shadow] duration-long ease-emph motion-reduce:transition-none',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                  // The slide is the long step; the hover and the selection are feedback
+                  // and land on the short one.
+                  '[transition:transform_var(--dur-long)_var(--ease-emph),background-color_var(--dur-short)_var(--ease-emph),box-shadow_var(--dur-short)_var(--ease-emph)] motion-reduce:transition-none',
+                  // The chosen row's bar is primary, so the focus ring is the
+                  // ink colour: on the chosen row a primary ring ran into the
+                  // bar, and focus and selection read as one mark.
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-on-surface',
                   position > 0 && 'border-t border-surface-container',
                   on
                     ? 'bg-surface-container-low shadow-[inset_3px_0_0_hsl(var(--primary))] rtl:shadow-[inset_-3px_0_0_hsl(var(--primary))]'
@@ -301,12 +322,12 @@ export function SubscriptionBand({ className }: { className?: string }) {
               >
                 <span className="flex flex-col gap-1.5">
                   <span className="flex items-center gap-2.5">
-                    <span aria-hidden className="text-[20px] leading-none">
+                    <span aria-hidden className="text-lead leading-none">
                       {server.cc}
                     </span>
-                    <span className="text-[19px] font-semibold text-on-surface">{server.city}</span>
+                    <span className="text-title-card font-semibold text-on-surface">{server.city}</span>
                   </span>
-                  <span dir="ltr" className="truncate font-mono text-[13px] text-on-surface-variant">
+                  <span dir="ltr" className="truncate font-mono text-meta text-on-surface-variant">
                     {`${server.host} `}
                     <span className="text-on-surface-variant">{`· ${server.tags.join(' · ')}`}</span>
                   </span>
@@ -316,7 +337,7 @@ export function SubscriptionBand({ className }: { className?: string }) {
                   <span
                     dir="ltr"
                     data-latency
-                    className={cn('font-mono text-[14px] font-medium tabular-nums', latencyTone(ms))}
+                    className={cn('font-mono text-caption font-medium tabular-nums', latencyTone(ms))}
                   >
                     {`${ms} ms`}
                   </span>
@@ -356,7 +377,7 @@ function Legend({ swatch, label, value }: { swatch: string; label: string; value
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <span className="flex flex-col gap-0.5">
-      <span className="text-[20px] font-semibold text-on-surface">{value}</span>
+      <span className="text-lead font-semibold text-on-surface">{value}</span>
       <span className="text-body-small text-on-surface-variant">{label}</span>
     </span>
   );

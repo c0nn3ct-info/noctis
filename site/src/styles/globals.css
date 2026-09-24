@@ -706,7 +706,10 @@
   @supports (animation-timeline: view()) {
     [data-enter],
     [data-enter-stagger] > * {
-      animation: enter-reveal linear both;
+      /* Decelerating across its run of scroll rather than linear, so an
+       * element settles into place instead of stopping dead where the range
+       * ends. Progress still follows position; only its shape eases. */
+      animation: enter-reveal var(--ease-emph-decel) both;
       animation-timeline: view();
       /* Measured against the whole overlap rather than the element's own
        * height, so a tall panel and a short row take a comparable run of

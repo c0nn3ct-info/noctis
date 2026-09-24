@@ -31,7 +31,7 @@ export function InstallButton({ block, className }: { block?: boolean; className
       asChild
       variant="filled"
       size="s"
-      className={cn('h-12 px-7 text-[15px]', block && 'w-full', className)}
+      className={cn('h-12 px-7 text-title-dense', block && 'w-full', className)}
     >
       <a href={localePath('/install/')}>
         {t('home.cta.install')}
@@ -58,7 +58,7 @@ export function StoreButton({ className }: { className?: string }) {
       variant="outlined"
       size="s"
       className={cn(
-        'h-12 border-outline-variant bg-surface-container-low/80 px-5 text-[15px] backdrop-blur-sm',
+        'h-12 border-outline-variant bg-surface-container-low/80 px-5 text-title-dense backdrop-blur-sm',
         className,
       )}
     >

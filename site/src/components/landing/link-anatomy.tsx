@@ -172,7 +172,7 @@ function LinkField({
           aria-hidden
           data-mirror
           dir="ltr"
-          className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre py-3 font-mono text-[15px] leading-[1.6] text-on-surface-variant"
+          className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre py-3 font-mono text-title-dense leading-[1.6] text-on-surface-variant"
         >
           {fields.length === 0 ? (
             <span className="text-on-surface">{link}</span>
@@ -220,7 +220,7 @@ function LinkField({
           spellCheck={false}
           autoComplete="off"
           dir="ltr"
-          className="relative block w-full min-w-0 bg-transparent py-3 font-mono text-[15px] leading-[1.6] text-transparent outline-none"
+          className="relative block w-full min-w-0 bg-transparent py-3 font-mono text-title-dense leading-[1.6] text-transparent outline-none"
         />
       </div>
       {link !== SAMPLE_LINK && (
@@ -294,7 +294,7 @@ function Entries({
           {/* The value alone: the punctuation that introduces it is in the link
               above, and repeating `?security=` here would make the entry a
               second copy of the string rather than a reading of it. */}
-          <span dir="ltr" title={field.value} className="min-w-0 truncate font-mono text-[16px] leading-[1.4]">
+          <span dir="ltr" title={field.value} className="min-w-0 truncate font-mono text-value leading-[1.4]">
             <span
               data-value
               className={cn(
@@ -307,7 +307,7 @@ function Entries({
               {field.value}
             </span>
           </span>
-          <span className="text-[14px] leading-[1.45] text-on-surface-variant [text-wrap:pretty]">
+          <span className="text-caption leading-[1.45] text-on-surface-variant [text-wrap:pretty]">
             {noteFor(field)}
           </span>
         </div>
@@ -364,7 +364,7 @@ function Rail({
               data-engine={engine.key}
               data-state={chosen ? 'chosen' : runs ? 'able' : 'out'}
               className={cn(
-                'flex items-center justify-between gap-3 rounded-sm border px-3.5 py-2.5 font-mono text-[14px] font-medium transition-colors duration-med ease-emph',
+                'flex items-center justify-between gap-3 rounded-sm border px-3.5 py-2.5 font-mono text-caption font-medium transition-colors duration-med ease-emph',
                 chosen && 'border-transparent bg-primary-container text-primary-on-container',
                 !chosen && runs && 'border-outline-variant text-on-surface',
                 !runs && 'border-outline-variant text-on-surface-variant',
@@ -390,7 +390,7 @@ function Rail({
         })}
       </ul>
 
-      <span className="text-[14px] leading-[1.5] text-on-surface-variant [text-wrap:pretty]">
+      <span className="text-caption leading-[1.5] text-on-surface-variant [text-wrap:pretty]">
         {reason(pick)}
       </span>
 
@@ -402,7 +402,7 @@ function Rail({
           {/* Read off the link in the field rather than written out: a link with
               no security parameter has three of these, and naming a fourth
               would be the page describing a link nobody pasted. */}
-          <span dir="ltr" className="font-mono text-[13px] leading-[1.6] text-on-surface-variant">
+          <span dir="ltr" className="font-mono text-meta leading-[1.6] text-on-surface-variant">
             {decides.map((f) => f.label).join(' · ')}
           </span>
         </div>
