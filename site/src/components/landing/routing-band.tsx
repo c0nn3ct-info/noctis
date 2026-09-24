@@ -189,12 +189,12 @@ function ModeLine({ on, about, short }: { on: boolean; about: string; short: str
   const height = useRef<number | null>(null);
 
   useLayoutEffect(() => {
-    const el = cell.current;
-    if (!el) return;
+    // Attached by the time a layout effect runs.
+    const el = cell.current!;
     const to = el.getBoundingClientRect().height;
     const from = height.current;
     height.current = to;
-    if (from === null || Math.abs(from - to) < 1 || !motionAllowed() || !el.animate) return;
+    if (from === null || Math.abs(from - to) < 1 || !motionAllowed() || typeof el.animate !== 'function') return;
     el.animate([{ height: `${from}px` }, { height: `${to}px` }], {
       duration: 450,
       easing: 'cubic-bezier(0.2, 0, 0, 1)',

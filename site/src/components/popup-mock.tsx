@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import {
   ArrowDown,
   ArrowRight,
@@ -60,7 +60,7 @@ function fmtSpeed(bps: number): { value: string; unit: string } {
 // its buffer holds only seconds that moved, so a tunnel going down leaves the
 // last active minute frozen on screen and the next byte picks up where it left
 // off. The wave stops; it does not reset.
-function useMockTraffic(paused: boolean, connected: boolean) {
+function useMockTraffic(paused: boolean, connected: boolean, root: RefObject<Element | null>) {
   const [buf, setBuf] = useState<{ down: number; up: number }[]>(seedTraffic);
   useEffect(() => {
     // Paused keeps the mulberry32 seed frame on screen forever: no interval, so
@@ -69,20 +69,32 @@ function useMockTraffic(paused: boolean, connected: boolean) {
     // store capture needs — a live walk makes each of them a different image.
     if (paused || !connected) return;
     const rnd = () => Math.random();
+    // Off screen counts as a background tab: the popup three bands up was
+    // redrawing its wave every second for nobody.
+    let onScreen = true;
+    // The ref is attached by the time an effect runs.
+    const io =
+      'IntersectionObserver' in window
+        ? new IntersectionObserver(([e]) => void (onScreen = e.isIntersecting))
+        : undefined;
+    io?.observe(root.current!);
     const id = setInterval(() => {
       // A background tab still runs timers on some engines; advancing the walk
       // there only burns battery redrawing something nobody is looking at. The
       // buffer holds only seconds that moved, so the wave picks up where it
       // left off rather than replaying the time the tab sat out — the same
       // guard the aria2t site puts on its shared landing clock.
-      if (document.hidden) return;
+      if (document.hidden || !onScreen) return;
       setBuf((b) => {
         const down = stepDown(b[b.length - 1].down, rnd);
         return [...b.slice(1), { down, up: down * (0.1 + Math.random() * 0.06) }];
       });
     }, 1000);
-    return () => clearInterval(id);
-  }, [paused, connected]);
+    return () => {
+      clearInterval(id);
+      io?.disconnect();
+    };
+  }, [paused, connected, root]);
   return buf;
 }
 
@@ -170,7 +182,8 @@ export function PopupMock({ className, paused }: PopupMockProps) {
   const [mode, setMode] = useState<Mode>('global');
 
   const still = paused ?? !motionAllowed();
-  const buf = useMockTraffic(still, connected);
+  const root = useRef<HTMLDivElement>(null);
+  const buf = useMockTraffic(still, connected, root);
   const latest = buf[buf.length - 1];
   const dn = fmtSpeed(latest.down);
   const up = fmtSpeed(latest.up);
@@ -182,6 +195,7 @@ export function PopupMock({ className, paused }: PopupMockProps) {
     // says which language it is in: a Russian page's screen reader would
     // otherwise read "Connect" and "Recent servers" with Russian phonetics.
     <div
+      ref={root}
       dir="ltr"
       lang="en"
       className={cn(

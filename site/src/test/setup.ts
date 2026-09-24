@@ -36,3 +36,9 @@ if (!Element.prototype.hasPointerCapture) {
   Element.prototype.setPointerCapture = () => {};
   Element.prototype.releasePointerCapture = () => {};
 }
+
+// jsdom has a `CSS` namespace with no `supports`; every browser has it, and the
+// FAQ asks it whether CSS can animate its panels.
+if (typeof CSS.supports !== 'function') {
+  CSS.supports = (() => false) as typeof CSS.supports;
+}

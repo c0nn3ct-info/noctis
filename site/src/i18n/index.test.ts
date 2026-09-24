@@ -98,3 +98,18 @@ describe('localePath', () => {
     expect(localePath('/')).toBe('/es/');
   });
 });
+
+describe('a locale that has not loaded yet', () => {
+  it('reads as English until its dictionary arrives', async () => {
+    vi.resetModules();
+    const fresh = await import('./index');
+    const enDict = (await import('./en.json')).default as Record<string, string>;
+    const ruDict = (await import('./ru.json')).default as Record<string, string>;
+    fresh.setLocale('ru');
+    expect(fresh.t('nav.install')).toBe(enDict['nav.install']);
+    await fresh.loadLocale('ru');
+    expect(fresh.t('nav.install')).toBe(ruDict['nav.install']);
+    await fresh.loadLocale('ru');
+    fresh.setLocale('en');
+  });
+});

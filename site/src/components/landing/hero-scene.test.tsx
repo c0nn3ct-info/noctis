@@ -9,10 +9,12 @@ import { HeroScene, canRunScene } from './hero-scene';
 const booted: { host: HTMLElement }[] = [];
 const disposed = { count: 0 };
 const dark = { value: false };
+const refuse = { value: false };
 
 vi.mock('./hero-planet', () => ({
   isDark: () => dark.value,
   bootHeroScene: (host: HTMLElement) => {
+    if (refuse.value) throw new Error('context lost');
     booted.push({ host });
     return { dispose: () => void disposed.count++, debug: () => ({}) };
   },
@@ -22,6 +24,7 @@ beforeEach(() => {
   booted.length = 0;
   disposed.count = 0;
   dark.value = false;
+  refuse.value = false;
   vi.stubGlobal('WebGLRenderingContext', class {});
 });
 
@@ -88,6 +91,22 @@ describe('HeroScene', () => {
     render(<HeroScene aria-label="figure" />);
     await waitFor(() => expect(booted).toHaveLength(1));
     document.documentElement.setAttribute('data-accent', 'cyan');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(booted).toHaveLength(1);
+  });
+
+  it('drops the figure, not the page, when a reboot is refused', async () => {
+    render(<HeroScene aria-label="figure" />);
+    await waitFor(() => expect(booted).toHaveLength(1));
+    refuse.value = true;
+    dark.value = true;
+    document.documentElement.classList.add('dark');
+    await waitFor(() => expect(disposed.count).toBe(1));
+    // The observer let go, so a second flip asks for nothing more.
+    refuse.value = false;
+    dark.value = false;
+    document.documentElement.classList.remove('dark');
     await Promise.resolve();
     await Promise.resolve();
     expect(booted).toHaveLength(1);

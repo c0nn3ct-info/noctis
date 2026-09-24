@@ -75,6 +75,34 @@ describe('PopupMock', () => {
     expect(wave(container)).not.toBe(opening);
   });
 
+  it('does not advance the walk while the popup is scrolled out of view', () => {
+    let report: ((e: { isIntersecting: boolean }[]) => void) | undefined;
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(cb: (e: { isIntersecting: boolean }[]) => void) {
+          report = cb;
+        }
+        observe() {}
+        disconnect = disconnect;
+      },
+    );
+    const { container, unmount } = render(<PopupMock />);
+    const opening = wave(container);
+
+    act(() => report!([{ isIntersecting: false }]));
+    tick(10, 0.5);
+    expect(wave(container)).toBe(opening);
+
+    act(() => report!([{ isIntersecting: true }]));
+    tick(1, 0.5);
+    expect(wave(container)).not.toBe(opening);
+    unmount();
+    expect(disconnect).toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
   it('merges a custom className onto the popup frame', () => {
     const bare = render(<PopupMock />).container.firstChild;
     expect(bare).toHaveClass('w-[380px]');

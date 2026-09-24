@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RoutingBand } from './routing-band';
@@ -156,5 +156,39 @@ describe('RoutingBand', () => {
 
     expect(hidden(t('home.routing.about_global'))).toHaveAttribute('aria-hidden', 'false');
     expect(hidden(t('home.routing.short_global'))).toHaveAttribute('aria-hidden', 'true');
+  });
+});
+
+describe('RoutingBand mode lines', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // @ts-expect-error jsdom has no Web Animations; the test adds it
+    delete Element.prototype.animate;
+  });
+
+  it('tweens a tile\'s line from the height it had to the one it has', async () => {
+    const animate = vi.fn();
+    Element.prototype.animate = animate as unknown as typeof Element.prototype.animate;
+    let h = 60;
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+      () => ({ height: h }) as DOMRect,
+    );
+    const user = userEvent.setup();
+    const { container } = render(<RoutingBand />);
+    h = 20;
+    await user.click(container.querySelector('[data-mode="global"]')!);
+    expect(animate).toHaveBeenCalled();
+    expect(animate.mock.calls[0][0]).toEqual([{ height: '60px' }, { height: '20px' }]);
+  });
+
+  it('leaves the height alone where it did not change, or cannot be animated', async () => {
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+      () => ({ height: 40 }) as DOMRect,
+    );
+    const user = userEvent.setup();
+    const { container } = render(<RoutingBand />);
+    // Same height: nothing to tween. And no Element.animate at all in jsdom.
+    await user.click(container.querySelector('[data-mode="direct"]')!);
+    expect(container.querySelector('[data-mode="direct"]')).toHaveAttribute('aria-pressed', 'true');
   });
 });
