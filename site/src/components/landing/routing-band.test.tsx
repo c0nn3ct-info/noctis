@@ -191,4 +191,60 @@ describe('RoutingBand mode lines', () => {
     await user.click(container.querySelector('[data-mode="direct"]')!);
     expect(container.querySelector('[data-mode="direct"]')).toHaveAttribute('aria-pressed', 'true');
   });
+  describe('on a phone', () => {
+    const cards = (c: HTMLElement) => Array.from(c.querySelectorAll('[data-card]')) as HTMLElement[];
+    const verdicts = (c: HTMLElement) =>
+      cards(c).map((card) => card.querySelector('[data-verdict]')?.getAttribute('data-verdict'));
+
+    it('lists every request as a row that says its answer in words', () => {
+      const { container } = render(<RoutingBand />);
+
+      expect(cards(container).map((c) => c.getAttribute('data-card'))).toEqual([...REQUESTS]);
+      expect(verdicts(container)).toEqual(REQUESTS.map((h) => routeFor(h, 'rules').direction));
+      cards(container).forEach((card, i) => {
+        const direction = routeFor(REQUESTS[i], 'rules').direction;
+        expect(card.querySelector('[data-verdict]')).toHaveTextContent(t(`home.routing.route_${direction}`));
+      });
+    });
+
+    it('is the list below md and the table from md up, never both', () => {
+      const { container } = render(<RoutingBand />);
+
+      const list = container.querySelector('[data-cards]') as HTMLElement;
+      const table = container.querySelector('[data-table]') as HTMLElement;
+      expect(list.className).toMatch(/(^|\s)md:hidden(\s|$)/);
+      expect(table.className).toMatch(/(^|\s)hidden(\s|$)/);
+      expect(table.className).toMatch(/(^|\s)md:block(\s|$)/);
+    });
+
+    it('names the rule under the host, and only in the mode that reads rules', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<RoutingBand />);
+      const rule = (i: number) => cards(container)[i].querySelector('[data-card-rule]') as HTMLElement;
+
+      expect(rule(0)).toHaveTextContent(routeFor(REQUESTS[0], 'rules').rule!.value);
+      expect(rule(0).closest('[aria-hidden="true"]')).toBeNull();
+
+      await user.click(tile(container, 'global'));
+
+      expect(rule(0).closest('[aria-hidden="true"]')).not.toBeNull();
+      expect(verdicts(container).every((v) => v === 'proxy')).toBe(true);
+    });
+
+    it('counts each lane above the list, in the lane\'s own tint', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<RoutingBand />);
+      const count = (lane: string) => container.querySelector(`[data-tally="${lane}"]`) as HTMLElement;
+
+      expect(count('proxy').className).toContain('dir-proxy');
+      expect(count('block')).toHaveTextContent(
+        String(REQUESTS.filter((h) => routeFor(h, 'rules').direction === 'block').length),
+      );
+
+      await user.click(tile(container, 'direct'));
+
+      expect(count('direct')).toHaveTextContent(String(REQUESTS.length));
+      expect(count('proxy')).toHaveAttribute('data-empty');
+    });
+  });
 });

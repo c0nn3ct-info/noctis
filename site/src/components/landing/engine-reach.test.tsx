@@ -136,4 +136,71 @@ describe('EngineReach', () => {
 
     expect(container.querySelector('table')).toBeNull();
   });
+  describe('on a phone', () => {
+    const segments = (c: HTMLElement) => Array.from(c.querySelectorAll('[data-segment]')) as HTMLElement[];
+
+    it('asks for an engine with one segmented control, and keeps the tiles for the row', () => {
+      const { container } = render(<EngineReach />);
+
+      const group = container.querySelector('[role="radiogroup"]') as HTMLElement;
+      expect(group.closest('.lg\\:hidden')).not.toBeNull();
+      expect(tiles(container)[0].parentElement).toHaveClass('hidden', 'lg:flex');
+      expect(segments(container).map((s) => s.getAttribute('data-segment'))).toEqual(ENGINES.map((e) => e.key));
+      expect(segments(container)[0]).toHaveAttribute('aria-checked', 'true');
+      for (const [i, engine] of ENGINES.entries()) {
+        expect(segments(container)[i]).toHaveTextContent(String(coverageFor(engine.key)));
+      }
+    });
+
+    it('moves the choice with the arrows, and only the chosen segment is in the tab order', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<EngineReach />);
+
+      expect(segments(container).map((s) => s.tabIndex)).toEqual([0, -1, -1]);
+      segments(container)[0].focus();
+      await user.keyboard('{ArrowRight}');
+
+      expect(segments(container)[1]).toHaveAttribute('aria-checked', 'true');
+      expect(segments(container)[1]).toHaveFocus();
+      expect(chosen(container)).toHaveAttribute('data-engine', 'xray');
+
+      await user.keyboard('{End}');
+      expect(segments(container)[2]).toHaveAttribute('aria-checked', 'true');
+      await user.keyboard('{ArrowRight}');
+      expect(segments(container)[0]).toHaveAttribute('aria-checked', 'true');
+      await user.keyboard('{ArrowLeft}');
+      expect(segments(container)[2]).toHaveAttribute('aria-checked', 'true');
+      await user.keyboard('{Home}');
+      expect(segments(container)[0]).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('answers a tap in the chips at once, and says the chosen engine in one sentence', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<EngineReach />);
+      const says = () =>
+        Array.from(container.querySelectorAll('[data-says]'))
+          .filter((el) => el.getAttribute('aria-hidden') !== 'true')
+          .map((el) => el.getAttribute('data-says'));
+
+      expect(says()).toEqual(['singbox']);
+
+      await user.click(segments(container)[1]);
+
+      expect(says()).toEqual(['xray']);
+      expect(chip(container, 'xhttp')).toHaveAttribute('data-state', 'only');
+      expect(chip(container, 'ShadowTLS')).toHaveAttribute('data-state', 'out');
+    });
+
+    it('puts what differs straight under the control, and what all three share last, in one line', () => {
+      const { container } = render(<EngineReach />);
+
+      const shared = rows(container)[0];
+      expect(shared).toHaveAttribute('data-reach', 'singbox+xray+mihomo');
+      expect(shared).toHaveClass('order-last', 'lg:order-none');
+      expect(shared.querySelector('ul')).toHaveClass('hidden', 'lg:flex');
+      const line = shared.querySelector('[data-shared-line]') as HTMLElement;
+      expect(line).toHaveClass('lg:hidden');
+      expect(line).toHaveTextContent('VLESS · VMess');
+    });
+  });
 });

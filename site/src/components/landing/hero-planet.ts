@@ -123,8 +123,12 @@ export function bootHeroScene(host: HTMLElement, canvas: HTMLCanvasElement): Her
   const stage = planetStage();
   // Transparent: the figure sits behind the hero's copy and has to let the
   // page's own ground through, at whatever the theme has made it.
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  // A phone draws the planet wider than its own screen at a density of three,
+  // on a battery. Below `sm` it gets 1.5 and no multisampling: the voxels are
+  // square by design, so the edges antialiasing would soften are the look.
+  const narrow = window.matchMedia?.('(max-width: 639px)').matches ?? false;
+  const renderer = new WebGLRenderer({ canvas, antialias: !narrow, alpha: true });
+  renderer.setPixelRatio(Math.min(narrow ? 1.5 : 2, window.devicePixelRatio || 1));
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = stage.exposure;

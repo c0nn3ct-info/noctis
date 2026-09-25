@@ -161,7 +161,7 @@ export function FaqList({ variant = 'card', openFirst = false, className, stagge
               data-faq-panel
               className={cn(
                 'text-body-medium text-on-surface-variant',
-                variant === 'card' ? 'px-4 pb-4 ps-11' : 'max-w-[65ch] px-4 pb-5 pe-12',
+                variant === 'card' ? 'px-4 pb-4 ps-11' : 'max-w-[65ch] px-4 pb-5 sm:pe-12',
               )}
             >
               {a}

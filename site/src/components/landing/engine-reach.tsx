@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { engineName } from './engine-pick';
@@ -79,9 +79,10 @@ export function EngineReach({ className }: { className?: string }) {
 
   return (
     <div className={cn('flex flex-col gap-10', className)}>
-      {/* Stacked below `lg`, where a row of three would leave each tile too
-          narrow for its own figure; a row from `lg` up, where the chosen one
-          can take the room the other two give it. At 768 the row gave the
+      {/* A row from `lg` up, where the chosen one can take the room the other
+          two give it. Below `lg` a row of three leaves each tile too narrow
+          for its own figure, and stacked they were a screen tall, so the
+          segmented control below stands in for them there. At 768 the row gave the
           chosen tile 324px, and the tile's fixed height clipped the figure
           and the sentence beside it. A floor, not a height, even here: the
           Russian sentence runs 7px past 210 at 1024.
@@ -90,7 +91,7 @@ export function EngineReach({ className }: { className?: string }) {
           the width the chosen tile will have, in `cqw`, before it has it. */}
       <div
         data-enter-stagger="soft"
-        className="flex flex-col gap-3 lg:min-h-[210px] lg:flex-row lg:[container-type:inline-size]"
+        className="hidden flex-col gap-3 lg:flex lg:min-h-[210px] lg:flex-row lg:[container-type:inline-size]"
       >
         {ENGINES.map((e) => {
           const chosen = e.key === engine;
@@ -200,18 +201,28 @@ export function EngineReach({ className }: { className?: string }) {
         })}
       </div>
 
+      <Switcher engine={engine} onPick={setEngine} />
+
       <div data-enter-stagger="soft" className="flex flex-col">
         {groups.map((group, i) => {
           const runs = group.engines.includes(engine);
+          const shared = group.engines.length === ENGINES.length;
           return (
             <div
               key={group.engines.join('+')}
               data-reach={group.engines.join('+')}
               className={cn(
                 'grid items-start gap-3 py-5 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6',
-                // No rule over the first group: it would draw a line under the
-                // tiles that belongs to neither.
-                i > 0 && 'border-t border-outline-variant',
+                // Below `lg` what all three share goes last: it is the same
+                // whichever engine is picked, and above the groups that do
+                // change it put a picked engine's answer a screen away from
+                // the control that asked for it.
+                shared && 'order-last lg:order-none',
+                // No rule over the first group in either order: it would draw
+                // a line under the control that belongs to neither.
+                i === 0 && 'border-t border-outline-variant lg:border-t-0',
+                i === 1 && 'lg:border-t lg:border-outline-variant',
+                i > 1 && 'border-t border-outline-variant',
               )}
             >
               <span className="flex items-baseline gap-2.5 lg:pt-[9px]">
@@ -229,11 +240,146 @@ export function EngineReach({ className }: { className?: string }) {
                 </span>
               </span>
 
-              <ul className="flex flex-wrap gap-2">
+              {/* Every engine runs these, so their chips never change state;
+                  on a phone fifteen of them were a wall in front of the four
+                  that do. One line there, the chips in the row. */}
+              {shared && (
+                <p data-shared-line dir="ltr" className="text-body-medium leading-[1.7] text-on-surface-variant lg:hidden">
+                  {group.rows.map((row) => row.name).join(' · ')}
+                </p>
+              )}
+              <ul className={cn('flex-wrap gap-2', shared ? 'hidden lg:flex' : 'flex')}>
                 {group.rows.map((row) => (
                   <Chip key={row.name} row={row} engine={engine} />
                 ))}
               </ul>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The tiles, for a phone: one segmented control and the chosen engine's
+ * sentence under it.
+ *
+ * Stacked, the three tiles were most of a screen before the first chip, and a
+ * tap changed chips a screen below it — the answer to the question arrived out
+ * of sight. Three options and a thumb are what a segmented control is for, and
+ * with the tiles gone the groups that change start right under it.
+ *
+ * The thumb slides between segments rather than jumping, on the page's long
+ * step. The sentences are all laid in one cell, so the panel is as tall as the
+ * longest and nothing under it moves: the outgoing one fades at once, and the
+ * incoming one waits for it and a beat more before it fades in.
+ */
+function Switcher({ engine, onPick }: { engine: EngineKey; onPick: (next: EngineKey) => void }) {
+  const segments = useRef<(HTMLButtonElement | null)[]>([]);
+  const at = ENGINES.findIndex((e) => e.key === engine);
+
+  const move = (to: number) => {
+    const next = (to + ENGINES.length) % ENGINES.length;
+    onPick(ENGINES[next].key);
+    segments.current[next]?.focus();
+  };
+
+  return (
+    <div data-enter="soft" className="flex flex-col gap-5 lg:hidden">
+      <div
+        role="radiogroup"
+        aria-label={t('home.protocols.h2')}
+        onKeyDown={(e) => {
+          // Arrows walk the segments in reading order, which in a right-to-left
+          // page is the other way round on screen.
+          const rtl = getComputedStyle(e.currentTarget).direction === 'rtl';
+          const step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1, ArrowDown: 1, ArrowUp: -1 }[e.key];
+          if (step) move(at + step);
+          else if (e.key === 'Home') move(0);
+          else if (e.key === 'End') move(ENGINES.length - 1);
+          else return;
+          e.preventDefault();
+        }}
+        className="relative grid grid-cols-3 rounded-lg bg-surface-container-low p-1"
+      >
+        <span
+          aria-hidden
+          style={{ '--at': at } as React.CSSProperties}
+          className={cn(
+            'absolute inset-y-1 start-1 w-[calc((100%-8px)/3)] rounded-md bg-primary-container',
+            '[transform:translateX(calc(var(--at)*100%))] rtl:[transform:translateX(calc(var(--at)*-100%))]',
+            'transition-transform duration-long ease-emph motion-reduce:transition-none',
+          )}
+        />
+        {ENGINES.map((e, i) => {
+          const on = i === at;
+          return (
+            <button
+              key={e.key}
+              ref={(el) => {
+                segments.current[i] = el;
+              }}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              tabIndex={on ? 0 : -1}
+              data-segment={e.key}
+              onClick={() => onPick(e.key)}
+              className={cn(
+                'relative flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-md px-2 py-2.5',
+                'transition-colors duration-short ease-emph',
+                // Inset and offset from the thumb's edge, so the ring reads as
+                // where the keyboard is and the fill as what is picked.
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                on ? 'text-primary-on-container' : 'text-on-surface hover:bg-surface-container',
+              )}
+            >
+              <span dir="ltr" className="max-w-full truncate font-mono text-meta font-medium">
+                {e.name}
+              </span>
+              <span dir="ltr" className="flex items-baseline gap-1">
+                <span className="text-title-plan font-light leading-none tabular-nums">{coverageFor(e.key)}</span>
+                <span
+                  className={cn(
+                    'font-mono text-body-small transition-colors duration-short ease-emph',
+                    on ? 'text-primary-on-container' : 'text-on-surface-variant',
+                  )}
+                >
+                  {`/${CAPABILITIES.length}`}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid">
+        {ENGINES.map((e) => {
+          const on = e.key === engine;
+          return (
+            <div
+              key={e.key}
+              data-says={e.key}
+              aria-hidden={!on}
+              className={cn(
+                'col-start-1 row-start-1 flex flex-col items-start gap-2.5',
+                on
+                  ? 'opacity-100 [transition:opacity_var(--dur-med)_var(--ease-emph)_calc(var(--dur-short)_+_80ms)]'
+                  : 'pointer-events-none opacity-0 [transition:opacity_var(--dur-short)_var(--ease-emph)]',
+                'motion-reduce:transition-none',
+              )}
+            >
+              {/* The badge rides with the sentence, in every cell that has one,
+                  so the panel keeps the height it needs for it. */}
+              {e.isDefault && (
+                <span className="inline-flex items-center rounded-pill bg-primary px-2.5 py-0.5 text-overline font-bold uppercase text-primary-foreground">
+                  {t('home.engines.default')}
+                </span>
+              )}
+              <p className="text-lead leading-[1.4] text-on-surface [text-wrap:pretty]">
+                {t(`home.engines.about.${e.key}`)}
+              </p>
             </div>
           );
         })}

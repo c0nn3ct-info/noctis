@@ -1,5 +1,17 @@
-import { useRef, useState } from 'react';
-import { Lock } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ArrowLeftRight,
+  Fingerprint,
+  Globe,
+  Hash,
+  KeyRound,
+  Layers,
+  Lock,
+  Server,
+  Shield,
+  Tag,
+  type LucideIcon,
+} from 'lucide-react';
 import { t } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { ENGINES } from './engines';
@@ -7,8 +19,32 @@ import { engineName, engineRest, pickEngine, type EnginePick } from './engine-pi
 import { noteFor } from './field-notes';
 import { SAMPLE_LINK, parseShareLink, type Field } from './share-link';
 
+/**
+ * A mark for each field the parser names. A key it does not name — `flow`,
+ * `pbk` — falls back to the tag, the field that means least.
+ */
+const FIELD_ICON: Record<string, LucideIcon> = {
+  protocol: Layers,
+  uuid: KeyRound,
+  host: Server,
+  port: Hash,
+  security: Shield,
+  sni: Globe,
+  fingerprint: Fingerprint,
+  transport: ArrowLeftRight,
+  tag: Tag,
+};
+
 /** What is lit: a field of the link, the engine rail, or nothing. */
 type Active = number | 'engine' | null;
+
+/**
+ * Whether a pointer event is a pointer that hovers. A touch screen sends enter
+ * and leave around a tap, and leaves the element "hovered" until the next tap
+ * lands somewhere else — which kept a field lit after a second tap had let go
+ * of it. Taps are the pin's business, so hover ignores them.
+ */
+const hovers = (e: React.PointerEvent) => e.pointerType !== 'touch';
 
 /**
  * Which field a character of the link belongs to.
@@ -60,7 +96,29 @@ export function fieldAt(fields: readonly Field[], index: number): number | null 
 export function LinkAnatomy({ className }: { className?: string }) {
   const [link, setLink] = useState(SAMPLE_LINK);
   /** What the pointer is on, which is nothing until it is on something. */
-  const [active, setActive] = useState<Active>(null);
+  const [hover, setHover] = useState<Active>(null);
+  /**
+   * What a tap or a key left lit. A touch screen has no hover to speak of — it
+   * reports the pointer arriving and leaving around every tap — so on a phone
+   * this is the only way anything is marked at all. The pointer, where there
+   * is one, still wins while it is on something.
+   */
+  const [pinned, setPinned] = useState<Active>(null);
+  const active = hover ?? pinned;
+  const root = useRef<HTMLDivElement>(null);
+
+  const pin = (next: Active) => setPinned((was) => (was === next ? null : next));
+
+  // A pin lets go on a tap anywhere outside the card, which is where a thumb
+  // goes to dismiss something on a phone.
+  useEffect(() => {
+    if (pinned === null) return;
+    const away = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setPinned(null);
+    };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [pinned]);
 
   const fields = parseShareLink(link);
   const pick = pickEngine(fields);
@@ -71,6 +129,10 @@ export function LinkAnatomy({ className }: { className?: string }) {
 
   return (
     <div
+      ref={root}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') setPinned(null);
+      }}
       className={cn(
         // `rounded-md` is 16px, the radius this site gives a container of data —
         // the FAQ's frame, the diagram's scroller, the language menu.
@@ -81,18 +143,25 @@ export function LinkAnatomy({ className }: { className?: string }) {
         // palette claims them, which is the cheapest tell that a surface was
         // assembled rather than built.
         'caret-primary selection:bg-primary-container selection:text-primary-on-container',
-        // The focus indicator belongs to the card, not to the row inside it: an
-        // inset ring on the row draws square corners the radius then clips.
-        'focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring',
+        // The field's focus indicator belongs to the card, not to the row
+        // inside it: an inset ring on the row draws square corners the radius
+        // then clips. Only the field's — the entries ring themselves.
+        'has-[input:focus]:ring-2 has-[input:focus]:ring-inset has-[input:focus]:ring-ring',
         className,
       )}
     >
       <LinkField
         link={link}
-        onChange={setLink}
+        onChange={(next) => {
+          setLink(next);
+          // The fields are counted afresh, so a pinned index would light
+          // whatever now sits where the pinned field was.
+          setPinned(null);
+        }}
+        reveal={typeof pinned === 'number' ? pinned : null}
         fields={fields}
         lit={lit}
-        onHover={setActive}
+        onHover={setHover}
       />
 
       {fields.length === 0 ? (
@@ -101,13 +170,22 @@ export function LinkAnatomy({ className }: { className?: string }) {
         </p>
       ) : (
         <div className="grid lg:grid-cols-[minmax(0,1fr)_280px]">
-          <Entries fields={fields} hover={active} lit={lit} onHover={setActive} />
+          <Entries
+            fields={fields}
+            ground={active}
+            pinned={pinned}
+            lit={lit}
+            onHover={setHover}
+            onPin={pin}
+          />
           {pick && (
             <Rail
               pick={pick}
               decides={fields.filter((f) => f.decides)}
               hover={active}
-              onHover={setActive}
+              pinned={pinned === 'engine'}
+              onHover={setHover}
+              onPin={() => pin('engine')}
             />
           )}
         </div>
@@ -133,14 +211,32 @@ function LinkField({
   fields,
   lit,
   onHover,
+  reveal,
 }: {
   link: string;
   onChange: (next: string) => void;
   fields: readonly Field[];
   lit: (field: Field, i: number) => boolean;
   onHover: (next: Active) => void;
+  /** A field to bring into view: the one a tap pinned below. */
+  reveal: number | null;
 }) {
   const mirror = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+
+  // On a phone the field shows a third of the link, so a slice lit from below
+  // is usually off to the side. Scrolled to, with a little of what comes
+  // before it, by the same arithmetic the pointer uses.
+  useEffect(() => {
+    const el = input.current;
+    if (reveal === null || !el || !mirror.current) return;
+    const width = mirror.current.scrollWidth / Math.max(link.length, 1);
+    if (!width) return;
+    const start = fields.slice(0, reveal).reduce((at, f) => at + f.raw.length, 0);
+    el.scrollLeft = Math.max(0, start * width - 2 * width);
+    // Only the pin moves the field; typing scrolls it the way a field scrolls.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reveal]);
 
   /**
    * Which field the pointer is over, from where it is along the line.
@@ -152,7 +248,7 @@ function LinkField({
    * the whole line over its character count, and the column under the pointer
    * is the distance from the line's start over that.
    */
-  const fieldUnder = (e: React.MouseEvent<HTMLInputElement>): number | null => {
+  const fieldUnder = (e: React.PointerEvent<HTMLInputElement>): number | null => {
     const width = mirror.current ? mirror.current.scrollWidth / Math.max(link.length, 1) : 0;
     // No layout to measure: the server pass and jsdom both report zero, and a
     // division by it would put the pointer on the first field always.
@@ -163,10 +259,11 @@ function LinkField({
   };
 
   return (
-    // No fill of its own when the field takes focus: a second ground on the
-    // first row of a card reads as a selected row rather than as a focused
-    // field, and the card's ring already says where the focus is.
-    <div className="flex items-center gap-3.5 border-b border-surface-container-high px-[clamp(16px,2.4vw,24px)] py-1.5">
+    // Its own ground, a step above the entries, so the card reads as three
+    // parts — the link, what it holds, which engine runs it — before any of it
+    // is read. The ground is the bar's at rest and does not change on focus:
+    // the card's ring already says where the focus is.
+    <div className="flex items-center gap-3.5 border-b border-outline-variant bg-surface-container-low px-[clamp(16px,2.4vw,24px)] py-1.5">
       <Lock className="h-4 w-4 shrink-0 text-on-surface-variant" aria-hidden />
       <div className="relative min-w-0 flex-1">
         <div
@@ -208,6 +305,7 @@ function LinkField({
             `py-3` rather than a taller row: 20px of input inside a 56px row
             meant a tap in the row but outside that band did not focus it. */}
         <input
+          ref={input}
           type="text"
           value={link}
           onChange={(e) => onChange(e.target.value)}
@@ -216,8 +314,8 @@ function LinkField({
           }}
           // Pointing at a slice of the link lights it, its entry below, and
           // nothing else — the same mark the entries give, from the other end.
-          onMouseMove={(e) => onHover(fieldUnder(e))}
-          onMouseLeave={() => onHover(null)}
+          onPointerMove={(e) => hovers(e) && onHover(fieldUnder(e))}
+          onPointerLeave={(e) => hovers(e) && onHover(null)}
           aria-label={t('home.anatomy.input_aria')}
           spellCheck={false}
           autoComplete="off"
@@ -251,14 +349,19 @@ function LinkField({
  */
 function Entries({
   fields,
-  hover,
+  ground,
+  pinned,
   lit,
   onHover,
+  onPin,
 }: {
   fields: readonly Field[];
-  hover: Active;
+  /** The one entry under the pointer or the pin, which takes a ground. */
+  ground: Active;
+  pinned: Active;
   lit: (field: Field, i: number) => boolean;
   onHover: (next: Active) => void;
+  onPin: (next: Active) => void;
 }) {
   return (
     <div
@@ -266,31 +369,40 @@ function Entries({
       data-enter-stagger="fade"
       className={cn(
         'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-        '[&>*]:border-surface-container',
+        '[&>*]:border-surface-container-high',
         'max-sm:[&>*+*]:border-t',
         'sm:max-lg:[&>*:nth-child(n+3)]:border-t sm:max-lg:[&>*:nth-child(2n)]:border-s',
         'lg:[&>*:nth-child(n+4)]:border-t lg:[&>*:nth-child(3n+2)]:border-s lg:[&>*:nth-child(3n)]:border-s',
       )}
     >
       {fields.map((field, i) => (
-        <div
+        // A button, so a tap or a key can do what hovering does: pressed, it
+        // keeps its field lit until it is pressed again.
+        <button
+          type="button"
           key={`${i}-${field.label}`}
           data-field
           data-state={lit(field, i) ? 'active' : 'plain'}
-          onMouseEnter={() => onHover(i)}
-          onMouseLeave={() => onHover(null)}
+          aria-pressed={pinned === i}
+          onClick={() => onPin(i)}
+          onPointerEnter={(e) => hovers(e) && onHover(i)}
+          onPointerLeave={(e) => hovers(e) && onHover(null)}
           className={cn(
-            'flex min-w-0 flex-col gap-2 px-6 py-5 transition-colors duration-short ease-emph',
-            // The ground follows the pointer alone: the rail lights four values
-            // at once and the walk lights one every second and a half, and
-            // either would read as a selection sliding around the card.
-            hover === i && 'bg-surface-container-low',
+            'relative flex min-w-0 flex-col gap-2 px-6 pb-[26px] pt-6 text-start transition-colors duration-short ease-emph',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+            // The ground follows one entry: the rail lights four values at
+            // once, and a ground under all four would read as a selection
+            // sliding around the card.
+            ground === i && 'bg-surface-container-low',
           )}
         >
           <span
             className={cn(
               'text-overline uppercase',
-              field.decides ? 'text-on-surface' : 'text-on-surface-variant',
+              // The accent names the four fields that build the tunnel; the
+              // rest stay legible rather than dimmed, since an overline at
+              // `outline` falls under 4.5:1 on this ground.
+              field.decides ? 'text-primary' : 'text-on-surface-variant',
             )}
           >
             {field.label}
@@ -298,7 +410,18 @@ function Entries({
           {/* The value alone: the punctuation that introduces it is in the link
               above, and repeating `?security=` here would make the entry a
               second copy of the string rather than a reading of it. */}
-          <span dir="ltr" title={field.value} className="min-w-0 truncate font-mono text-value leading-[1.4]">
+          {/* Room on the right for the mark, so a long value truncates short
+              of it rather than running under it. */}
+          <span
+            dir="ltr"
+            title={field.value}
+            className={cn(
+              'min-w-0 pe-9 font-mono text-value leading-[1.4]',
+              // Pinned, the value is spelled out whole: the tooltip that holds
+              // it otherwise never appears under a finger.
+              pinned === i ? 'break-all' : 'truncate',
+            )}
+          >
             <span
               data-value
               className={cn(
@@ -314,9 +437,30 @@ function Entries({
           <span className="text-caption leading-[1.45] text-on-surface-variant [text-wrap:pretty]">
             {noteFor(field)}
           </span>
-        </div>
+          <FieldMark label={field.label} lit={lit(field, i)} />
+        </button>
       ))}
     </div>
+  );
+}
+
+/**
+ * A faint mark in the entry's corner that says what kind of thing the field is
+ * before its name is read, and takes the accent when the field is lit. Last in
+ * the entry so the name stays its first line for a reader.
+ */
+function FieldMark({ label, lit }: { label: string; lit: boolean }) {
+  const Icon = FIELD_ICON[label] ?? Tag;
+  return (
+    <Icon
+      aria-hidden
+      data-mark
+      strokeWidth={1.5}
+      className={cn(
+        'absolute end-[22px] top-[22px] h-[22px] w-[22px] transition-colors duration-short ease-emph',
+        lit ? 'text-primary' : 'text-outline-variant',
+      )}
+    />
   );
 }
 
@@ -335,24 +479,30 @@ function Rail({
   pick,
   decides,
   hover,
+  pinned,
   onHover,
+  onPin,
 }: {
   pick: EnginePick;
   decides: readonly Field[];
   hover: Active;
+  pinned: boolean;
   onHover: (next: Active) => void;
+  onPin: () => void;
 }) {
   return (
     <div
       data-rail
       data-enter="fade"
       data-state={hover === 'engine' ? 'active' : 'plain'}
-      onMouseEnter={() => onHover('engine')}
-      onMouseLeave={() => onHover(null)}
+      onPointerEnter={(e) => hovers(e) && onHover('engine')}
+      onPointerLeave={(e) => hovers(e) && onHover(null)}
       className={cn(
-        'flex flex-col gap-3.5 border-t border-surface-container-high p-6 transition-colors duration-short ease-emph',
+        // The page's own ground, a step below the entries: the rail is the
+        // verdict the fields add up to, and sits apart from them.
+        'flex flex-col gap-3.5 border-t border-outline-variant p-6 transition-colors duration-short ease-emph',
         'lg:border-s lg:border-t-0',
-        hover === 'engine' && 'bg-surface-container-low',
+        hover === 'engine' ? 'bg-surface-container-low' : 'bg-background',
       )}
     >
       <span className="text-overline uppercase text-on-surface-variant">
@@ -400,7 +550,14 @@ function Rail({
       </span>
 
       {decides.length > 0 && (
-        <div className="mt-auto flex flex-col gap-1.5 border-t border-surface-container-high pt-3.5">
+        // The line that names the deciding fields is the rail's control: a tap
+        // on it lights them, as pointing at the rail does.
+        <button
+          type="button"
+          aria-pressed={pinned}
+          onClick={onPin}
+          className="m3-state-layer -mx-3 -mb-3 mt-auto flex min-h-11 flex-col gap-1.5 rounded-sm border-t border-surface-container-high px-3 pb-3 pt-3.5 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           <span className="text-overline uppercase text-on-surface-variant">
             {t('home.anatomy.decided_by')}
           </span>
@@ -410,7 +567,7 @@ function Rail({
           <span dir="ltr" className="font-mono text-meta leading-[1.6] text-on-surface-variant">
             {decides.map((f) => f.label).join(' · ')}
           </span>
-        </div>
+        </button>
       )}
     </div>
   );

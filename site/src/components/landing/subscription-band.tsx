@@ -156,7 +156,7 @@ export function SubscriptionBand({ className }: { className?: string }) {
         className,
       )}
     >
-      <div data-enter="fade" className="grid grid-cols-[28px_minmax(0,1fr)] gap-6 bg-surface-container-low p-7">
+      <div data-enter="fade" className="grid grid-cols-[28px_minmax(0,1fr)] gap-5 bg-surface-container-low p-5 sm:gap-6 sm:p-7">
         {/* The plan as a column: what has been spent fills it from the bottom,
             down first because down is what a plan is spent on. 
           *
@@ -278,7 +278,9 @@ export function SubscriptionBand({ className }: { className?: string }) {
             </span>
           </div>
 
-          <div className="flex gap-5">
+          {/* Wraps rather than squeezes: in Russian the two labels together
+              run past a phone's column. */}
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
             <Stat value={t('home.subs.days').replace('{n}', '20')} label={t('home.subs.to_expiry')} />
             <Stat value={t('home.subs.hours').replace('{n}', '6')} label={t('home.subs.every')} />
           </div>
@@ -336,7 +338,17 @@ export function SubscriptionBand({ className }: { className?: string }) {
                   </span>
                   <span dir="ltr" className="truncate font-mono text-meta text-on-surface-variant">
                     {`${server.host} `}
-                    <span className="text-on-surface-variant">{`· ${server.tags.join(' · ')}`}</span>
+                    {/* The protocol always; the transport and security only
+                        where there is room for them. On a phone the whole
+                        stack truncated to `fra.sirius.vpn:443 · vl…`, which
+                        kept none of it. */}
+                    <span className="text-on-surface-variant">{`· ${server.tags[0]}`}</span>
+                    <span className="hidden text-on-surface-variant sm:inline">
+                      {server.tags
+                        .slice(1)
+                        .map((tag) => ` · ${tag}`)
+                        .join('')}
+                    </span>
                   </span>
                 </span>
 

@@ -106,16 +106,16 @@ export function RoutingBand({ className }: { className?: string }) {
         {LANES.map((lane) => `${t(`home.routing.route_${lane}`)}: ${countFor(lane, mode)}`).join(', ')}
       </p>
 
-      {/* Below `lg` the table keeps its width and scrolls: four columns and a
-          230px request need about 700px, and reflowed into a phone the lanes
-          stop being lanes. */}
-      {/* One piece: the rule column's cells carry an opacity of their own for
+      <Cards routes={routes} byRule={byRule} countFor={(lane) => countFor(lane, mode)} />
+
+      {/* The table needs about 700px: four columns and a 230px request. Below
+          `md` it would scroll, and the lanes — the answer — would be the part
+          scrolled off, so a phone gets the list above instead.
+       *
+          One piece: the rule column's cells carry an opacity of their own for
           the modes that read no rule, and a row-by-row fade over them would
           show the column for as long as it ran. */}
-      <div
-        data-enter="soft"
-        className="scrollbar-quiet -mx-5 overflow-x-auto px-5 lg:mx-0 lg:overflow-visible lg:px-0"
-      >
+      <div data-table data-enter="soft" className="hidden md:block">
         <div
           className="grid min-w-[680px] transition-[grid-template-columns] duration-long ease-emph lg:min-w-0"
           style={{ gridTemplateColumns: `230px ${byRule ? '170px' : '0px'} repeat(3, minmax(0, 1fr))` }}
@@ -227,6 +227,100 @@ function ModeLine({ on, about, short }: { on: boolean; about: string; short: str
       {line(on, 'text-title-dense leading-[1.5] [text-wrap:pretty]', about)}
       {line(!on, 'text-body-medium', short)}
     </span>
+  );
+}
+
+/**
+ * The table, for a phone: one row per request, the host with the rule that
+ * decided under it, and the answer at the end in words.
+ *
+ * Three lanes do not fit a phone without taking the answer off the screen, and
+ * a table that has to be scrolled to be read has stopped being a table. So the
+ * lanes fold into a label in their own tint, and what the lanes did as columns
+ * — show at a glance how many went each way — moves to a tally over the list.
+ */
+function Cards({
+  routes,
+  byRule,
+  countFor,
+}: {
+  routes: readonly { host: string; direction: Direction }[];
+  byRule: boolean;
+  countFor: (lane: Direction) => number;
+}) {
+  return (
+    <div data-cards data-enter="soft" className="md:hidden">
+      <div aria-hidden className="flex flex-wrap gap-2 pb-4">
+        {LANES.map((lane) => {
+          const n = countFor(lane);
+          return (
+            <span
+              key={lane}
+              data-tally={lane}
+              data-empty={n === 0 ? '' : undefined}
+              className={cn(
+                DIRECTION_CLASS[lane],
+                'inline-flex items-center gap-2 rounded-pill px-3 py-1.5 text-overline font-bold transition-colors duration-med ease-emph',
+                // A lane nothing went down drops to the page's grey, as its
+                // head does in the table.
+                n === 0
+                  ? 'bg-surface-container-low text-on-surface-variant'
+                  : 'bg-[hsl(var(--dir)/0.16)] text-dir',
+              )}
+            >
+              {t(`home.routing.route_${lane}`)}
+              <span className="font-mono tabular-nums tracking-normal">{n}</span>
+            </span>
+          );
+        })}
+      </div>
+
+      <ul className="flex flex-col">
+        {routes.map((route) => {
+          const rule = routeFor(route.host, 'rules').rule;
+          return (
+            <li
+              key={route.host}
+              data-card={route.host}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-surface-container py-3"
+            >
+              <span className="flex min-w-0 flex-col">
+                <span dir="ltr" className="truncate font-mono text-title-dense leading-[1.6] text-on-surface">
+                  {route.host}
+                </span>
+                {/* Folded rather than removed under the modes that read no
+                    rule, so the rows close up together instead of jumping. */}
+                <span
+                  aria-hidden={!byRule}
+                  className={cn(
+                    'grid transition-[grid-template-rows,opacity] duration-long ease-emph',
+                    byRule ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+                  )}
+                >
+                  <span className="overflow-hidden">
+                    <span data-card-rule dir="ltr" className="flex gap-1.5 font-mono text-meta text-on-surface-variant">
+                      <span className="truncate">{rule ? rule.value : t('home.routing.no_rule')}</span>
+                      {rule && rule.kind !== 'domain' && <span className="shrink-0">{rule.kind}</span>}
+                    </span>
+                  </span>
+                </span>
+              </span>
+              <span
+                data-verdict={route.direction}
+                className={cn(
+                  DIRECTION_CLASS[route.direction],
+                  // One width for all three words, so the column of labels
+                  // reads as a column and a mode change does not shift it.
+                  'min-w-[6.5rem] rounded-pill bg-[hsl(var(--dir)/0.16)] px-3 py-1.5 text-center text-overline font-bold text-dir transition-colors duration-med ease-emph',
+                )}
+              >
+                {t(`home.routing.route_${route.direction}`)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 

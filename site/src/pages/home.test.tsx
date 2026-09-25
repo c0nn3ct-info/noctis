@@ -199,8 +199,16 @@ describe('HomePage', () => {
     // squeezing it into what is left: without it the globe came out a third
     // of the size it has beside the copy.
     const band = container.querySelector('main section > div.relative') as HTMLElement;
-    expect(band.className).toContain('pb-[min(32vh,240px)]');
+    // Only the part the buttons are not standing on: at 240px the strip ran
+    // past the globe and left the foot of the band empty on a phone.
+    expect(band.className).toContain('pb-[min(20vh,150px)]');
     expect(band.className).toContain('md:pb-20');
+
+    // Square on a phone and hung from the foot, so the scene — which fits the
+    // globe to the narrower side and centres it — puts it under the buttons
+    // rather than up behind the lede.
+    expect(figure.className).toContain('aspect-square');
+    expect(figure.className).toContain('sm:aspect-auto');
   });
 
   it('keeps the call to action on one row wherever it fits on one', () => {

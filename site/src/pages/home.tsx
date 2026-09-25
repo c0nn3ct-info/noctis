@@ -67,7 +67,12 @@ export function HomePage() {
             because it can: those rows carry their own grounds — filled,
             outlined, blurred — so they read over a planet, and the band does
             not have to buy the figure's whole height in padding to give it a
-            size worth looking at. */}
+            size worth looking at.
+          *
+            Square on a phone and hung from the band's foot: the scene fits the
+            globe to the box's narrower side and centres it, so a box taller
+            than it was wide floated the globe up behind the lede and left the
+            bottom of the band empty. */}
         {/* From `xl` the box is 74% wide and hung 6% off the edge. At 80% and
             −4% the land reached the end of the headline's second line at 1440,
             1728 and 1920 — the last letters of "engine" ran into the first
@@ -75,7 +80,7 @@ export function HomePage() {
             least 60px of grey disc between the words and the land. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-[2%] end-[-14%] h-[74%] w-[128%] sm:bottom-[1%] sm:end-[-10%] sm:h-[76%] sm:w-[112%] md:inset-y-[-12%] md:end-[-3%] md:h-auto md:w-[62%] lg:inset-y-[-14%] lg:end-[-4%] lg:w-[72%] xl:end-[-6%] xl:w-[74%]"
+          className="pointer-events-none absolute bottom-[-10%] end-[-14%] aspect-square h-auto w-[128%] sm:bottom-[1%] sm:aspect-auto sm:end-[-10%] sm:h-[76%] sm:w-[112%] md:inset-y-[-12%] md:end-[-3%] md:h-auto md:w-[62%] lg:inset-y-[-14%] lg:end-[-4%] lg:w-[72%] xl:end-[-6%] xl:w-[74%]"
         >
           <HeroScene aria-label={t('home.hero.scene_alt')} />
         </div>
@@ -135,7 +140,7 @@ export function HomePage() {
             part of the figure the buttons are not standing on, which is why
             it is smaller than the globe. Capped in vh as well as px so a
             short window does not end up with a hero two screens tall. */}
-        <div className="relative mx-auto flex min-h-[620px] w-full max-w-[1160px] flex-col justify-center px-5 pb-[min(32vh,240px)] pt-14 sm:min-h-[720px] sm:px-8 sm:pb-[min(30vh,270px)] sm:pt-20 md:pb-20 lg:px-10 lg:py-24 [@media(max-height:500px)]:min-h-0 [@media(max-height:500px)]:pt-10">
+        <div className="relative mx-auto flex min-h-[min(620px,88svh)] w-full max-w-[1160px] flex-col justify-center px-5 pb-[min(20vh,150px)] pt-14 sm:min-h-[720px] sm:px-8 sm:pb-[min(30vh,270px)] sm:pt-20 md:pb-20 lg:px-10 lg:py-24 [@media(max-height:500px)]:min-h-0 [@media(max-height:500px)]:pt-10">
           {/* aria2t's shape, and for its reason: only the reading blocks are
               capped, and the buttons and the chips are their siblings at the
               band's own width.
@@ -155,9 +160,15 @@ export function HomePage() {
                 heading's size is capped with it — aria2t's rule, and the
                 reason is the wrap: the longer line runs about nine times the
                 font size, so a measure that stops growing while the font
-                keeps going is exactly how two lines become three. */}
+                keeps going is exactly how two lines become three.
+              *
+                On a phone the measure is the screen, so the size follows the
+                screen: 11vw less the gutter's share keeps the longer line
+                inside it, where 6vw had left it at a 36px floor on every
+                phone there is — and at 320 that floor broke it onto a third
+                line. */}
             <div className="max-w-[600px] md:max-w-[420px] lg:max-w-[min(600px,42vw)]">
-              <h1 className="m-0 text-[clamp(36px,6vw,72px)] leading-[0.93] tracking-[-0.04em] md:text-[min(45px,6vw)] lg:text-[min(72px,5vw)]">
+              <h1 className="m-0 text-[clamp(32px,calc(11vw-4px),46px)] sm:text-[clamp(36px,6vw,72px)] leading-[0.93] tracking-[-0.04em] md:text-[min(45px,6vw)] lg:text-[min(72px,5vw)]">
                 <span className="block font-extrabold">{t('home.hero.h1_a')}</span>
                 <span className="block font-light text-on-surface-variant">
                   {t('home.hero.h1_b')}
@@ -225,7 +236,7 @@ export function HomePage() {
           mode that overrules it. It follows the popup because the popup is
           where these three words — proxy, direct, blocked — are read. */}
       <LandingSection id="routing">
-        <div data-enter="soft" className="mb-10">
+        <div data-enter="soft" className="mb-8 sm:mb-10">
           <SectionHeading
             title={t('home.routing.h2')}
             body={t('home.routing.lede')}
@@ -248,7 +259,7 @@ export function HomePage() {
       <LandingSection id="protocols">
         {/* 40px under the heading, which is the step the band's own parts take
             between them. */}
-        <div data-enter="soft" className="mb-10">
+        <div data-enter="soft" className="mb-8 sm:mb-10">
           <SectionHeading
             title={t('home.protocols.h2')}
             body={t('home.protocols.lede')}
@@ -276,7 +287,7 @@ export function HomePage() {
             600px column of copy over a 1080px card reads as a caption that lost
             its figure. The answer — which engine this link runs on — is inside
             the card now, on the rail beside the fields that decided it. */}
-        <div data-enter="soft" className="mb-10">
+        <div data-enter="soft" className="mb-8 sm:mb-10">
           <SectionHeading
             title={t('home.anatomy.h2')}
             body={t('home.anatomy.lede')}
@@ -294,7 +305,7 @@ export function HomePage() {
           page; this answers the one a visitor holding a provider's link has
           right now. */}
       <LandingSection id="subscriptions">
-        <div data-enter="soft" className="mb-10">
+        <div data-enter="soft" className="mb-8 sm:mb-10">
           <SectionHeading
             title={t('home.subs.h2')}
             body={t('home.subs.lede')}

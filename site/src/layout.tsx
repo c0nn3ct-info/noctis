@@ -119,7 +119,8 @@ function FooterColumn({ label, children }: { label: string; children: ReactNode 
       <div className="mb-2 text-overline uppercase text-on-surface-variant">
         {label}
       </div>
-      <ul className="space-y-1.5">{children}</ul>
+      {/* On a phone the rows are 44px each and need no gap between them. */}
+      <ul className="sm:space-y-1.5">{children}</ul>
     </nav>
   );
 }
@@ -136,9 +137,9 @@ function FooterLink({ href, icon: Icon, children, current, external }: FooterLin
   return (
     <li>
       <a
-        // 24px minimum: at the footer's label size the rows would otherwise sit
-        // closer together than a finger can pick them apart.
-        className="inline-flex min-h-[24px] items-center gap-2 py-1 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        // 44px on a phone, where the footer is navigated by thumb; 24px from
+        // `sm`, the floor at which a pointer can still pick the rows apart.
+        className="inline-flex min-h-11 items-center gap-2 underline-offset-4 sm:min-h-[24px] sm:py-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         href={href}
         aria-current={current ? 'page' : undefined}
         {...(external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
@@ -231,13 +232,16 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
       >
         <div
           className={cn(
-            'mx-auto flex w-full flex-wrap items-start gap-x-12 gap-y-6 border-t border-outline-variant pt-6',
+            // Two columns on a phone, the brand across both: a free wrap put
+            // one column under another at whatever width each happened to be.
+            'mx-auto grid w-full grid-cols-2 items-start gap-x-6 gap-y-6 border-t border-outline-variant pt-6',
+            'sm:flex sm:flex-wrap sm:gap-x-12',
             // A bleeding page lays its own bands out edge to edge, so the rule
             // closes the whole band rather than a reading measure inside it.
             !bleed && 'max-w-5xl',
           )}
         >
-          <div className="flex max-w-[280px] flex-col gap-3">
+          <div className="col-span-2 flex max-w-[280px] flex-col gap-3">
             <BrandLockup homeHref={homeHref} logoClass="h-5 w-5" idSuffix="footer" />
             <p className="text-body-small text-on-surface-variant">{t('home.description')}</p>
           </div>
@@ -296,7 +300,7 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
                 </span>
               )}
               <a
-                className="inline-flex min-h-6 items-center underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex min-h-11 items-center underline-offset-4 sm:min-h-6 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 href={withLocale(currentPath, l.code)}
                 hrefLang={l.code}
                 lang={l.code}

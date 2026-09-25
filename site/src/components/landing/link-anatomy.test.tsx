@@ -109,6 +109,103 @@ describe('LinkAnatomy', () => {
     expect(container.querySelector('[data-state="active"]')).toBeNull();
   });
 
+  it('marks each entry with what kind of field it is, and lights the mark with it', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<LinkAnatomy />);
+    const marks = () => lines(container).map((l) => l.querySelector('[data-mark]') as Element);
+
+    expect(marks().every(Boolean)).toBe(true);
+    expect(marks()[0]).toHaveClass('lucide-layers');
+    expect(marks()[5]).toHaveClass('lucide-globe');
+    // Decoration: the name is still the entry's first line for a reader.
+    expect(marks()[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(marks().filter((m) => m.classList.contains('text-primary'))).toHaveLength(0);
+
+    await user.hover(lines(container)[5]);
+
+    expect(marks().map((m) => m.classList.contains('text-primary'))).toEqual(
+      parsed.map((_, i) => i === 5),
+    );
+  });
+
+  describe('under a finger', () => {
+    it('pins a field with a tap, and lets it go with a second', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<LinkAnatomy />);
+
+      await user.click(lines(container)[5]);
+      // The pointer leaving is what a touch screen reports after every tap.
+      await user.unhover(lines(container)[5]);
+
+      expect(lines(container)[5]).toHaveAttribute('data-state', 'active');
+      expect(lines(container)[5]).toHaveAttribute('aria-pressed', 'true');
+      expect(slices(container)[5]).toHaveAttribute('data-state', 'active');
+
+      await user.click(lines(container)[5]);
+      await user.unhover(lines(container)[5]);
+
+      expect(container.querySelector('[data-state="active"]')).toBeNull();
+    });
+
+    it('moves the pin to whichever field is tapped next', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<LinkAnatomy />);
+
+      await user.click(lines(container)[1]);
+      await user.click(lines(container)[2]);
+      await user.unhover(lines(container)[2]);
+
+      expect(states(slices(container)).filter((s) => s === 'active')).toHaveLength(1);
+      expect(slices(container)[2]).toHaveAttribute('data-state', 'active');
+    });
+
+    it('lets go of a pin on Escape, or on a tap anywhere else', async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <>
+          <LinkAnatomy />
+          <p>elsewhere</p>
+        </>,
+      );
+
+      await user.click(lines(container)[0]);
+      await user.unhover(lines(container)[0]);
+      await user.keyboard('{Escape}');
+      expect(container.querySelector('[data-state="active"]')).toBeNull();
+
+      await user.click(lines(container)[0]);
+      await user.unhover(lines(container)[0]);
+      await user.click(screen.getByText('elsewhere'));
+      expect(container.querySelector('[data-state="active"]')).toBeNull();
+    });
+
+    it('spells a pinned value out in full, which a tooltip never did on a phone', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<LinkAnatomy />);
+      const box = (i: number) => values(container)[i].parentElement as HTMLElement;
+
+      expect(box(5)).toHaveClass('truncate');
+
+      await user.click(lines(container)[5]);
+
+      expect(box(5)).not.toHaveClass('truncate');
+      expect(box(5)).toHaveClass('break-all');
+      expect(box(4)).toHaveClass('truncate');
+    });
+
+    it('pins the engine’s fields from the line that names them', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<LinkAnatomy />);
+      const decided = screen.getByRole('button', { name: new RegExp(t('home.anatomy.decided_by'), 'i') });
+
+      await user.click(decided);
+      await user.unhover(rail(container));
+
+      expect(decided).toHaveAttribute('aria-pressed', 'true');
+      expect(states(lines(container))).toEqual(parsed.map((f) => (f.decides ? 'active' : 'plain')));
+    });
+  });
+
   it('spells the link back out of its own slices', () => {
     const { container } = render(<LinkAnatomy />);
 
@@ -291,9 +388,14 @@ describe('LinkAnatomy', () => {
       'selection:bg-primary-container',
       'selection:text-primary-on-container',
     );
-    // And the focus indicator is the card's, so the ring follows its radius
-    // instead of drawing square corners the radius then clips.
-    expect(card).toHaveClass('focus-within:ring-2', 'focus-within:ring-inset', 'focus-within:ring-ring');
+    // And the field's focus indicator is the card's, so the ring follows its
+    // radius instead of drawing square corners the radius then clips. Only the
+    // field's: the entries are buttons now, and ring themselves.
+    expect(card).toHaveClass(
+      'has-[input:focus]:ring-2',
+      'has-[input:focus]:ring-inset',
+      'has-[input:focus]:ring-ring',
+    );
   });
 
   it('gives the field a hit area a finger can land on', () => {

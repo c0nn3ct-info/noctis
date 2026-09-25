@@ -5,18 +5,19 @@ import { t } from '@/i18n';
 
 describe('PopupBand', () => {
 
-  it('runs the phone mock off the screen edge, and lets the band clip it', () => {
+  it('fits the whole phone mock on the screen, scaled rather than scrolled', () => {
     const { container } = render(<PopupBand />);
 
-    // The 380px surface cannot fit a 390px phone with a gutter either way.
-    // Bled, it runs off the edge the way a phone shows anything wider than
-    // itself; contained, it was cut mid-card with 20px of ground beside the
-    // cut. `overflow-x: clip` on the band keeps those 40px off the document,
-    // and unlike `auto` it makes no scroll container for a sticky to catch on.
-    const strip = container.querySelector('.overflow-x-auto') as HTMLElement;
-    expect(strip.className).toContain('-mx-5');
+    // A 380px surface on a 360px phone either scrolls sideways or shrinks. It
+    // shrinks: the popup is the subject, and the half that scrolled off was the
+    // half with the answer in it.
+    expect(container.querySelector('.overflow-x-auto')).toBeNull();
+    const fit = container.querySelector('[data-fit]') as HTMLElement;
+    expect(fit.style.getPropertyValue('--s')).toContain('100cqw');
+    expect(fit.parentElement?.className).toContain('[container-type:inline-size]');
     expect(container.firstElementChild).toHaveClass('overflow-x-clip');
   });
+
   it('says what the popup is, and what only it can claim', () => {
     render(<PopupBand />);
 
@@ -43,8 +44,7 @@ describe('PopupBand', () => {
 
     const strip = container.querySelector('.sm\\:hidden');
     const framed = container.querySelector('.sm\\:flex');
-    // 382: the 380 surface plus the pixel of site framing on each edge.
-    expect(strip?.querySelector('.min-w-\\[382px\\]')).not.toBeNull();
+    expect(strip?.querySelector('[data-fit]')).not.toBeNull();
     expect(framed).toHaveClass('hidden');
   });
 

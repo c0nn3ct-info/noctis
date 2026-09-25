@@ -25,21 +25,30 @@ import { SurfaceSwitch } from './surface-switch';
  *
  * Below `sm` the frame is the wrong container: wider than the viewport, it
  * would put the subject of the band off the right edge. The popup goes alone
- * there, still at 380, and the strip scrolls sideways — a popup narrowed to 280
- * is no longer the thing being shown.
+ * there, laid out at its own 380 and scaled down to the column as one picture,
+ * so a 360px phone sees all of it. A popup reflowed to 320 would be a different
+ * popup; one scrolled sideways hid the half with the servers in it.
  */
 function Extension() {
   return (
     <>
-      {/* Bled to the band edge, so the 380px surface runs off the screen the
-          way a phone shows anything wider than itself. Contained inside the
-          gutter instead, it was cut mid-card with 20px of ground beside the
-          cut, which reads as broken rather than as more to scroll to. The band
-          clips the bleed, so those 40px never reach the document. */}
-      <div className="scrollbar-quiet -mx-5 overflow-x-auto px-5 sm:hidden">
-        {/* 382: the 380 surface plus the pixel of site framing on each edge. */}
-        <div className="min-w-[382px]">
-          <PopupMock />
+      <div className="[container-type:inline-size] sm:hidden">
+        {/* `--s` is the column over 382 — the surface plus a pixel of framing on
+            each edge — as a bare number: `atan2` of two lengths is an angle,
+            and its tangent is their ratio. Never above 1, so a wide phone
+            shows the popup at its own size. The height follows the scale, so
+            nothing is left standing under the popup where it used to reach. */}
+        <div
+          data-fit
+          className="flex justify-center"
+          style={{
+            '--s': 'min(1, tan(atan2(100cqw, 382px)))',
+            height: 'calc(602px * var(--s))',
+          } as React.CSSProperties}
+        >
+          <div className="shrink-0 origin-top [transform:scale(var(--s))]">
+            <PopupMock />
+          </div>
         </div>
       </div>
       <div className="hidden sm:flex sm:justify-center">

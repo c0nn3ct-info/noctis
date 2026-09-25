@@ -47,7 +47,11 @@ describe('SubscriptionBand', () => {
     expect(rows(container)).toHaveLength(3);
     const frankfurt = within(rows(container)[0]);
     expect(frankfurt.getByText(/fra\.sirius\.vpn:443/)).toBeInTheDocument();
-    expect(frankfurt.getByText(/vless · tcp · reality · xtls-rprx-vision/)).toBeInTheDocument();
+    // The whole stack reads in order, the protocol first; past the protocol
+    // it only shows where there is room for it.
+    const endpoint = frankfurt.getByText(/fra\.sirius\.vpn:443/);
+    expect(endpoint).toHaveTextContent('vless · tcp · reality · xtls-rprx-vision');
+    expect(within(endpoint).getByText(/· tcp · reality/)).toHaveClass('hidden', 'sm:inline');
     expect(frankfurt.getByText('128 ms')).toBeInTheDocument();
   });
 
