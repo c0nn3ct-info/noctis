@@ -780,6 +780,10 @@
       animation: enter-fade var(--ease-emph-decel) backwards;
       animation-timeline: view();
       animation-range: cover 4% cover 32%;
+      /* A layer each from the start. Inside a card that is itself moving,
+       * Safari built one per row at the moment its fade began and dropped a
+       * 55-70ms frame doing it; a handful of rows can hold theirs. */
+      will-change: opacity;
     }
     /* The same steps for faded parts. Here they matter more: the server rows
      * are placed by a transform, which a view timeline does not see, so all

@@ -168,7 +168,11 @@ export function Layout({ current, bleed = false, children }: LayoutProps) {
         {t('nav.skip')}
       </a>
 
-      <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-outline-variant bg-surface-container-low/95 px-4 backdrop-blur-md sm:px-6">
+      {/* Opaque, and no backdrop blur. The blur was only there to hide what a
+          95% fill let through, and over the hero's live canvas it made the
+          first frame of every scroll a 55-90ms one in Chrome while its
+          surface was built. */}
+      <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-outline-variant bg-surface-container-low px-4 sm:px-6">
         {/* Under 360px the lockup and the two 44px buttons need 9px more than
             the bar has, so the org half goes; the footer still carries it. */}
         <BrandLockup

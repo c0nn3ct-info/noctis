@@ -19,6 +19,10 @@ describe('Layout', () => {
     );
 
     const header = screen.getByRole('banner');
+    // Opaque, with no backdrop blur: over the hero's live WebGL canvas the
+    // blur cost the first scroll frame 55-90ms in Chrome.
+    expect(header.className).not.toMatch(/backdrop-blur/);
+    expect(header).toHaveClass('bg-surface-container-low');
     const home = within(header).getByRole('link', { name: t('nav.home_aria') });
     expect(home).toHaveAttribute('href', '/');
     expect(home.querySelector('svg')).not.toBeNull();

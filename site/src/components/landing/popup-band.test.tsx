@@ -15,6 +15,9 @@ describe('PopupBand', () => {
     const fit = container.querySelector('[data-fit]') as HTMLElement;
     expect(fit.style.getPropertyValue('--s')).toContain('100cqw');
     expect(fit.parentElement?.className).toContain('[container-type:inline-size]');
+    // Its own layer, rastered once at the scale: Safari re-rastered the whole
+    // popup on every frame of the band's exit and dropped one of 60-70ms.
+    expect(fit.firstElementChild).toHaveClass('will-change-transform');
     expect(container.firstElementChild).toHaveClass('overflow-x-clip');
   });
 
