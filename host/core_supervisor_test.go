@@ -590,6 +590,36 @@ func TestSupervisorStopKillsStubbornChild(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 }
 
+// Windows has no SIGTERM: Process.Signal fails there without touching the
+// child. stop() used to ignore that and sit out the whole grace period, so the
+// core kept its port for 2s and a connect in that window was refused with
+// "already running". A signal the platform cannot deliver has to mean kill now.
+func TestSupervisorStopKillsAtOnceWhenTermUnsupported(t *testing.T) {
+	stashVersionCache(t)
+	seedVersion(t, "sing-box", "1.11.0")
+	t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.11.0"))
+	notify, events := collectNotify()
+	sup := newSupervisor(notify)
+	savedGrace, savedTerm := stopGrace, signalTerm
+	stopGrace = 10 * time.Second
+	signalTerm = func(*os.Process) error { return errors.New("not supported by windows") }
+	t.Cleanup(func() { stopGrace, signalTerm = savedGrace, savedTerm })
+
+	if _, err := sup.start(singBoxCore{}, socksConfig(map[string]any{"test_behavior": "ignoreterm"})); err != nil {
+		t.Fatalf("start: %v", err)
+	}
+	sup.stop()
+	waitEvent(t, events, "child_exit", time.Second)
+	if got := sup.currentPort(); got != 0 {
+		t.Fatalf("currentPort after stop = %d", got)
+	}
+	if _, err := sup.start(singBoxCore{}, socksConfig(nil)); err != nil {
+		t.Fatalf("start right after stop: %v", err)
+	}
+	sup.stop()
+	waitEvent(t, events, "child_exit", time.Second)
+}
+
 // stop() used to poll cmd.ProcessState to decide whether the child still needed
 // a SIGKILL, which is a read of state that cmd.Wait() writes from the supervise
 // goroutine - a data race, and the shape below is what tripped it: a child that

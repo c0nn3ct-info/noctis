@@ -904,6 +904,10 @@ func (s *supervisor) supervise(cmd *exec.Cmd, port int, done chan struct{}) {
 // A var so tests can shorten it.
 var stopGrace = 2 * time.Second
 
+// signalTerm is a seam for tests: the failure it exists to handle is Windows',
+// where os.Process.Signal refuses SIGTERM, and unix never reaches it.
+var signalTerm = func(p *os.Process) error { return p.Signal(syscall.SIGTERM) }
+
 func (s *supervisor) stop() {
 	s.mu.Lock()
 	cmd := s.cmd
@@ -925,7 +929,12 @@ func (s *supervisor) stop() {
 	if cmd == nil || cmd.Process == nil {
 		return
 	}
-	_ = cmd.Process.Signal(syscall.SIGTERM)
+	if err := signalTerm(cmd.Process); err != nil {
+		// Windows cannot deliver SIGTERM at all. Waiting out the grace period
+		// there only keeps the core on its port, and a connect inside that
+		// window is refused with "already running".
+		_ = cmd.Process.Kill()
+	}
 	// Read on the caller's goroutine, not inside the escalation: the value is
 	// only ever changed by a test, and reading it here keeps that change ordered
 	// behind the stop() that observes it.
