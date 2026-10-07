@@ -104,7 +104,13 @@ func (singBoxCore) InjectBindInterface(raw []byte, iface string) ([]byte, error)
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		return nil, err
 	}
-	if obs, ok := doc["outbounds"].([]any); ok {
+	// WireGuard lives under `endpoints` since sing-box 1.13; it dials like an
+	// outbound and takes the same dial fields.
+	for _, key := range []string{"outbounds", "endpoints"} {
+		obs, ok := doc[key].([]any)
+		if !ok {
+			continue
+		}
 		for _, ob := range obs {
 			m, ok := ob.(map[string]any)
 			if !ok {

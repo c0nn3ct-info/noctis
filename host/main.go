@@ -17,7 +17,7 @@ import (
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.2.8"
+var hostVersion = "1.3.0"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`
@@ -287,6 +287,9 @@ type startArgs struct {
 	// a LAN emulator like Hamachi, where every outbound dial dies silently, so
 	// the user gets the last word.
 	BindInterface string `json:"bindInterface"`
+	// Geo names the active profile's own databases for xray and mihomo; empty
+	// leaves the ones shipped with the helper.
+	Geo geoURLs `json:"geo"`
 }
 
 func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
@@ -381,6 +384,7 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 			return errAck(msg.ID, err)
 		}
 		sup.setBindPref(args.BindInterface)
+		sup.setGeoURLs(args.Geo)
 		port, err := sup.start(core, raw)
 		if err != nil {
 			logger.Printf("start failed: %v", err)
@@ -404,6 +408,7 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 			return errAck(msg.ID, err)
 		}
 		sup.setBindPref(args.BindInterface)
+		sup.setGeoURLs(args.Geo)
 		port, err := sup.reload(core, raw)
 		if err != nil {
 			logger.Printf("reload failed: %v", err)

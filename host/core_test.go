@@ -80,6 +80,24 @@ func TestSingBoxInjectBindInterface(t *testing.T) {
 	}
 }
 
+// sing-box 1.13 runs WireGuard as an endpoint, not an outbound; an unbound
+// endpoint would handshake through a system VPN's default route.
+func TestSingBoxInjectBindInterfaceWireGuardEndpoint(t *testing.T) {
+	raw := []byte(`{"endpoints":[{"type":"wireguard","tag":"proxy-out"}],"outbounds":[{"type":"direct","tag":"direct"}]}`)
+	out, err := singBoxCore{}.InjectBindInterface(raw, "en0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(out, &doc); err != nil {
+		t.Fatal(err)
+	}
+	wg := doc["endpoints"].([]any)[0].(map[string]any)
+	if wg["bind_interface"] != "en0" {
+		t.Fatalf("wireguard endpoint bind_interface=%v", wg["bind_interface"])
+	}
+}
+
 func TestSingBoxInjectBindInterfaceEmptyNoop(t *testing.T) {
 	raw := []byte(`{"outbounds":[{"type":"vless"}]}`)
 	out, err := singBoxCore{}.InjectBindInterface(raw, "")

@@ -376,6 +376,9 @@ type supervisor struct {
 	// can carry its protocol. A problem report that names only the preference
 	// puts a sing-box label above an xray log.
 	coreID string
+	// geo is the active profile's own geo databases, carried on start/reload
+	// like bindPref.
+	geo geoURLs
 }
 
 func (s *supervisor) setBindPref(pref string) {
@@ -799,6 +802,15 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	var env []string
+	if p, ok := core.(geoPruner); ok {
+		geoDir := p.GeoDir(bin, dataDir)
+		if dir := s.customGeoDir(core.ID(), geoDir, s.geoURLs()); dir != "" {
+			geoDir = dir
+			dataDir, env = p.UseGeoDir(dir, dataDir)
+		}
+		patched = s.pruneUnknownGeo(core, geoDir, patched)
+	}
 	cfgPath, err := writeTempConfig(patched, core.ConfigExt())
 	if err != nil {
 		return 0, err
@@ -806,6 +818,9 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, bin, core.RunArgs(cfgPath, dataDir)...)
+	if len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	}
 	stdout := newLogPipe(s.notify, "stdout")
 	stderr := newLogPipe(s.notify, "stderr")
 	for _, p := range []*logPipe{stdout, stderr} {
