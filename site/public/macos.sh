@@ -230,7 +230,29 @@ TARGETS=(
   "$HOME/Library/Application Support/com.operasoftware.Opera/NativeMessagingHosts"
   "$HOME/Library/Application Support/com.operasoftware.OperaGX/NativeMessagingHosts"
   "$HOME/Library/Application Support/Yandex/YandexBrowser/NativeMessagingHosts"
+  "$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts"
 )
+
+# Any other Chromium-based browser: its user data dir holds `Local State` and a
+# `Default` profile, and it reads <that dir>/NativeMessagingHosts like the ones
+# above. Electron apps keep a `Local State` too, but no profile dir, so they
+# stay out.
+discover_targets() {                    # $@ = roots to search
+  local root state dir known t
+  for root in "$@"; do
+    [[ -d "$root" ]] || continue
+    while IFS= read -r state; do
+      dir="$(dirname "$state")"
+      [[ -d "$dir/Default" ]] || continue
+      known=0
+      for t in "${TARGETS[@]}"; do
+        if [[ "$t" == "$dir/NativeMessagingHosts" ]]; then known=1; break; fi
+      done
+      (( known )) || TARGETS+=("$dir/NativeMessagingHosts")
+    done < <(find "$root" -mindepth 2 -maxdepth 3 -name 'Local State' -type f 2>/dev/null)
+  done
+}
+discover_targets "$HOME/Library/Application Support"
 
 # Merge ids into allowed_origins instead of overwriting: each browser/profile has
 # its own extension id, so running this from a second browser must not evict the

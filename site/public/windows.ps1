@@ -415,7 +415,8 @@ $registryRoots = @(
   'Software\Vivaldi\NativeMessagingHosts',
   'Software\Opera Software\Opera Stable\NativeMessagingHosts',
   'Software\Opera Software\Opera GX Stable\NativeMessagingHosts',
-  'Software\Yandex\YandexBrowser\NativeMessagingHosts'
+  'Software\Yandex\YandexBrowser\NativeMessagingHosts',
+  'Software\imput\Helium\NativeMessagingHosts'
 )
 
 $script:Step = 'browser registration'

@@ -232,6 +232,7 @@ TARGETS=(
   "$CONFIG_BASE/opera/NativeMessagingHosts"
   "$CONFIG_BASE/opera-beta/NativeMessagingHosts"
   "$CONFIG_BASE/yandex-browser/NativeMessagingHosts"
+  "$CONFIG_BASE/net.imput.helium/NativeMessagingHosts"
   # Flatpak: each app keeps its own ~/.config equivalent.
   "$FLATPAK_BASE/com.google.Chrome/config/google-chrome/NativeMessagingHosts"
   "$FLATPAK_BASE/com.github.Eloston.UngoogledChromium/config/chromium/NativeMessagingHosts"
@@ -244,6 +245,27 @@ TARGETS=(
   "$SNAP_BASE/chromium/current/.config/chromium/NativeMessagingHosts"
   "$SNAP_BASE/brave/current/.config/BraveSoftware/Brave-Browser/NativeMessagingHosts"
 )
+
+# Any other Chromium-based browser: its user data dir holds `Local State` and a
+# `Default` profile, and it reads <that dir>/NativeMessagingHosts like the ones
+# above. Electron apps keep a `Local State` too, but no profile dir, so they
+# stay out.
+discover_targets() {                    # $@ = roots to search
+  local root state dir known t
+  for root in "$@"; do
+    [[ -d "$root" ]] || continue
+    while IFS= read -r state; do
+      dir="$(dirname "$state")"
+      [[ -d "$dir/Default" ]] || continue
+      known=0
+      for t in "${TARGETS[@]}"; do
+        if [[ "$t" == "$dir/NativeMessagingHosts" ]]; then known=1; break; fi
+      done
+      (( known )) || TARGETS+=("$dir/NativeMessagingHosts")
+    done < <(find "$root" -mindepth 2 -maxdepth 3 -name 'Local State' -type f 2>/dev/null)
+  done
+}
+discover_targets "$CONFIG_BASE" "$FLATPAK_BASE"/*/config "$SNAP_BASE"/*/current/.config
 
 # Merge ids into allowed_origins instead of overwriting: each browser/profile has
 # its own extension id, so running this from a second browser must not evict the
