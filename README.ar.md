@@ -99,7 +99,7 @@ Block يسقط الترافيك بدل توجيهه: نطاقات الإعلان
 
 ### قبل أن تبدأ
 
-- متصفّح مبني على Chromium، الإصدار 120 أو أحدث (Chrome وChromium وEdge وBrave وArc وVivaldi وOpera وYandex Browser).
+- متصفّح مبني على Chromium، الإصدار 120 أو أحدث (Chrome وChromium وEdge وBrave وArc وVivaldi وOpera وYandex Browser وHelium).
 - نحو 100 ميغابايت من مساحة القرص الحرّة للمكوّن ومحرّكات الوكيل.
 - دون صلاحيات مسؤول / root — يُثبَّت كل شيء داخل حساب المستخدم الخاص بك.
 
@@ -165,7 +165,7 @@ VLESS وVMess وTrojan وShadowsocks وHysteria/2 وTUIC وWireGuard وAnyTLS و
 أكثر أمانًا من معظمها. لا يرسل Noctis أي شيء إلى مطوّره — لا تحليلات ولا قياس عن بُعد ولا إعدادات بعيدة. تبقى إعدادات الخوادم في تخزين المتصفّح. يعمل المكوّن المحلي دون صلاحيات مسؤول. تجد قائمة الصلاحيات الكاملة ومبرّراتها في [سياسة الخصوصية](./site/PRIVACY.md).
 
 **هل يعمل Noctis على Windows وmacOS وLinux؟**
-نعم — على المتصفّحات المبنية على Chromium في Windows وmacOS وLinux (Chrome وEdge وBrave وArc وVivaldi وOpera وYandex Browser). للمكوّن الأصلي سكربتات تثبيت من سطر واحد لكل منصّة.
+نعم — على المتصفّحات المبنية على Chromium في Windows وmacOS وLinux (Chrome وEdge وBrave وArc وVivaldi وOpera وYandex Browser وHelium). للمكوّن الأصلي سكربتات تثبيت من سطر واحد لكل منصّة.
 
 **هل يمكنني استخدام رابط اشتراك لتحديث الخوادم تلقائيًا؟**
 نعم. الصق رابط اشتراك مرة واحدة ويحدّثه Noctis وفق جدول زمني. تتحدّث قوائم الخوادم تلقائيًا؛ وتبقى التحديدات المثبّتة والنشطة عبر التحديثات.

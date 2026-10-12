@@ -99,7 +99,7 @@ Block ترافیک را دور می‌ریزد و مسیریابی نمی‌کن
 
 ### پیش از شروع
 
-- یک مرورگر مبتنی بر Chromium، نسخه ۱۲۰ یا جدیدتر (Chrome، Chromium، Edge، Brave، Arc، Vivaldi، Opera، Yandex Browser).
+- یک مرورگر مبتنی بر Chromium، نسخه ۱۲۰ یا جدیدتر (Chrome، Chromium، Edge، Brave، Arc، Vivaldi، Opera، Yandex Browser، Helium).
 - حدود ۱۰۰ مگابایت فضای دیسک خالی برای مؤلفه محلی و موتورهای پراکسی.
 - بدون دسترسی admin / root — همه چیز در حساب کاربری شما نصب می‌شود.
 
@@ -165,7 +165,7 @@ VLESS، VMess، Trojan، Shadowsocks، Hysteria/2، TUIC، WireGuard، AnyTLS، 
 امن‌تر از بیشترشان. Noctis هیچ چیزی به سازنده‌اش نمی‌فرستد — نه تحلیل، نه تله‌متری، نه پیکربندی از راه دور. کانفیگ‌های سرور در حافظه مرورگر باقی می‌مانند. مؤلفه محلی بدون دسترسی مدیر اجرا می‌شود. فهرست کامل مجوزها و دلیل هر کدام در [سیاست حریم خصوصی](./site/PRIVACY.md) است.
 
 **آیا Noctis روی Windows، macOS و Linux کار می‌کند؟**
-بله — مرورگرهای مبتنی بر Chromium روی Windows، macOS و Linux (Chrome، Edge، Brave، Arc، Vivaldi، Opera، Yandex Browser). مؤلفه محلی برای هر پلتفرم اسکریپت نصب تک‌خطی دارد.
+بله — مرورگرهای مبتنی بر Chromium روی Windows، macOS و Linux (Chrome، Edge، Brave، Arc، Vivaldi، Opera، Yandex Browser، Helium). مؤلفه محلی برای هر پلتفرم اسکریپت نصب تک‌خطی دارد.
 
 **آیا می‌توانم برای به‌روزرسانی خودکار سرورها یک پیوند اشتراک اضافه کنم؟**
 بله. پیوند اشتراک را یک بار اضافه کنید تا Noctis آن را طبق برنامه به‌روزرسانی کند. سرورهای سنجاق‌شده و سرور فعال هنگام به‌روزرسانی فهرست حفظ می‌شوند.

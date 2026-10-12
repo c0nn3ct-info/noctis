@@ -6,12 +6,13 @@ package main
 // from the os/exec docs): tests generate a tiny shell wrapper that re-execs
 // the test binary with NOCTIS_FAKE_CORE=1, and point SINGBOX_BIN/XRAY_BIN/
 // MIHOMO_BIN at it. The fake answers version probes and, in run mode, binds
-// the SOCKS port injected into its config file so waitPort succeeds.
+// the SOCKS port injected into its config file so waitReady succeeds.
 
 import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -33,8 +34,61 @@ func TestMain(m *testing.M) {
 //
 //	test_behavior: "" (bind socks port) | "nobind" (never bind) |
 //	               "ignoreterm" (bind, ignore SIGTERM so stop() must SIGKILL) |
-//	               "dieafterbind" (bind, then exit(7) on its own)
+//	               "dieafterbind" (bind, then exit(7) on its own) |
+//	               "exitbeforebind" (print test_log, exit(1) without binding)
 //	test_log:      line printed to stdout and stderr after startup
+// fakeTester emulates a `delay` tester instance: no inbound, a Clash API. The
+// first outbound's test_delay picks the answer: "ok" (42ms), "timeout",
+// "garbage" (not JSON), "zero" (a 200 with no delay), "exit" (log a fatal line
+// and exit before the API is up), "noapi" (never serve).
+func fakeTester(doc, exp map[string]any) {
+	api, _ := exp["clash_api"].(map[string]any)
+	addr, _ := api["external_controller"].(string)
+	secret, _ := api["secret"].(string)
+	behavior := ""
+	if obs, ok := doc["outbounds"].([]any); ok && len(obs) > 0 {
+		if m, ok := obs[0].(map[string]any); ok {
+			behavior, _ = m["test_delay"].(string)
+		}
+	}
+	switch behavior {
+	case "exit":
+		fmt.Fprintln(os.Stderr, "FATAL[0000] start service: tester refused")
+		os.Exit(1)
+	case "noapi":
+		time.Sleep(30 * time.Second)
+		return
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer "+secret {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if r.URL.Path == "/version" {
+			fmt.Fprint(w, `{"version":"fake"}`)
+			return
+		}
+		switch behavior {
+		case "timeout":
+			fmt.Fprintln(os.Stderr, "ERROR[0003] outbound/hysteria2[proxy-out]: handshake timed out")
+			w.WriteHeader(http.StatusGatewayTimeout)
+			fmt.Fprint(w, `{"message":"Timeout"}`)
+		case "refused":
+			fmt.Fprintln(os.Stderr, "ERROR[0001] connection refused by peer")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			fmt.Fprint(w, `{"message":"An error occurred in the delay test"}`)
+		case "garbage":
+			fmt.Fprint(w, "not json")
+		case "zero":
+			fmt.Fprint(w, `{}`)
+		default:
+			fmt.Fprintf(w, `{"delay":42,"url":%q}`, r.URL.Query().Get("url"))
+		}
+	})
+	_ = http.ListenAndServe(addr, mux)
+}
+
 func fakeCoreMain() {
 	args := os.Args[1:]
 	if len(args) > 0 && (args[0] == "version" || args[0] == "-v") {
@@ -55,6 +109,10 @@ func fakeCoreMain() {
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		os.Exit(3)
 	}
+	if exp, ok := doc["experimental"].(map[string]any); ok && doc["inbounds"] == nil {
+		fakeTester(doc, exp)
+		return
+	}
 	behavior, _ := doc["test_behavior"].(string)
 	if behavior == "ignoreterm" {
 		signal.Ignore(syscall.SIGTERM)
@@ -62,6 +120,9 @@ func fakeCoreMain() {
 	if line, _ := doc["test_log"].(string); line != "" {
 		fmt.Fprintln(os.Stdout, line)
 		fmt.Fprintln(os.Stderr, line)
+	}
+	if behavior == "exitbeforebind" {
+		os.Exit(1)
 	}
 	if behavior != "nobind" {
 		port := 0

@@ -415,20 +415,6 @@ func freePort() (int, error) {
 	return addr.Port, nil
 }
 
-func waitPort(port int, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	addr := fmt.Sprintf("127.0.0.1:%d", port)
-	for time.Now().Before(deadline) {
-		c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
-		if err == nil {
-			_ = c.Close()
-			return nil
-		}
-		time.Sleep(80 * time.Millisecond)
-	}
-	return fmt.Errorf("port %d not ready", port)
-}
-
 // netInterfaces and interfaceAddrs are seams for tests to substitute the
 // interface list and each interface's addresses; neither is reassigned in
 // production code. Addrs can genuinely fail (the interface may vanish between
@@ -811,6 +797,9 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 		}
 		patched = s.pruneUnknownGeo(core, geoDir, patched)
 	}
+	if _, ok := core.(singBoxCore); ok {
+		patched = s.localizeRuleSets(bin, dataDir, patched)
+	}
 	cfgPath, err := writeTempConfig(patched, core.ConfigExt())
 	if err != nil {
 		return 0, err
@@ -823,9 +812,11 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 	}
 	stdout := newLogPipe(s.notify, "stdout")
 	stderr := newLogPipe(s.notify, "stderr")
+	tail := newLineTail(startTailLines)
 	for _, p := range []*logPipe{stdout, stderr} {
 		p.route = s.route
 		p.coreID = core.ID()
+		p.tail = tail
 	}
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -851,9 +842,9 @@ func (s *supervisor) start(core Core, raw json.RawMessage) (int, error) {
 
 	go s.supervise(cmd, port, done)
 
-	if err := waitPort(port, 5*time.Second); err != nil {
+	if err := waitReady(port, coreBindTimeout, done); err != nil {
 		s.stop()
-		return 0, fmt.Errorf("%s did not bind socks: %w", core.ID(), err)
+		return 0, startFailure(core.ID(), err, tail.lines())
 	}
 
 	// Seed a snapshot so a `stats` request before the first push still reports
@@ -1001,8 +992,11 @@ type logPipe struct {
 	// out of the user-visible log.
 	route  *routeJournal
 	coreID string
-	mu     sync.Mutex
-	buf    bytes.Buffer
+	// tail keeps the core's last lines for a start that fails: the reason a
+	// core gave up is in its own output, and nowhere else.
+	tail *lineTail
+	mu   sync.Mutex
+	buf  bytes.Buffer
 }
 
 func newLogPipe(notify notifyFn, stream string) *logPipe {
@@ -1044,6 +1038,9 @@ func (p *logPipe) emit(line string) {
 		if routeLineHidden(p.coreID, line) {
 			return
 		}
+	}
+	if p.tail != nil {
+		p.tail.add(line)
 	}
 	if p.notify != nil {
 		p.notify("log", map[string]any{

@@ -99,7 +99,7 @@ La extensión Noctis necesita un pequeño componente local ejecutándose en tu e
 
 ### Antes de empezar
 
-- Un navegador basado en Chromium, versión 120 o más reciente (Chrome, Chromium, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser).
+- Un navegador basado en Chromium, versión 120 o más reciente (Chrome, Chromium, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser, Helium).
 - Unos 100 MB de disco libre para el componente local y los motores de proxy.
 - Sin permisos de administrador / root — todo se instala en tu cuenta de usuario.
 
@@ -165,7 +165,7 @@ VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard, AnyTLS, ShadowTL
 Más segura que la mayoría. Noctis no envía nada a su desarrollador — ni analíticas, ni telemetría, ni configuración remota. Las configuraciones de servidor se quedan en el almacenamiento del navegador. El componente local se ejecuta sin permisos de administrador. La lista completa de permisos y su justificación están en la [política de privacidad](./site/PRIVACY.md).
 
 **¿Noctis funciona en Windows, macOS y Linux?**
-Sí — en navegadores basados en Chromium en Windows, macOS y Linux (Chrome, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser). El componente local tiene scripts de instalación de una línea para cada plataforma.
+Sí — en navegadores basados en Chromium en Windows, macOS y Linux (Chrome, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser, Helium). El componente local tiene scripts de instalación de una línea para cada plataforma.
 
 **¿Puedo usar una URL de suscripción para actualizar los servidores automáticamente?**
 Sí. Pega una URL de suscripción una vez y Noctis la actualiza según un horario. Las listas de servidores se actualizan automáticamente; las selecciones fijadas y la activa sobreviven a las actualizaciones.

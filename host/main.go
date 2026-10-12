@@ -17,7 +17,7 @@ import (
 
 // Multi-core helper: hello reports `cores` (+ per-core versions). The extension
 // treats a missing `cores` field in the hello ack as a pre-multi-core helper.
-var hostVersion = "1.3.0"
+var hostVersion = "1.4.0"
 
 type incomingMsg struct {
 	ID   string          `json:"id"`
@@ -307,10 +307,13 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 				// extension can show the real one instead of a guess: a wrong pick
 				// (a virtual adapter on Windows) kills every dial silently.
 				"bindInterface": sup.boundInterface(),
-				// Capabilities added after 1.1.2, advertised for future use. The
-				// extension gates on the host version instead (helper-compat.ts):
-				// a helper without "fetch" reads as outdated, not incompatible.
-				"features": []string{"fetch", "route", "interfaces", "diagnostics"},
+				// Capabilities added after 1.1.2. The extension gates most on the
+				// host version instead (helper-compat.ts): a helper without "fetch"
+				// reads as outdated, not incompatible. "local-rule-sets" lets it
+				// name sing-box categories SagerNet does not publish, since this
+				// helper builds them from the geo databases (geo_ruleset.go).
+				// "delay" measures a server through sing-box itself (delay.go).
+				"features": []string{"fetch", "route", "interfaces", "diagnostics", "local-rule-sets", "delay"},
 			},
 		}
 	case "cores":
@@ -423,6 +426,16 @@ func dispatch(msg *incomingMsg, sup *supervisor, logger *log.Logger) ack {
 			return errAck(msg.ID, fmt.Errorf("decode probe: %w", err))
 		}
 		result, err := doProbe(args, sup.boundInterface())
+		if err != nil {
+			return errAck(msg.ID, err)
+		}
+		return ack{ID: msg.ID, Type: "ack", OK: true, Data: result}
+	case "delay":
+		var args delayArgs
+		if err := json.Unmarshal(msg.Raw, &args); err != nil {
+			return errAck(msg.ID, fmt.Errorf("decode delay: %w", err))
+		}
+		result, err := sup.delay(args)
 		if err != nil {
 			return errAck(msg.ID, err)
 		}

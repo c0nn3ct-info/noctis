@@ -99,7 +99,7 @@ Noctis 扩展需要在你的机器上运行一个小型本机组件。该本机�
 
 ### 开始之前
 
-- 基于 Chromium 的浏览器，版本 120 或更新（Chrome、Chromium、Edge、Brave、Arc、Vivaldi、Opera、Yandex Browser）。
+- 基于 Chromium 的浏览器，版本 120 或更新（Chrome、Chromium、Edge、Brave、Arc、Vivaldi、Opera、Yandex Browser、Helium）。
 - 约 100 MB 的可用磁盘空间，用于本机组件和各代理引擎。
 - 无需管理员 / root 权限——一切都安装到你的用户账户中。
 
@@ -165,7 +165,7 @@ VLESS、VMess、Trojan、Shadowsocks、Hysteria/2、TUIC、WireGuard、AnyTLS、
 比大多数更安全。Noctis 不向开发者发送任何东西——没有分析、没有遥测、没有远程配置。服务器配置保存在浏览器存储中。本机组件无需管理员权限即可运行。完整的权限清单和说明在[隐私政策](./site/PRIVACY.md)中。
 
 **Noctis 能在 Windows、macOS 和 Linux 上运行吗？**
-可以——Windows、macOS 和 Linux 上基于 Chromium 的浏览器（Chrome、Edge、Brave、Arc、Vivaldi、Opera、Yandex Browser）。本机组件为每个平台都提供了一行命令的安装脚本。
+可以——Windows、macOS 和 Linux 上基于 Chromium 的浏览器（Chrome、Edge、Brave、Arc、Vivaldi、Opera、Yandex Browser、Helium）。本机组件为每个平台都提供了一行命令的安装脚本。
 
 **我能用订阅 URL 来自动更新服务器吗？**
 可以。只需粘贴一次订阅 URL，Noctis 就会按计划刷新它。服务器列表会自动更新；置顶和活动选择会在刷新后保留。

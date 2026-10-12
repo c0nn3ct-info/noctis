@@ -99,7 +99,7 @@ The Noctis extension needs a small native helper running on your machine. The he
 
 ### Before you start
 
-- A Chromium-based browser, version 120 or newer (Chrome, Chromium, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser).
+- A Chromium-based browser, version 120 or newer (Chrome, Chromium, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser, Helium).
 - About 100 MB of free disk for the helper and the proxy engines.
 - No admin / root rights — everything installs into your user account.
 
@@ -167,7 +167,7 @@ VLESS, VMess, Trojan, Shadowsocks, Hysteria/2, TUIC, WireGuard, AnyTLS, ShadowTL
 Safer than most. Noctis sends nothing to its developer — no analytics, no telemetry, no remote config. Server configs stay in browser storage. The native helper runs without admin rights. The full permission list and rationale is in the [privacy policy](./site/PRIVACY.md).
 
 **Does Noctis work on Windows, macOS and Linux?**
-Yes — Chromium-based browsers on Windows, macOS and Linux (Chrome, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser). The native helper has one-line install scripts for each platform.
+Yes — Chromium-based browsers on Windows, macOS and Linux (Chrome, Edge, Brave, Arc, Vivaldi, Opera, Yandex Browser, Helium). The native helper has one-line install scripts for each platform.
 
 **Can I use a subscription URL to auto-update servers?**
 Yes. Paste a subscription URL once and Noctis refreshes it on a schedule. Server lists update automatically; pinned and active selections survive refreshes.

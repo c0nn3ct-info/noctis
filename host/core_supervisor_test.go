@@ -60,23 +60,37 @@ func TestFreePortListenError(t *testing.T) {
 	})
 }
 
-func TestWaitPort(t *testing.T) {
+func TestWaitReady(t *testing.T) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer ln.Close()
 	port := ln.Addr().(*net.TCPAddr).Port
-	if err := waitPort(port, 2*time.Second); err != nil {
-		t.Fatalf("waitPort on live listener: %v", err)
+	if err := waitReady(port, 2*time.Second, nil); err != nil {
+		t.Fatalf("waitReady on live listener: %v", err)
 	}
 
 	closed, err := freePort()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := waitPort(closed, 300*time.Millisecond); err == nil {
-		t.Fatal("want timeout error for closed port")
+	if err := waitReady(closed, 300*time.Millisecond, nil); err == nil || errors.Is(err, errCoreExited) {
+		t.Fatalf("want timeout error for closed port, got %v", err)
+	}
+
+	exited := make(chan struct{})
+	close(exited)
+	if err := waitReady(closed, 5*time.Second, exited); !errors.Is(err, errCoreExited) {
+		t.Fatalf("want errCoreExited at once, got %v", err)
+	}
+
+	// An exit while waiting between dials ends the wait without the timeout.
+	later := make(chan struct{})
+	time.AfterFunc(150*time.Millisecond, func() { close(later) })
+	start := time.Now()
+	if err := waitReady(closed, 5*time.Second, later); !errors.Is(err, errCoreExited) || time.Since(start) > 2*time.Second {
+		t.Fatalf("want errCoreExited soon after exit, got %v after %s", err, time.Since(start))
 	}
 }
 
@@ -557,11 +571,37 @@ func TestSupervisorStartErrors(t *testing.T) {
 	t.Run("waitport", func(t *testing.T) {
 		seedVersion(t, "sing-box", "1.11.0")
 		t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.11.0"))
+		old := coreBindTimeout
+		coreBindTimeout = time.Second
+		t.Cleanup(func() { coreBindTimeout = old })
 		sup := newSupervisor(notify)
 		start := time.Now()
-		_, err := sup.start(singBoxCore{}, socksConfig(map[string]any{"test_behavior": "nobind"}))
-		if err == nil || !strings.Contains(err.Error(), "did not bind") {
-			t.Fatalf("want bind timeout error, got %v (after %s)", err, time.Since(start))
+		_, err := sup.start(singBoxCore{}, socksConfig(map[string]any{
+			"test_behavior": "nobind",
+			"test_log":      "INFO[0000] outbound/vless[proxy-out]: outbound connection to raw.githubusercontent.com:443",
+		}))
+		want := "did not bind socks: port"
+		if err == nil || !strings.Contains(err.Error(), want) ||
+			!strings.Contains(err.Error(), "; last log line: outbound/vless[proxy-out]: outbound connection to raw.githubusercontent.com:443") {
+			t.Fatalf("want bind timeout quoting the last line, got %v (after %s)", err, time.Since(start))
+		}
+	})
+
+	t.Run("exits before binding", func(t *testing.T) {
+		seedVersion(t, "sing-box", "1.11.0")
+		t.Setenv("SINGBOX_BIN", fakeCoreBin(t, "1.11.0"))
+		sup := newSupervisor(notify)
+		start := time.Now()
+		_, err := sup.start(singBoxCore{}, socksConfig(map[string]any{
+			"test_behavior": "exitbeforebind",
+			"test_log":      "\x1b[31mFATAL\x1b[0m[0000] start service: initialize rule-set[0]: connection reset",
+		}))
+		want := "sing-box did not bind socks: exited: start service: initialize rule-set[0]: connection reset"
+		if err == nil || err.Error() != want {
+			t.Fatalf("got %v, want %q", err, want)
+		}
+		if time.Since(start) > 3*time.Second {
+			t.Fatalf("an exited core was waited on for %s", time.Since(start))
 		}
 	})
 }

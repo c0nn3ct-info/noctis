@@ -94,6 +94,7 @@ TARGETS=(
   "$HOME/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts"
   "$HOME/Library/Application Support/Microsoft Edge/NativeMessagingHosts"
   "$HOME/Library/Application Support/Arc/User Data/NativeMessagingHosts"
+  "$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts"
 )
 
 # Merge ids into allowed_origins instead of overwriting: each browser/profile has
