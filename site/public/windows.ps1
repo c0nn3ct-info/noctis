@@ -13,6 +13,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# `$env:X='...'` outlives this `iex` run: the whole PowerShell window keeps it.
+# Read once into the parameters above, then drop, so the next command in the
+# same window, which may set no cores at all, does not reuse this selection.
+Remove-Item Env:NOCTIS_CORES, Env:NOCTIS_EXT_ID -ErrorAction SilentlyContinue
+
 if (-not $ExtensionId) {
   Write-Error 'Pass the extension ID via $env:NOCTIS_EXT_ID or -ExtensionId.'
   exit 1
@@ -39,6 +44,7 @@ if ($wantCores.Count -eq 0) {
   Write-Error 'No cores selected.'
   exit 1
 }
+Write-Host "-> cores: $($wantCores -join ', ')"
 
 $repo = 'c0nn3ct-info/noctis'
 
